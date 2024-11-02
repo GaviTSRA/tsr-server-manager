@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16.4
+    restart: always
+    ports:
+      - 3877:5432/tcp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: tsr-server-manager
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
