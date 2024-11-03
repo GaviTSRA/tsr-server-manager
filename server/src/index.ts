@@ -78,6 +78,7 @@ app.get("/", async (req, res) => {
       status: data.data.status,
     });
   }
+  console.info(result);
   res.send(result);
 });
 
@@ -148,6 +149,9 @@ serverRouter.get("/", async (req: ServerRouterRequest, res) => {
     options: req.body.server.options,
     status: result?.data?.status,
     ports: req.body.server.ports,
+    cpuUsage: result?.data?.cpuUsage,
+    usedRam: result?.data?.usedRam,
+    availableRam: result?.data?.availableRam,
   });
 });
 

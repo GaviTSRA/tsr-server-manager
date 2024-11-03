@@ -10,6 +10,7 @@ import {
   RotateCw,
   Server as ServerIcon,
   X,
+  Cpu,
 } from "react-feather";
 import { ServerStatus, ServerType } from "../types";
 import { useMutation, useQuery } from "react-query";
@@ -256,7 +257,7 @@ function Console({
           />
         ))}
       </div>
-      <div className="mx-4 w-1/3">
+      <div className="mx-4 w-1/3 flex flex-col gap-2">
         <div className="bg-header p-2 rounded w-full flex flex-row items-center gap-2">
           {statusIcon}
           <p className="text-2xl">{server.name}</p>
@@ -325,6 +326,27 @@ function Console({
                 }
               }}
             />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col bg-header p-2 rounded gap-2">
+            <div className="flex flex-row items-center gap-2">
+              <Cpu />
+              <p>{Math.round(server.cpuUsage * 100) / 100} %</p>
+            </div>
+            <div className="flex flex-row items-center gap-2">
+              <ServerIcon />
+              <p>
+                {Math.round((server.usedRam / 1024 / 1024 / 1024) * 100) / 100}{" "}
+                GB{" "}
+              </p>
+              <p className="text-secondary-text">
+                /{" "}
+                {Math.round((server.availableRam / 1024 / 1024 / 1024) * 100) /
+                  100}{" "}
+                GB
+              </p>
+            </div>
           </div>
         </div>
       </div>

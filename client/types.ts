@@ -13,6 +13,9 @@ export type ServerStatus = {
     | "exited"
     | "dead";
   ports: string[];
+  cpuUsage: number;
+  usedRam: number;
+  availableRam: number;
 };
 
 export type ServerType = {

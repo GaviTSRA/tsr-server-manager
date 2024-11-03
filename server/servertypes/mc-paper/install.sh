@@ -1,9 +1,15 @@
+if [ -e "server.jar" ]; then
+    exit
+fi
+
+echo "Downloading paper jar"
+
 LATEST_BUILD=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/${VERSION}/builds" | \
     grep -o '"build":[0-9]*' | \
     awk -F: '{print $2}' | \
     tail -n 1)
 
-if [ "$LATEST_BUILD" != "null" ]; then
+if [ "$LATEST_BUILD" != "" ]; then
     echo "Latest stable build is $LATEST_BUILD"
     JAR_NAME=paper-${VERSION}-${LATEST_BUILD}.jar
     PAPERMC_URL="https://api.papermc.io/v2/projects/paper/versions/${VERSION}/builds/${LATEST_BUILD}/downloads/${JAR_NAME}"

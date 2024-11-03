@@ -37,6 +37,9 @@ type ContainerStatus = {
     | "removing"
     | "exited"
     | "dead";
+  cpuUsage: number;
+  usedRam: number;
+  availableRam: number;
 };
 
 async function request(
@@ -131,6 +134,29 @@ export async function inspectContainer(
   id: string
 ): Promise<{ status: InspectContainerResponse; data?: ContainerStatus }> {
   const result = await request(`/containers/${id}/json`, "get", {}, {});
+  const stats = await request(
+    `/containers/${id}/stats`,
+    "get",
+    { stream: false },
+    {}
+  );
+  let usedRam = 0;
+  let availableRam = stats.data["memory_stats"]["limit"];
+  try {
+    usedRam =
+      stats.data["memory_stats"]["usage"] -
+      stats.data["memory_stats"]["stats"]["cache"];
+  } catch {
+    availableRam = 0;
+  }
+
+  const cpu_delta =
+    stats.data["cpu_stats"]["cpu_usage"]["total_usage"] -
+    stats.data["precpu_stats"]["cpu_usage"]["total_usage"];
+  const system_cpu_delta =
+    stats.data["cpu_stats"]["system_cpu_usage"] -
+    stats.data["precpu_stats"]["system_cpu_usage"];
+
   switch (result.status) {
     case 200:
       return {
@@ -138,6 +164,12 @@ export async function inspectContainer(
         data: {
           id: result.data["Id"],
           status: result.data["State"]["Status"],
+          cpuUsage:
+            (cpu_delta / system_cpu_delta) *
+            stats.data["cpu_stats"]["online_cpus"] *
+            100.0,
+          usedRam,
+          availableRam,
         },
       };
     case 404:
