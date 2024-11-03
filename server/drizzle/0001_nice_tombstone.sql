@@ -1,0 +1,1 @@
+ALTER TABLE "Server" ADD COLUMN "options" json NOT NULL;

@@ -1,0 +1,17 @@
+{
+    "name": "Minecraft Forge",
+    "image": null,
+    "options": {
+        "version": {
+            "name": "Version",
+            "type": "string",
+            "default": "1.20.4"
+        },
+        "image": {
+            "name": "Image",
+            "type": "enum",
+            "options": [],
+            "default": "ubuntu:latest"
+        }
+    }
+}

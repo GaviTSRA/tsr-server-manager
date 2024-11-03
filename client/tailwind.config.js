@@ -11,6 +11,7 @@ module.exports = {
                 "danger": "#FF4D4D",
                 "success": "#28a745",
                 "border": "#444466",
+                "border-hover": "#555577",
                 'context-menu': '#2B2B3A',
                 "context-menu-border": "#1F1F28",
                 "button": "#2D2D3A",

@@ -1,6 +1,9 @@
 import axios, { AxiosResponse } from "axios";
 import tar from 'tar-stream';
 import stream from 'stream';
+import { WebSocket } from "ws";
+import fs from "fs";
+import path from "path";
 
 type BasicReponse = "success" | "server error" | "unknown error";
 
@@ -10,17 +13,19 @@ type StartContainerResponse = BasicReponse | "container already started" | "no s
 type RestartContainerResponse = BasicReponse | "no such container";
 type StopContainerResponse = BasicReponse | "container already stopped" | "no such container";
 type KillContainerResponse = BasicReponse | "no such container" | "container is not running";
+type GetImagesResponse = BasicReponse;
 type ContainerStatus = {
     id: string;
     status: "created" | "running" | "paused" | "restarting" | "removing" | "exited" | "dead";
 }
 
-async function request(url: string, method: "get" | "post", params: any, body: any): Promise<AxiosResponse<any, any>> {
+async function request(url: string, method: "get" | "post", params: any, body: any, stream: boolean = false): Promise<AxiosResponse<any, any>> {
     const res = await axios({
         url: "http://localhost:2375/v1.47" + url,
         method,
         params,
         data: body,
+        responseType: stream ? "stream" : undefined
     }).catch((error) => {
         if (error.response) {
             return error.response;
@@ -46,8 +51,21 @@ async function createTarArchive(content: string): Promise<Buffer> {
     return Buffer.concat(chunks);
 }
 
-export async function createContainer(name: string): Promise<{ status: CreateContainerResponse, containerId?: string }> {
-    const result = await request("/containers/create", "post", { name }, { Image: "ubuntu:latest" });
+export async function createContainer(id: string, name: string, image: string, cmd: string[], env: string[]): Promise<{ status: CreateContainerResponse, containerId?: string }> {
+    const hostDirectory = path.resolve(__dirname, `../servers/${id}`);
+    if (!fs.existsSync(hostDirectory)) fs.mkdirSync(hostDirectory);
+    const result = await request("/containers/create", "post", { name }, {
+        Image: image,
+        Tty: true,
+        HostConfig: {
+            Binds: [
+                `${hostDirectory}:/server`
+            ]
+        },
+        WorkingDir: "/server",
+        Env: env,
+        Cmd: cmd
+    });
     switch (result.status) {
         case 201:
             return { status: "success", containerId: result.data["Id"] }
@@ -58,6 +76,7 @@ export async function createContainer(name: string): Promise<{ status: CreateCon
         case 409:
             return { status: "conflict" }
         case 500:
+            console.info(result.data)
             return { status: "server error" }
     }
     console.info("unknown error (create): " + result.status + "\n" + result.statusText);
@@ -145,7 +164,38 @@ export async function killContainer(id: string): Promise<KillContainerResponse> 
     return "unknown error";
 }
 
-export async function createImage(id: string, dockerfile: string) {
+export async function exec(containerId: string, command: string[]): Promise<AxiosResponse<any, any>> {
+    const result = await request(`/containers/${containerId}/exec`, "post", {}, {
+        Cmd: command,
+        AttachStdout: true,
+        AttachStderr: true
+    });
+    const execId = result.data.Id;
+    return await request(`/exec/${execId}/start`, "post", {}, {
+        Detach: false,
+        Tty: true
+    }, true);
+}
+
+export function attachToContainer(id: string): WebSocket {
+    const ws = new WebSocket(`ws://localhost:2375/v1.47/containers/${id}/attach/ws?logs=true&stdout=true&stderr=true`);
+    return ws;
+}
+
+export async function downloadImage(image: string) {
+    const res = await request("/images/create", "post", { fromImage: image }, {}, true);
+    await new Promise((resolve, reject) => {
+        res.data.on('data', (chunk) => {
+            console.log(chunk.toString());
+        });
+        res.data.on('end', resolve);
+        res.data.on('error', reject);
+    });
+
+    console.info(res.status, res.statusText)
+}
+
+export async function buildImage(name: string, dockerfile: string) {
     const tarBuffer = await createTarArchive(dockerfile);
     const tarStream = new stream.PassThrough();
     tarStream.end(tarBuffer);
@@ -156,8 +206,34 @@ export async function createImage(id: string, dockerfile: string) {
             'Content-Length': tarBuffer.length,
         },
         params: {
-            t: `server-${id}`
-        }
+            t: name.toLowerCase().replace(" ", "-")
+        },
+        responseType: 'stream',
     });
-    console.info(res)
+
+    await new Promise((resolve, reject) => {
+        res.data.on('data', (chunk) => {
+            console.log(chunk.toString());
+        });
+        res.data.on('end', resolve);
+        res.data.on('error', reject);
+    });
+
+    console.info(res.status, res.statusText)
+}
+
+export async function getImages(): Promise<{ status: GetImagesResponse, data?: string[] }> {
+    const result = await request(`/images/json`, "get", { all: true }, {});
+    switch (result.status) {
+        case 200:
+            const data = [] as string[];
+            for (let image of result.data as { RepoTags: string[] }[]) {
+                data.push(image.RepoTags[0])
+            }
+            return { status: "success", data };
+        case 500:
+            return { status: "server error" };
+    }
+    console.info("unknown error (kill): " + result.status + "\n" + result.statusText);
+    return { status: "unknown error" };
 }

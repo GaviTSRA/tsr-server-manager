@@ -3,10 +3,12 @@ import { ServerStatus } from "../types";
 import { AlertCircle, ArrowUpCircle, PlayCircle, Plus, StopCircle } from "react-feather";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Dropdown } from "./components/Dropdown";
 
 function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false)
   const [serverName, setServerName] = useState("");
+  const [serverType, setServerType] = useState("");
   const navigate = useNavigate();
 
   const {
@@ -17,6 +19,13 @@ function ServerList() {
     queryFn: () => fetch("http://localhost:3000").then((res) => res.json()),
   });
 
+  const {
+    data: serverTypes
+  } = useQuery({
+    queryKey: "serverTypes",
+    queryFn: () => fetch("http://localhost:3000/servertypes").then((res) => res.json()),
+  });
+
   const createServer = useMutation({
     mutationFn: () => {
       return fetch("http://localhost:3000/servers/create", {
@@ -25,7 +34,8 @@ function ServerList() {
           "Content-Type": 'application/json'
         },
         body: JSON.stringify({
-          name: serverName
+          name: serverName,
+          type: serverType
         })
       })
     },
@@ -63,7 +73,7 @@ function ServerList() {
               <div className="flex flex-col">
                 <p className="text-xl">{server.name}</p>
                 <p className="text-secondary-text text-sm">{server.id.slice(0, 18)}</p>
-                <p className="text-secondary-text text-sm">{server.containerId.slice(0, 18)}</p>
+                {server.containerId && <p className="text-secondary-text text-sm">{server.containerId.slice(0, 18)}</p>}
               </div>
               <div className="ml-auto flex items-center mr-2">
                 <div className="p-2 rounded">
@@ -80,7 +90,7 @@ function ServerList() {
       >
         <Plus className="text-green-600" size={40} />
       </div>
-      {creatingServer && (
+      {creatingServer && serverTypes && (
         <div className="fixed top-0 w-screen h-screen flex bg-black/75" onClick={() => setCreatingServer(false)}>
           <div className="bg-background p-4 m-auto rounded flex flex-col w-1/4" onClick={(e) => e.stopPropagation()}>
             <p className="text-2xl mb-4 text-center">Create New Server</p>
@@ -90,6 +100,8 @@ function ServerList() {
                 className="rounded bg-header outline-none px-2 py-1 w-full"
                 onChange={event => setServerName(event.target.value)}
               />
+              <p className="text-secondary-text mt-2">Type</p>
+              <Dropdown values={serverTypes.map((type) => type.name)} onSelect={(value: string) => setServerType(serverTypes.find(type => type.name === value).id)} placeholder="Select server type..." />
             </div>
             <button
               className="px-4 py-2 mt-auto bg-success rounded outline-none"
