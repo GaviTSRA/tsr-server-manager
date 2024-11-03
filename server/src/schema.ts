@@ -12,6 +12,7 @@ export const Server = pgTable("Server", {
   type: varchar().notNull(),
   containerId: varchar(),
   options: json().$type<{ [name: string]: string }>().notNull(),
+  ports: json().$type<string[]>().notNull(),
 });
 
 export type ServerType = {
@@ -21,4 +22,5 @@ export type ServerType = {
   type: string;
   containerId: string | null;
   options: { [name: string]: string };
+  ports: string[];
 };

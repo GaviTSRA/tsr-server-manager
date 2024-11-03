@@ -20,6 +20,7 @@ export interface ServerRouterRequest extends express.Request {
   body: {
     server: schema.ServerType;
     options?: { [name: string]: string };
+    ports?: string[];
   };
 }
 
@@ -107,6 +108,7 @@ app.post("/servers/create", async (req, res) => {
     state: "NOT_INSTALLED",
     type: type.id,
     options: defaults,
+    ports: [],
   });
 
   res.sendStatus(201);
@@ -145,6 +147,7 @@ serverRouter.get("/", async (req: ServerRouterRequest, res) => {
     type: req.body.server.type,
     options: req.body.server.options,
     status: result?.data?.status,
+    ports: req.body.server.ports,
   });
 });
 
@@ -167,9 +170,10 @@ serverRouter.post("/start", async (req: ServerRouterRequest, res) => {
       const result = await docker.createContainer(
         id,
         req.body.server.name.toLowerCase().replace(" ", "-"),
-        type.image ?? type.options["image"].default,
-        ["/bin/sh", "-c", type.command],
-        env
+        type.image ?? req.body.server.options["image"],
+        ["/bin/bash", "-c", "/server/install.sh && " + type.command],
+        env,
+        req.body.server.ports
       );
       if (result.status !== "success" || !result.containerId) {
         res.status(500);
@@ -181,35 +185,17 @@ serverRouter.post("/start", async (req: ServerRouterRequest, res) => {
         .set({ containerId: result.containerId })
         .where(eq(schema.Server.id, req.body.server.id));
       containerId = result.containerId;
+
+      res.write("[TSR Server Manager] Installing server...\n");
+      res.write("[TSR Server Manager] Creating install script...\n");
+      fs.copyFileSync(
+        `servertypes/${type.id}/install.sh`,
+        `servers/${id}/install.sh`
+      );
     }
 
-    res.write("[TSR Server Manager] Installing server...\n");
-    res.write("[TSR Server Manager] Creating install script...\n");
-    fs.copyFileSync(
-      `servertypes/${type.id}/install.sh`,
-      `servers/${id}/install.sh`
-    );
-
-    res.write(`[TSR Server Manager] Starting container ${containerId}...\n`);
-    const startRes = await docker.startContainer(containerId);
-    res.write(startRes + "\n");
-
-    res.write("[TSR Server Manager] Running install script...\n");
-    const res2 = await docker.exec(containerId, ["sh", "/server/install.sh"]);
-
-    const writable = res.write.bind(res);
-    res2.data.on("data", (chunk: any) => {
-      writable(chunk);
-    });
-
-    res2.data.on("end", async () => {
-      res.write("[TSR Server Manager] Server installed\n");
-      await docker.stopContainer(containerId);
-      await db
-        .update(schema.Server)
-        .set({ state: "INSTALLED" })
-        .where(eq(schema.Server.id, id));
-    });
+    res.write(`[TSR Server Manager] Starting container...\n`);
+    await docker.startContainer(containerId);
     return;
   }
 
@@ -257,55 +243,48 @@ serverRouter.post("/options", async (req: ServerRouterRequest, res) => {
     res.sendStatus(400);
     return;
   }
+  if (req.body.server.containerId) {
+    await docker.removeContainer(req.body.server.containerId);
+  }
   await db
     .update(schema.Server)
-    .set({ options: req.body.options })
+    .set({ options: req.body.options, containerId: null })
     .where(eq(schema.Server.id, req.body.server.id));
   res.sendStatus(200);
 });
 
-serverRouter.get("/connect", async (req, res) => {
+serverRouter.post("/ports", async (req: ServerRouterRequest, res) => {
+  if (!req.body.ports) {
+    res.sendStatus(400);
+    return;
+  }
+  if (req.body.server.containerId) {
+    await docker.removeContainer(req.body.server.containerId);
+  }
+  await db
+    .update(schema.Server)
+    .set({ ports: req.body.ports, containerId: null })
+    .where(eq(schema.Server.id, req.body.server.id));
+  res.sendStatus(200);
+});
+
+serverRouter.get("/connect", async (req: ServerRouterRequest, res) => {
+  if (!req.body.server.containerId) {
+    res.sendStatus(500);
+    return;
+  }
   const stream = new PassThrough();
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
-  const dockerUrl = `http://localhost:2375/containers/${req.body.server.containerId}/attach?stream=true&stdout=true&stderr=true`;
-
   try {
-    const logsResponse = await axios.get(
-      `http://localhost:2375/containers/${req.body.server.containerId}/logs?stdout=true&stderr=true&logs=true`
-    );
-    logsResponse.data.split("\n").forEach((log) => {
-      stream.write(`data: ${log}\n\n`);
-    });
-
-    const wsResponse = await axios({
-      method: "get",
-      url: dockerUrl,
-      responseType: "stream",
-      params: {
-        stream: true,
-        stdout: true,
-        stderr: true,
-      },
-    });
-
-    wsResponse.data.on("data", (chunk) => {
-      const logData = chunk.toString();
-      stream.write(`data: ${logData}\n\n`);
-    });
-
-    wsResponse.data.on("end", () => {
-      stream.end();
-    });
-
-    wsResponse.data.on("error", (err) => {
-      console.error(err);
-      stream.end();
+    const res2 = await docker.attachToContainer(req.body.server.containerId);
+    res2.data.on("data", (chunk) => {
+      stream.write(chunk.toString());
     });
   } catch (error) {
-    //console.error('Error connecting to Docker API:', error);
+    console.error("Error connecting to Docker API:", error);
     res.status(500).send("Failed to connect to Docker API");
   }
 
@@ -326,13 +305,27 @@ fs.readdirSync("servertypes").forEach((folder) => {
     options: data.options,
   });
 });
+
+const customImages = [] as string[];
+fs.readdirSync("images").forEach((folder) => {
+  console.info("Building image " + folder);
+  const data = fs.readFileSync(`images/${folder}/Dockerfile`).toString();
+  customImages.push(folder);
+  docker.buildImage(folder, data);
+});
+
 const requiredImages = [] as string[];
 serverTypes.forEach((type) => {
-  if (type.image && !requiredImages.includes(type.image))
+  if (
+    type.image &&
+    !requiredImages.includes(type.image) &&
+    !customImages.includes(type.image)
+  )
     requiredImages.push(type.image);
   if (type.options["image"]) {
     type.options["image"].options?.forEach((image) => {
-      if (!requiredImages.includes(image)) requiredImages.push(image);
+      if (!requiredImages.includes(image) && !customImages.includes(image))
+        requiredImages.push(image);
     });
   }
 });

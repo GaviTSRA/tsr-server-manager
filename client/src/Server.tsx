@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   PlayCircle,
   Terminal,
@@ -6,14 +6,16 @@ import {
   StopCircle,
   ArrowUpCircle,
   AlertCircle,
-  Play,
   XCircle,
   RotateCw,
+  Server as ServerIcon,
+  X,
 } from "react-feather";
 import { ServerStatus, ServerType } from "../types";
 import { useMutation, useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
+import AnsiToHtml from "ansi-to-html";
 
 export function Server() {
   const { serverId } = useParams();
@@ -25,12 +27,17 @@ export function Server() {
         res.json()
       ),
     enabled: serverId !== undefined,
+    refetchInterval: 1000,
   });
 
   const tabs = server
     ? {
         Console: [<Terminal />, <Console server={server} refetch={refetch} />],
         Files: [<File />, <Files />],
+        Network: [
+          <ServerIcon />,
+          <Network server={server} refetch={refetch} />,
+        ],
         Startup: [
           <PlayCircle />,
           <Startup server={server} refetch={refetch} />,
@@ -76,14 +83,17 @@ function Console({
   server: ServerStatus;
   refetch: () => void;
 }) {
+  const ansiConverter = new AnsiToHtml();
   const [startButtonEnabled, setStartButtonEnabled] = useState(false);
   const [restartButtonEnabled, setRestartButtonEnabled] = useState(false);
   const [stopButtonEnabled, setStopButtonEnabled] = useState(false);
   const [killButtonEnabled, setKillButtonEnabled] = useState(false);
   const [statusIcon, setStatusIcon] = useState(null);
   const [logs, setLogs] = useState([] as string[]);
+  const consoleRef = useRef(null);
+  const [autoScroll, setAutoScroll] = useState(true);
 
-  const startServer = useMutation(async () => {
+  const startServer = useMutation("start", async () => {
     const response = await fetch(
       `http://localhost:3000/server/${server.id}/start`,
       { method: "POST" }
@@ -108,6 +118,7 @@ function Console({
     }
   });
   const restartServer = useMutation({
+    mutationKey: "restart",
     mutationFn: () => {
       return fetch(`http://localhost:3000/server/${server.id}/restart`, {
         method: "POST",
@@ -115,6 +126,7 @@ function Console({
     },
   });
   const stopServer = useMutation({
+    mutationKey: "stop",
     mutationFn: () => {
       return fetch(`http://localhost:3000/server/${server.id}/stop`, {
         method: "POST",
@@ -122,6 +134,7 @@ function Console({
     },
   });
   const killServer = useMutation({
+    mutationKey: "kill",
     mutationFn: () => {
       return fetch(`http://localhost:3000/server/${server.id}/kill`, {
         method: "POST",
@@ -139,10 +152,22 @@ function Console({
     return response.body.getReader();
   };
 
-  const { data: logStream, error } = useQuery(
-    ["serverLogs", server.id],
-    fetchLogs
-  );
+  const {
+    data: logStream,
+    error,
+    refetch: reconnectLogs,
+  } = useQuery(["serverLogs", server.id], fetchLogs, {
+    refetchOnWindowFocus: false,
+    refetchInterval: () => false,
+    refetchOnMount: false,
+  });
+
+  useEffect(() => {
+    if (server.status === "running") {
+      setLogs([]);
+      reconnectLogs();
+    }
+  }, [reconnectLogs, server.status]);
 
   useEffect(() => {
     if (logStream) {
@@ -153,14 +178,32 @@ function Console({
           const { done, value } = await logStream.read();
           if (done) break;
 
-          const logData = decoder.decode(value, { stream: true });
-          console.log(logData); // Handle the log data (e.g., display it in a UI component)
+          const chunk = decoder.decode(value, { stream: true });
+          if (chunk === "success") break;
+          setLogs((prev) => [
+            ...prev,
+            ...chunk.split("\n").filter((el) => el !== ""),
+          ]);
         }
       };
 
       readStream();
     }
   }, [logStream]);
+
+  useEffect(() => {
+    if (autoScroll && consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [logs, autoScroll]);
+
+  const handleScroll = () => {
+    if (!consoleRef.current) return;
+    const isAtBottom =
+      consoleRef.current.scrollHeight - consoleRef.current.scrollTop ===
+      consoleRef.current.clientHeight;
+    setAutoScroll(isAtBottom);
+  };
 
   useEffect(() => {
     switch (server.status) {
@@ -199,9 +242,18 @@ function Console({
 
   return (
     <div className="w-full h-full flex flex-row">
-      <div className="bg-black w-2/3 mb-2 h-full rounded flex flex-col p-4 overflow-auto">
-        {logs.map((log) => (
-          <p>{log}</p>
+      <div
+        className="bg-black w-2/3 mb-2 h-full rounded flex flex-col p-4 overflow-auto"
+        ref={consoleRef}
+        onScroll={handleScroll}
+      >
+        {logs.map((log, index) => (
+          <div
+            key={index}
+            dangerouslySetInnerHTML={{
+              __html: ansiConverter.toHtml(log),
+            }}
+          />
         ))}
       </div>
       <div className="mx-4 w-1/3">
@@ -288,6 +340,75 @@ function Files() {
   );
 }
 
+function Network({
+  server,
+  refetch,
+}: {
+  server: ServerStatus;
+  refetch: () => void;
+}) {
+  const updatePorts = useMutation({
+    mutationKey: "ports",
+    mutationFn: (newPorts: string[]) => {
+      return fetch(`http://localhost:3000/server/${server.id}/ports`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ports: newPorts,
+        }),
+      });
+    },
+  });
+  const [newPort, setNewPort] = useState(null);
+
+  return (
+    <div className="flex gap-2">
+      {server.ports.map((port) => {
+        return (
+          <div
+            className="px-4 flex items-center gap-2 rounded bg-header"
+            key={port}
+          >
+            <p className="text-xl">{port}</p>
+            <div
+              className="p-1 bg-danger rounded"
+              onClick={() =>
+                updatePorts.mutate(
+                  [...server.ports.filter((el) => el !== port)],
+                  { onSuccess: () => refetch() }
+                )
+              }
+            >
+              <X />
+            </div>
+          </div>
+        );
+      })}
+      <div className="w-fit flex flex-row gap-2 p-2 rounded bg-header">
+        <input
+          className="w-fit bg-border p-2 rounded outline-none"
+          placeholder="Add port..."
+          onChange={(value) => {
+            setNewPort(value.target.value);
+          }}
+        />
+        <button
+          className="p-2 bg-success rounded"
+          onClick={() =>
+            updatePorts.mutate([...server.ports, newPort], {
+              onSuccess: () => refetch(),
+            })
+          }
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Startup({
   server,
   refetch,
@@ -302,6 +423,7 @@ function Startup({
   });
 
   const updateOptions = useMutation({
+    mutationKey: "options",
     mutationFn: (newOptions: { [name: string]: string }) => {
       return fetch(`http://localhost:3000/server/${server.id}/options`, {
         method: "POST",

@@ -41,7 +41,7 @@ type ContainerStatus = {
 
 async function request(
   url: string,
-  method: "get" | "post",
+  method: "get" | "post" | "delete",
   params: any,
   body: any,
   stream: boolean = false
@@ -82,10 +82,15 @@ export async function createContainer(
   name: string,
   image: string,
   cmd: string[],
-  env: string[]
+  env: string[],
+  ports: string[]
 ): Promise<{ status: CreateContainerResponse; containerId?: string }> {
   const hostDirectory = path.resolve(__dirname, `../servers/${id}`);
   if (!fs.existsSync(hostDirectory)) fs.mkdirSync(hostDirectory);
+  const exposedPorts = {};
+  const portBindings = {};
+  ports.forEach((port) => (exposedPorts[`${port}/tcp`] = {}));
+  ports.forEach((port) => (portBindings[`${port}/tcp`] = [{ HostPort: port }]));
   const result = await request(
     "/containers/create",
     "post",
@@ -95,10 +100,12 @@ export async function createContainer(
       Tty: true,
       HostConfig: {
         Binds: [`${hostDirectory}:/server`],
+        PortBindings: portBindings,
       },
       WorkingDir: "/server",
       Env: env,
       Cmd: cmd,
+      ExposedPorts: exposedPorts,
     }
   );
   switch (result.status) {
@@ -249,11 +256,25 @@ export async function exec(
   );
 }
 
-export function attachToContainer(id: string): WebSocket {
-  const ws = new WebSocket(
-    `ws://localhost:2375/v1.47/containers/${id}/attach/ws?logs=true&stdout=true&stderr=true`
+export async function attachToContainer(
+  id: string
+): Promise<AxiosResponse<any, any>> {
+  return await request(
+    `/containers/${id}/attach`,
+    "post",
+    {
+      stream: true,
+      logs: true,
+      stdout: true,
+      stderr: true,
+    },
+    {},
+    true
   );
-  return ws;
+}
+
+export async function removeContainer(id: string) {
+  await request(`/containers/${id}`, "delete", { force: true }, {});
 }
 
 export async function downloadImage(image: string) {
