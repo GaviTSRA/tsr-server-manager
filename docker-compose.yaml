@@ -3,13 +3,33 @@ services:
     image: postgres:16.4
     restart: always
     ports:
-      - 3877:5432/tcp
+      - 5432:5432/tcp
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: tsr-server-manager
       POSTGRES_PASSWORD: postgres
+  server:
+    build:
+      context: /server
+      dockerfile: Dockerfile
+    environment:
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+      - DB_HOST=db
+    ports:
+      - 3000:3000/tcp
     volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+      - ./server:/server
+      - /server/node_modules
+    working_dir: /server
+    command: ["npm", "run", "dev"]
+  client:
+    build:
+      context: /client
+      dockerfile: Dockerfile
+    ports:
+      - 3001:3001/tcp
+    volumes:
+      - ./client:/client
+      - /client/node_modules
+    working_dir: /client
+    command: ["npm", "start"]

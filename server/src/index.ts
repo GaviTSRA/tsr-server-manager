@@ -8,7 +8,6 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 import { v4 } from "uuid";
 import { PassThrough } from "stream";
-import axios from "axios";
 import { eq } from "drizzle-orm";
 
 const db = drizzle(process.env.DATABASE_URL!, { schema });
@@ -78,7 +77,6 @@ app.get("/", async (req, res) => {
       status: data.data.status,
     });
   }
-  console.info(result);
   res.send(result);
 });
 

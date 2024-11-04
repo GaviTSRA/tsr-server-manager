@@ -50,7 +50,7 @@ async function request(
   stream: boolean = false
 ): Promise<AxiosResponse<any, any>> {
   const res = await axios({
-    url: "http://localhost:2375/v1.47" + url,
+    url: "http://host.docker.internal:2375/v1.47" + url,
     method,
     params,
     data: body,
@@ -333,16 +333,20 @@ export async function buildImage(name: string, dockerfile: string) {
   const tarStream = new stream.PassThrough();
   tarStream.end(tarBuffer);
 
-  const res = await axios.post("http://localhost:2375/v1.47/build", tarStream, {
-    headers: {
-      "Content-Type": "application/x-tar",
-      "Content-Length": tarBuffer.length,
-    },
-    params: {
-      t: name.toLowerCase().replace(" ", "-"),
-    },
-    responseType: "stream",
-  });
+  const res = await axios.post(
+    "http://host.docker.internal:2375/v1.47/build",
+    tarStream,
+    {
+      headers: {
+        "Content-Type": "application/x-tar",
+        "Content-Length": tarBuffer.length,
+      },
+      params: {
+        t: name.toLowerCase().replace(" ", "-"),
+      },
+      responseType: "stream",
+    }
+  );
 
   await new Promise((resolve, reject) => {
     res.data.on("data", (chunk) => {
