@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: postgres
   server:
     build:
-      context: /server
+      context: ./server
       dockerfile: Dockerfile
     environment:
       - DOCKER_HOST=tcp://host.docker.internal:2375
@@ -24,7 +24,7 @@ services:
     command: ["npm", "run", "dev"]
   client:
     build:
-      context: /client
+      context: ./client
       dockerfile: Dockerfile
     ports:
       - 3001:3001/tcp
