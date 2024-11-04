@@ -67,17 +67,19 @@ async function request(
   body: any,
   stream: boolean = false
 ): Promise<AxiosResponse<any, any>> {
-  const res = await dockerClient({
-    url: "http://host.docker.internal:2375/v1.47" + url,
-    method,
-    params,
-    data: body,
-    responseType: stream ? "stream" : undefined,
-  }).catch((error) => {
-    if (error.response) {
-      return error.response;
-    }
-  });
+  const res = await dockerClient
+    .request({
+      url: "/v1.47" + url,
+      method,
+      params,
+      data: body,
+      responseType: stream ? "stream" : undefined,
+    })
+    .catch((error) => {
+      if (error.response) {
+        return error.response;
+      }
+    });
 
   return res;
 }
@@ -351,20 +353,16 @@ export async function buildImage(name: string, dockerfile: string) {
   const tarStream = new stream.PassThrough();
   tarStream.end(tarBuffer);
 
-  const res = await dockerClient.post(
-    "http://host.docker.internal:2375/v1.47/build",
-    tarStream,
-    {
-      headers: {
-        "Content-Type": "application/x-tar",
-        "Content-Length": tarBuffer.length,
-      },
-      params: {
-        t: name.toLowerCase().replace(" ", "-"),
-      },
-      responseType: "stream",
-    }
-  );
+  const res = await dockerClient.post("/v1.47/build", tarStream, {
+    headers: {
+      "Content-Type": "application/x-tar",
+      "Content-Length": tarBuffer.length,
+    },
+    params: {
+      t: name.toLowerCase().replace(" ", "-"),
+    },
+    responseType: "stream",
+  });
 
   await new Promise((resolve, reject) => {
     res.data.on("data", (chunk) => {
