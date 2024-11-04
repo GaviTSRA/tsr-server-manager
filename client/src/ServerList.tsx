@@ -11,6 +11,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+
 function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
   const [serverName, setServerName] = useState("");
@@ -19,18 +21,18 @@ function ServerList() {
 
   const { data: servers, refetch } = useQuery({
     queryKey: "servers",
-    queryFn: () => fetch("http://localhost:3000").then((res) => res.json()),
+    queryFn: () => fetch(API_BASE_URL).then((res) => res.json()),
   });
 
   const { data: serverTypes } = useQuery({
     queryKey: "serverTypes",
     queryFn: () =>
-      fetch("http://localhost:3000/servertypes").then((res) => res.json()),
+      fetch(`${API_BASE_URL}/servertypes`).then((res) => res.json()),
   });
 
   const createServer = useMutation({
     mutationFn: () => {
-      return fetch("http://localhost:3000/servers/create", {
+      return fetch(`${API_BASE_URL}/servers/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

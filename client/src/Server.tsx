@@ -18,15 +18,15 @@ import { useParams } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import AnsiToHtml from "ansi-to-html";
 
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+
 export function Server() {
   const { serverId } = useParams();
   const [selectedTab, setSelectedTab] = useState("Console");
   const { data: server, refetch } = useQuery({
     queryKey: "server",
     queryFn: () =>
-      fetch(`http://localhost:3000/server/${serverId}`).then((res) =>
-        res.json()
-      ),
+      fetch(`${API_BASE_URL}/server/${serverId}`).then((res) => res.json()),
     enabled: serverId !== undefined,
     refetchInterval: 1000,
   });
@@ -95,10 +95,9 @@ function Console({
   const [autoScroll, setAutoScroll] = useState(true);
 
   const startServer = useMutation("start", async () => {
-    const response = await fetch(
-      `http://localhost:3000/server/${server.id}/start`,
-      { method: "POST" }
-    );
+    const response = await fetch(`${API_BASE_URL}/server/${server.id}/start`, {
+      method: "POST",
+    });
     if (!response.ok) {
       throw new Error("Network response was not ok");
     }
@@ -121,7 +120,7 @@ function Console({
   const restartServer = useMutation({
     mutationKey: "restart",
     mutationFn: () => {
-      return fetch(`http://localhost:3000/server/${server.id}/restart`, {
+      return fetch(`${API_BASE_URL}/server/${server.id}/restart`, {
         method: "POST",
       });
     },
@@ -129,7 +128,7 @@ function Console({
   const stopServer = useMutation({
     mutationKey: "stop",
     mutationFn: () => {
-      return fetch(`http://localhost:3000/server/${server.id}/stop`, {
+      return fetch(`${API_BASE_URL}/server/${server.id}/stop`, {
         method: "POST",
       });
     },
@@ -137,16 +136,14 @@ function Console({
   const killServer = useMutation({
     mutationKey: "kill",
     mutationFn: () => {
-      return fetch(`http://localhost:3000/server/${server.id}/kill`, {
+      return fetch(`${API_BASE_URL}/server/${server.id}/kill`, {
         method: "POST",
       });
     },
   });
 
   const fetchLogs = async () => {
-    const response = await fetch(
-      `http://localhost:3000/server/${server.id}/connect`
-    );
+    const response = await fetch(`${API_BASE_URL}/server/${server.id}/connect`);
     if (!response.ok) {
       throw new Error("Network response was not ok");
     }
@@ -372,7 +369,7 @@ function Network({
   const updatePorts = useMutation({
     mutationKey: "ports",
     mutationFn: (newPorts: string[]) => {
-      return fetch(`http://localhost:3000/server/${server.id}/ports`, {
+      return fetch(`${API_BASE_URL}/server/${server.id}/ports`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -441,13 +438,13 @@ function Startup({
   const { data: serverTypes } = useQuery({
     queryKey: "serverTypes",
     queryFn: () =>
-      fetch("http://localhost:3000/servertypes").then((res) => res.json()),
+      fetch(`${API_BASE_URL}/servertypes`).then((res) => res.json()),
   });
 
   const updateOptions = useMutation({
     mutationKey: "options",
     mutationFn: (newOptions: { [name: string]: string }) => {
-      return fetch(`http://localhost:3000/server/${server.id}/options`, {
+      return fetch(`${API_BASE_URL}/server/${server.id}/options`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
