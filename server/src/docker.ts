@@ -5,6 +5,24 @@ import { WebSocket } from "ws";
 import fs from "fs";
 import path from "path";
 
+const dockerSocketPath = "/var/run/docker.sock";
+let dockerClient = axios.create({});
+
+if (fs.existsSync(dockerSocketPath)) {
+  dockerClient = axios.create({
+    baseURL: "http://localhost",
+    socketPath: dockerSocketPath,
+  });
+} else if (process.env.DOCKER_HOST) {
+  dockerClient = axios.create({
+    baseURL: process.env.DOCKER_HOST.replace("tcp://", "http://"),
+  });
+} else {
+  throw new Error(
+    "Could not detect Docker API endpoint. Make sure DOCKER_HOST is set or Docker socket is accessible."
+  );
+}
+
 type BasicReponse = "success" | "server error" | "unknown error";
 
 type CreateContainerResponse =
@@ -49,7 +67,7 @@ async function request(
   body: any,
   stream: boolean = false
 ): Promise<AxiosResponse<any, any>> {
-  const res = await axios({
+  const res = await dockerClient({
     url: "http://host.docker.internal:2375/v1.47" + url,
     method,
     params,
@@ -333,7 +351,7 @@ export async function buildImage(name: string, dockerfile: string) {
   const tarStream = new stream.PassThrough();
   tarStream.end(tarBuffer);
 
-  const res = await axios.post(
+  const res = await dockerClient.post(
     "http://host.docker.internal:2375/v1.47/build",
     tarStream,
     {

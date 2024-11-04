@@ -18,6 +18,7 @@ services:
     ports:
       - 3000:3000/tcp
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./server:/server
       - /server/node_modules
     working_dir: /server
