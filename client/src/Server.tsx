@@ -256,21 +256,58 @@ function Console({
     );
   }, [server.cpuUsage, server.usedRam, server.availableRam]);
 
+  const [command, setCommand] = useState("");
+
+  const runCommand = useMutation({
+    mutationKey: "runCmd",
+    mutationFn: (command: string) => {
+      return fetch(`${API_BASE_URL}/server/${server.id}/run`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          command,
+        }),
+      });
+    },
+  });
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      runCommand.mutate(command);
+      setCommand("");
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-row">
       <div
-        className="bg-black text-secondary-text w-2/3 mb-2 h-full rounded flex flex-col p-4 overflow-auto "
+        className="bg-black mt-auto text-secondary-text w-2/3 h-full rounded flex flex-col overflow-auto relative"
         ref={consoleRef}
         onScroll={handleScroll}
       >
-        {logs.map((log, index) => (
-          <div
-            key={index}
-            dangerouslySetInnerHTML={{
-              __html: ansiConverter.toHtml(log),
-            }}
+        <div className="px-2 py-1">
+          {logs.map((log, index) => (
+            <div
+              key={index}
+              dangerouslySetInnerHTML={{
+                __html: ansiConverter.toHtml(log),
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="sticky bottom-0">
+          <input
+            className="bg-header w-full outline-none p-2"
+            placeholder="Enter a command..."
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
-        ))}
+        </div>
       </div>
       <div className="mx-4 w-1/3 flex flex-col gap-2">
         <div className="bg-header p-2 rounded w-full flex flex-row items-center gap-2">

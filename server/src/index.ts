@@ -20,6 +20,7 @@ export interface ServerRouterRequest extends express.Request {
     server: schema.ServerType;
     options?: { [name: string]: string };
     ports?: string[];
+    command?: string;
   };
 }
 
@@ -173,7 +174,11 @@ serverRouter.post("/start", async (req: ServerRouterRequest, res) => {
         id,
         req.body.server.name.toLowerCase().replace(" ", "-"),
         type.image ?? req.body.server.options["image"],
-        ["/bin/bash", "-c", "/server/install.sh && " + type.command],
+        [
+          "/bin/bash",
+          "-c",
+          `/usr/bin/screen -S server bash -c "/server/install.sh && ${type.command}"`,
+        ],
         env,
         req.body.server.ports
       );
@@ -266,6 +271,26 @@ serverRouter.post("/ports", async (req: ServerRouterRequest, res) => {
     .update(schema.Server)
     .set({ ports: req.body.ports, containerId: null })
     .where(eq(schema.Server.id, req.body.server.id));
+  res.sendStatus(200);
+});
+
+serverRouter.post("/run", async (req: ServerRouterRequest, res) => {
+  if (!req.body.command) {
+    res.sendStatus(400);
+    return;
+  }
+  if (!req.body.server.containerId) {
+    res.sendStatus(404);
+    return;
+  }
+  await docker.exec(req.body.server.containerId, [
+    "screen",
+    "-S",
+    "server",
+    "-X",
+    "stuff",
+    req.body.command + "^M",
+  ]);
   res.sendStatus(200);
 });
 
