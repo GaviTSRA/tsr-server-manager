@@ -5,6 +5,7 @@ import {
   ArrowUpCircle,
   PlayCircle,
   Plus,
+  Settings,
   StopCircle,
 } from "react-feather";
 import { useState } from "react";
@@ -55,18 +56,21 @@ function ServerList() {
           servers.map((server: ServerStatus) => {
             let status = undefined;
             switch (server.status) {
+              case undefined:
+                status = <Settings size={40} className="text-gray-500" />;
+                break;
               case "created":
               case "exited":
-                status = <StopCircle size={40} className="text-red-500" />;
+                status = <StopCircle size={40} className="text-danger" />;
                 break;
               case "running":
-                status = <PlayCircle size={40} className="text-green-500" />;
+                status = <PlayCircle size={40} className="text-success" />;
                 break;
               case "restarting":
                 status = <ArrowUpCircle size={40} className="text-gray-500" />;
                 break;
               case "dead":
-                status = <AlertCircle size={40} className="text-red-500" />;
+                status = <AlertCircle size={40} className="text-danger" />;
                 break;
             }
             return (

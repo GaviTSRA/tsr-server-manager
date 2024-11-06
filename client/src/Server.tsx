@@ -11,6 +11,7 @@ import {
   Server as ServerIcon,
   X,
   Cpu,
+  Settings,
 } from "react-feather";
 import { ServerStatus, ServerType } from "../types";
 import { useMutation, useQuery } from "react-query";
@@ -48,14 +49,14 @@ export function Server() {
 
   return (
     <div className="w-full h-full flex flex-col bg-background text-primary-text">
-      <div className="w-full h-fit bg-header flex flex-row">
-        <p className="p-4 my-auto text-2xl mr-4">TSR Server Manager</p>
+      <div className="w-full h-fit bg-header gap-2 flex flex-row items-end">
+        <p className="px-4 pt-4 pb-2 text-2xl mr-4">TSR Server Manager</p>
         {Object.keys(tabs).map((name) => (
           <div
             className={
-              "py-1 mt-auto px-4 rounded-t cursor-pointer select-none " +
+              "py-1 mt-auto px-4 rounded-t border-border border-t-4 cursor-pointer select-none " +
               (selectedTab === name
-                ? "bg-background border-t-2 border-accent"
+                ? "bg-background border-t-accent"
                 : "bg-header")
             }
             onClick={() => setSelectedTab(name)}
@@ -152,8 +153,8 @@ function Console({
 
   const {
     data: logStream,
-    error,
     refetch: reconnectLogs,
+    isRefetching,
   } = useQuery(["serverLogs", server.id], fetchLogs, {
     refetchOnWindowFocus: false,
     refetchInterval: () => false,
@@ -161,7 +162,7 @@ function Console({
   });
 
   useEffect(() => {
-    if (server.status === "running") {
+    if (server.status === "running" && !isRefetching) {
       setLogs([]);
       reconnectLogs();
     }
@@ -205,21 +206,27 @@ function Console({
 
   useEffect(() => {
     switch (server.status) {
-      case "created":
-      case "exited":
       case undefined:
         setStartButtonEnabled(true);
         setRestartButtonEnabled(false);
         setStopButtonEnabled(false);
         setKillButtonEnabled(false);
-        setStatusIcon(<StopCircle size={30} className="text-red-500" />);
+        setStatusIcon(<Settings size={40} className="text-gray-500" />);
+        break;
+      case "created":
+      case "exited":
+        setStartButtonEnabled(true);
+        setRestartButtonEnabled(false);
+        setStopButtonEnabled(false);
+        setKillButtonEnabled(false);
+        setStatusIcon(<StopCircle size={30} className="text-danger" />);
         break;
       case "running":
         setStartButtonEnabled(false);
         setRestartButtonEnabled(true);
         setStopButtonEnabled(true);
         setKillButtonEnabled(true);
-        setStatusIcon(<PlayCircle size={30} className="text-green-500" />);
+        setStatusIcon(<PlayCircle size={30} className="text-success" />);
         break;
       case "restarting":
         setStartButtonEnabled(false);
@@ -233,15 +240,26 @@ function Console({
         setRestartButtonEnabled(false);
         setStopButtonEnabled(false);
         setKillButtonEnabled(false);
-        setStatusIcon(<AlertCircle size={30} className="text-red-500" />);
+        setStatusIcon(<AlertCircle size={30} className="text-danger" />);
         break;
     }
   }, [server.status]);
 
+  const [cpuUsage, setCPUUsage] = useState(0);
+  const [usedRam, setUsedRam] = useState(0);
+  const [availableRam, setAvailableRam] = useState(0);
+  useEffect(() => {
+    setCPUUsage(Math.round(server.cpuUsage * 100) / 100);
+    setUsedRam(Math.round((server.usedRam / 1024 / 1024 / 1024) * 100) / 100);
+    setAvailableRam(
+      Math.round((server.availableRam / 1024 / 1024 / 1024) * 100) / 100
+    );
+  }, [server.cpuUsage, server.usedRam, server.availableRam]);
+
   return (
     <div className="w-full h-full flex flex-row">
       <div
-        className="bg-black w-2/3 mb-2 h-full rounded flex flex-col p-4 overflow-auto"
+        className="bg-black text-secondary-text w-2/3 mb-2 h-full rounded flex flex-col p-4 overflow-auto "
         ref={consoleRef}
         onScroll={handleScroll}
       >
@@ -264,7 +282,7 @@ function Console({
               className={
                 `p-2 rounded-l border-border border-1 ` +
                 (startButtonEnabled
-                  ? "bg-border hover:bg-green-500"
+                  ? "bg-border hover:bg-green-800"
                   : "bg-background")
               }
               onClick={() => {
@@ -280,7 +298,7 @@ function Console({
               className={
                 `p-2 border-border border-1 ` +
                 (restartButtonEnabled
-                  ? "bg-border hover:bg-red-500"
+                  ? "bg-border hover:bg-danger"
                   : "bg-background")
               }
               onClick={() => {
@@ -296,7 +314,7 @@ function Console({
               className={
                 `p-2 border-border border-1 ` +
                 (stopButtonEnabled
-                  ? "bg-border hover:bg-red-500"
+                  ? "bg-border hover:bg-danger"
                   : "bg-background")
               }
               onClick={() => {
@@ -312,7 +330,7 @@ function Console({
               className={
                 `p-2 rounded-r border-border border-1 ` +
                 (killButtonEnabled
-                  ? "bg-border hover:bg-red-500"
+                  ? "bg-border hover:bg-danger"
                   : "bg-background")
               }
               onClick={() => {
@@ -329,19 +347,13 @@ function Console({
           <div className="flex flex-col bg-header p-2 rounded gap-2">
             <div className="flex flex-row items-center gap-2">
               <Cpu />
-              <p>{Math.round(server.cpuUsage * 100) / 100} %</p>
+              <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>
             </div>
             <div className="flex flex-row items-center gap-2">
               <ServerIcon />
-              <p>
-                {Math.round((server.usedRam / 1024 / 1024 / 1024) * 100) / 100}{" "}
-                GB{" "}
-              </p>
+              <p>{Number.isNaN(usedRam) ? 0 : usedRam} GB </p>
               <p className="text-secondary-text">
-                /{" "}
-                {Math.round((server.availableRam / 1024 / 1024 / 1024) * 100) /
-                  100}{" "}
-                GB
+                / {Number.isNaN(availableRam) ? 0 : availableRam} GB
               </p>
             </div>
           </div>
@@ -467,7 +479,7 @@ function Startup({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-4 gap-2">
       {Object.entries(type.options).map(([id, option]) => {
         return (
           <div className="p-2 rounded bg-header" key={id}>

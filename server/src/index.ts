@@ -178,8 +178,7 @@ serverRouter.post("/start", async (req: ServerRouterRequest, res) => {
         req.body.server.ports
       );
       if (result.status !== "success" || !result.containerId) {
-        res.status(500);
-        res.send(result.status);
+        res.write(result.status);
         return;
       }
       await db
