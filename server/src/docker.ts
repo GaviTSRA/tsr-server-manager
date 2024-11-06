@@ -1,9 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import tar from "tar-stream";
 import stream from "stream";
-import { WebSocket } from "ws";
 import fs from "fs";
-import path from "path";
 
 const dockerSocketPath = "/var/run/docker.sock";
 let dockerClient = axios.create({});
@@ -108,8 +106,9 @@ export async function createContainer(
   env: string[],
   ports: string[]
 ): Promise<{ status: CreateContainerResponse; containerId?: string }> {
-  const hostDirectory = path.resolve(__dirname, `../servers/${id}`);
-  if (!fs.existsSync(hostDirectory)) fs.mkdirSync(hostDirectory);
+  const hostDirectory = (process.env.SERVERS_DIR as string) + id;
+  const serverDirectory = "servers/" + id;
+  if (!fs.existsSync(serverDirectory)) fs.mkdirSync(serverDirectory);
   const exposedPorts = {};
   const portBindings = {};
   ports.forEach((port) => (exposedPorts[`${port}/tcp`] = {}));
