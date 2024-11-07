@@ -177,7 +177,7 @@ serverRouter.post("/start", async (req: ServerRouterRequest, res) => {
         [
           "/bin/bash",
           "-c",
-          `/usr/bin/screen -S server bash -c "/server/install.sh && ${type.command}"`,
+          `screen -S server bash -c "/server/install.sh && ${type.command}"`,
         ],
         env,
         req.body.server.ports
@@ -229,6 +229,14 @@ serverRouter.post("/stop", async (req: ServerRouterRequest, res) => {
     res.sendStatus(500);
     return;
   }
+  docker.exec(req.body.server.containerId, [
+    "screen",
+    "-S",
+    "server",
+    "-X",
+    "stuff",
+    "stop^M",
+  ]);
   const result = await docker.stopContainer(req.body.server.containerId);
   res.status(result === "success" ? 200 : 500);
   res.send(result);
