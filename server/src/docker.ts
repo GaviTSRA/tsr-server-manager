@@ -160,8 +160,9 @@ export async function inspectContainer(
     {}
   );
   let usedRam = 0;
-  let availableRam = stats.data["memory_stats"]["limit"];
+  let availableRam = 0;
   try {
+    availableRam = stats.data["memory_stats"]["limit"];
     usedRam =
       stats.data["memory_stats"]["usage"] -
       stats.data["memory_stats"]["stats"]["cache"];
