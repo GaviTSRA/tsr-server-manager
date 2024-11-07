@@ -32,71 +32,16 @@ export function Server() {
     refetchInterval: 1000,
   });
 
-  const tabs = server
-    ? {
-        Console: [<Terminal />, <Console server={server} refetch={refetch} />],
-        Files: [<File />, <Files />],
-        Network: [
-          <ServerIcon />,
-          <Network server={server} refetch={refetch} />,
-        ],
-        Startup: [
-          <PlayCircle />,
-          <Startup server={server} refetch={refetch} />,
-        ],
-      }
-    : {};
-
-  return (
-    <div className="w-full h-full flex flex-col bg-background text-primary-text">
-      <div className="w-full h-fit bg-header gap-2 flex flex-row items-end">
-        <p className="px-4 pt-4 pb-2 text-2xl mr-4">TSR Server Manager</p>
-        {Object.keys(tabs).map((name) => (
-          <div
-            className={
-              "py-1 mt-auto px-4 rounded-t border-border border-t-4 cursor-pointer select-none " +
-              (selectedTab === name
-                ? "bg-background border-t-accent"
-                : "bg-header")
-            }
-            onClick={() => setSelectedTab(name)}
-            key={name}
-          >
-            <div className="mx-auto flex flex-row gap-2">
-              {tabs[name][0]}
-              <p>{name}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-      {server && (
-        <div className="w-full h-full overflow-y-auto p-4">
-          {tabs[selectedTab][1]}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Console({
-  server,
-  refetch,
-}: {
-  server: ServerStatus;
-  refetch: () => void;
-}) {
-  const ansiConverter = new AnsiToHtml();
   const [startButtonEnabled, setStartButtonEnabled] = useState(false);
   const [restartButtonEnabled, setRestartButtonEnabled] = useState(false);
   const [stopButtonEnabled, setStopButtonEnabled] = useState(false);
   const [killButtonEnabled, setKillButtonEnabled] = useState(false);
+  const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null);
   const [logs, setLogs] = useState([] as string[]);
-  const consoleRef = useRef(null);
-  const [autoScroll, setAutoScroll] = useState(true);
 
   const startServer = useMutation("start", async () => {
-    const response = await fetch(`${API_BASE_URL}/server/${server.id}/start`, {
+    const response = await fetch(`${API_BASE_URL}/server/${serverId}/start`, {
       method: "POST",
     });
     if (!response.ok) {
@@ -121,7 +66,7 @@ function Console({
   const restartServer = useMutation({
     mutationKey: "restart",
     mutationFn: () => {
-      return fetch(`${API_BASE_URL}/server/${server.id}/restart`, {
+      return fetch(`${API_BASE_URL}/server/${serverId}/restart`, {
         method: "POST",
       });
     },
@@ -129,7 +74,7 @@ function Console({
   const stopServer = useMutation({
     mutationKey: "stop",
     mutationFn: () => {
-      return fetch(`${API_BASE_URL}/server/${server.id}/stop`, {
+      return fetch(`${API_BASE_URL}/server/${serverId}/stop`, {
         method: "POST",
       });
     },
@@ -137,14 +82,61 @@ function Console({
   const killServer = useMutation({
     mutationKey: "kill",
     mutationFn: () => {
-      return fetch(`${API_BASE_URL}/server/${server.id}/kill`, {
+      return fetch(`${API_BASE_URL}/server/${serverId}/kill`, {
         method: "POST",
       });
     },
   });
 
+  useEffect(() => {
+    if (!server) return;
+    switch (server.status) {
+      case undefined:
+        setStartButtonEnabled(true);
+        setRestartButtonEnabled(false);
+        setStopButtonEnabled(false);
+        setKillButtonEnabled(false);
+        setStatusIcon(<Settings size={40} className="text-gray-500" />);
+        setStatus("Not Configured");
+        break;
+      case "created":
+      case "exited":
+        setStartButtonEnabled(true);
+        setRestartButtonEnabled(false);
+        setStopButtonEnabled(false);
+        setKillButtonEnabled(false);
+        setStatusIcon(<StopCircle size={30} className="text-red-600" />);
+        setStatus("Stopped");
+        break;
+      case "running":
+        setStartButtonEnabled(false);
+        setRestartButtonEnabled(true);
+        setStopButtonEnabled(true);
+        setKillButtonEnabled(true);
+        setStatusIcon(<PlayCircle size={30} className="text-success" />);
+        setStatus("Running");
+        break;
+      case "restarting":
+        setStartButtonEnabled(false);
+        setRestartButtonEnabled(false);
+        setStopButtonEnabled(false);
+        setKillButtonEnabled(true);
+        setStatusIcon(<ArrowUpCircle size={30} className="text-gray-500" />);
+        setStatus("Restarting");
+        break;
+      case "dead":
+        setStartButtonEnabled(true);
+        setRestartButtonEnabled(false);
+        setStopButtonEnabled(false);
+        setKillButtonEnabled(false);
+        setStatusIcon(<AlertCircle size={30} className="text-red-600" />);
+        setStatus("Dead");
+        break;
+    }
+  }, [server]);
+
   const fetchLogs = async () => {
-    const response = await fetch(`${API_BASE_URL}/server/${server.id}/connect`);
+    const response = await fetch(`${API_BASE_URL}/server/${serverId}/connect`);
     if (!response.ok) {
       throw new Error("Network response was not ok");
     }
@@ -155,18 +147,19 @@ function Console({
     data: logStream,
     refetch: reconnectLogs,
     isRefetching,
-  } = useQuery(["serverLogs", server.id], fetchLogs, {
+  } = useQuery("serverLogs", fetchLogs, {
     refetchOnWindowFocus: false,
     refetchInterval: () => false,
     refetchOnMount: false,
   });
 
   useEffect(() => {
+    if (!server) return;
     if (server.status === "running" && !isRefetching) {
       setLogs([]);
       reconnectLogs();
     }
-  }, [reconnectLogs, server.status]);
+  }, [reconnectLogs, server]);
 
   useEffect(() => {
     if (logStream) {
@@ -190,134 +183,37 @@ function Console({
     }
   }, [logStream]);
 
-  useEffect(() => {
-    if (autoScroll && consoleRef.current) {
-      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
-    }
-  }, [logs, autoScroll]);
+  const tabs = server
+    ? {
+        Console: [<Terminal />, <Console server={server} logs={logs} />],
+        Files: [<File />, <Files />],
+        Network: [
+          <ServerIcon />,
+          <Network server={server} refetch={refetch} />,
+        ],
+        Startup: [
+          <PlayCircle />,
+          <Startup server={server} refetch={refetch} />,
+        ],
+      }
+    : {};
 
-  const handleScroll = () => {
-    if (!consoleRef.current) return;
-    const isAtBottom =
-      consoleRef.current.scrollHeight - consoleRef.current.scrollTop ===
-      consoleRef.current.clientHeight;
-    setAutoScroll(isAtBottom);
-  };
-
-  useEffect(() => {
-    switch (server.status) {
-      case undefined:
-        setStartButtonEnabled(true);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(false);
-        setStatusIcon(<Settings size={40} className="text-gray-500" />);
-        break;
-      case "created":
-      case "exited":
-        setStartButtonEnabled(true);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(false);
-        setStatusIcon(<StopCircle size={30} className="text-danger" />);
-        break;
-      case "running":
-        setStartButtonEnabled(false);
-        setRestartButtonEnabled(true);
-        setStopButtonEnabled(true);
-        setKillButtonEnabled(true);
-        setStatusIcon(<PlayCircle size={30} className="text-success" />);
-        break;
-      case "restarting":
-        setStartButtonEnabled(false);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(true);
-        setStatusIcon(<ArrowUpCircle size={30} className="text-gray-500" />);
-        break;
-      case "dead":
-        setStartButtonEnabled(true);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(false);
-        setStatusIcon(<AlertCircle size={30} className="text-danger" />);
-        break;
-    }
-  }, [server.status]);
-
-  const [cpuUsage, setCPUUsage] = useState(0);
-  const [usedRam, setUsedRam] = useState(0);
-  const [availableRam, setAvailableRam] = useState(0);
-  useEffect(() => {
-    setCPUUsage(Math.round(server.cpuUsage * 100) / 100);
-    setUsedRam(Math.round((server.usedRam / 1024 / 1024 / 1024) * 100) / 100);
-    setAvailableRam(
-      Math.round((server.availableRam / 1024 / 1024 / 1024) * 100) / 100
-    );
-  }, [server.cpuUsage, server.usedRam, server.availableRam]);
-
-  const [command, setCommand] = useState("");
-
-  const runCommand = useMutation({
-    mutationKey: "runCmd",
-    mutationFn: (command: string) => {
-      return fetch(`${API_BASE_URL}/server/${server.id}/run`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          command,
-        }),
-      });
-    },
-  });
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      runCommand.mutate(command);
-      setCommand("");
-    }
-  };
+  if (!server) return <></>;
 
   return (
-    <div className="w-full h-full flex flex-row">
-      <div
-        className="bg-black mt-auto text-secondary-text w-2/3 h-full rounded flex flex-col overflow-auto relative"
-        ref={consoleRef}
-        onScroll={handleScroll}
-      >
-        <div className="px-2 py-1">
-          {logs.map((log, index) => (
-            <div
-              key={index}
-              dangerouslySetInnerHTML={{
-                __html: ansiConverter.toHtml(log),
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="sticky bottom-0">
-          <input
-            className="bg-header w-full outline-none p-2"
-            placeholder="Enter a command..."
-            value={command}
-            onChange={(e) => setCommand(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-      </div>
-      <div className="mx-4 w-1/3 flex flex-col gap-2">
-        <div className="bg-header p-2 rounded w-full flex flex-row items-center gap-2">
-          {statusIcon}
+    <div className="w-full h-full flex flex-row bg-background text-primary-text">
+      <div className="h-full flex flex-col bg-header shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl">
+        <div className="p-2 rounded flex flex-col gap-2">
           <p className="text-2xl">{server.name}</p>
-          <div className="flex flex-row my-auto ml-auto">
+          <div className="flex flex-row items-center gap-2">
+            {statusIcon}
+            <p>{status}</p>
+          </div>
+          <div className="flex rounded-xl flex-row shadow-[0_0_3px_2px_rgba(0,0,0,0.3)]">
             <PlayCircle
               size={40}
               className={
-                `p-2 rounded-l border-border border-1 ` +
+                `p-2 rounded-l-lg border-border border-1 ` +
                 (startButtonEnabled
                   ? "bg-border hover:bg-green-800"
                   : "bg-background")
@@ -365,7 +261,7 @@ function Console({
             <XCircle
               size={40}
               className={
-                `p-2 rounded-r border-border border-1 ` +
+                `p-2 rounded-r-lg border-border border-1 ` +
                 (killButtonEnabled
                   ? "bg-border hover:bg-danger"
                   : "bg-background")
@@ -380,8 +276,121 @@ function Console({
             />
           </div>
         </div>
+        <div className="w-full h-full gap-2 flex flex-col items-center p-2">
+          {Object.keys(tabs).map((name) => (
+            <div
+              className={
+                "w-full py-2 px-2 rounded border-border-hover border-l-4 cursor-pointer select-none transition-colors " +
+                (selectedTab === name
+                  ? "bg-background border-l-accent"
+                  : "bg-header hover:bg-border")
+              }
+              onClick={() => setSelectedTab(name)}
+              key={name}
+            >
+              <div className="mx-auto flex flex-row gap-2">
+                {tabs[name][0]}
+                <p>{name}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {server && (
+        <div className="w-full h-full overflow-y-auto p-4">
+          {tabs[selectedTab][1]}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Console({ server, logs }: { server: ServerStatus; logs: string[] }) {
+  const ansiConverter = new AnsiToHtml();
+  const consoleRef = useRef(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+
+  useEffect(() => {
+    if (autoScroll && consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [logs, autoScroll]);
+
+  const handleScroll = () => {
+    if (!consoleRef.current) return;
+    const isAtBottom =
+      consoleRef.current.scrollHeight - consoleRef.current.scrollTop ===
+      consoleRef.current.clientHeight;
+    setAutoScroll(isAtBottom);
+  };
+
+  const [cpuUsage, setCPUUsage] = useState(0);
+  const [usedRam, setUsedRam] = useState(0);
+  const [availableRam, setAvailableRam] = useState(0);
+  useEffect(() => {
+    setCPUUsage(Math.round(server.cpuUsage * 100) / 100);
+    setUsedRam(Math.round((server.usedRam / 1024 / 1024 / 1024) * 100) / 100);
+    setAvailableRam(
+      Math.round((server.availableRam / 1024 / 1024 / 1024) * 100) / 100
+    );
+  }, [server.cpuUsage, server.usedRam, server.availableRam]);
+
+  const [command, setCommand] = useState("");
+
+  const runCommand = useMutation({
+    mutationKey: "runCmd",
+    mutationFn: (command: string) => {
+      return fetch(`${API_BASE_URL}/server/${server.id}/run`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          command,
+        }),
+      });
+    },
+  });
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      runCommand.mutate(command);
+      setCommand("");
+    }
+  };
+
+  return (
+    <div className="w-full h-full flex flex-row">
+      <div
+        className="bg-black mt-auto text-secondary-text w-2/3 h-full rounded flex flex-col overflow-auto relative"
+        ref={consoleRef}
+        onScroll={handleScroll}
+      >
+        <div className="px-2 pb-4">
+          {logs.map((log, index) => (
+            <div
+              key={index}
+              dangerouslySetInnerHTML={{
+                __html: ansiConverter.toHtml(log),
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="sticky bottom-0 mt-auto h-fit">
+          <input
+            className="bg-header w-full outline-none p-2"
+            placeholder="Enter a command..."
+            value={command}
+            onChange={(e) => setCommand(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
+      </div>
+      <div className="mx-4 w-1/3 flex flex-col gap-2">
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col bg-header p-2 rounded gap-2">
+          <div className="flex flex-col bg-header p-2 rounded gap-2 shadow-[0_5px_10px_3px_rgba(0,0,0,0.3)]">
             <div className="flex flex-row items-center gap-2">
               <Cpu />
               <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>

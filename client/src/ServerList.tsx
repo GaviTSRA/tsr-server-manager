@@ -61,7 +61,7 @@ function ServerList() {
                 break;
               case "created":
               case "exited":
-                status = <StopCircle size={40} className="text-danger" />;
+                status = <StopCircle size={40} className="text-red-600" />;
                 break;
               case "running":
                 status = <PlayCircle size={40} className="text-success" />;
@@ -70,7 +70,7 @@ function ServerList() {
                 status = <ArrowUpCircle size={40} className="text-gray-500" />;
                 break;
               case "dead":
-                status = <AlertCircle size={40} className="text-danger" />;
+                status = <AlertCircle size={40} className="text-red-600" />;
                 break;
             }
             return (
