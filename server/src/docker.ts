@@ -161,21 +161,25 @@ export async function inspectContainer(
   );
   let usedRam = 0;
   let availableRam = 0;
+  let cpu_delta = 0;
+  let system_cpu_delta = 0;
   try {
     availableRam = stats.data["memory_stats"]["limit"];
     usedRam =
       stats.data["memory_stats"]["usage"] -
       stats.data["memory_stats"]["stats"]["cache"];
+    cpu_delta =
+      stats.data["cpu_stats"]["cpu_usage"]["total_usage"] -
+      stats.data["precpu_stats"]["cpu_usage"]["total_usage"];
+    system_cpu_delta =
+      stats.data["cpu_stats"]["system_cpu_usage"] -
+      stats.data["precpu_stats"]["system_cpu_usage"];
   } catch {
     availableRam = 0;
+    usedRam = 0;
+    cpu_delta = 0;
+    system_cpu_delta = 0.001;
   }
-
-  const cpu_delta =
-    stats.data["cpu_stats"]["cpu_usage"]["total_usage"] -
-    stats.data["precpu_stats"]["cpu_usage"]["total_usage"];
-  const system_cpu_delta =
-    stats.data["cpu_stats"]["system_cpu_usage"] -
-    stats.data["precpu_stats"]["system_cpu_usage"];
 
   switch (result.status) {
     case 200:
