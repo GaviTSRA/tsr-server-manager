@@ -257,13 +257,13 @@ serverRouter.post("/options", async (req: ServerRouterRequest, res) => {
     res.sendStatus(400);
     return;
   }
-  if (req.body.server.containerId) {
-    await docker.removeContainer(req.body.server.containerId);
-  }
   await db
     .update(schema.Server)
     .set({ options: req.body.options, containerId: null })
     .where(eq(schema.Server.id, req.body.server.id));
+  if (req.body.server.containerId) {
+    await docker.removeContainer(req.body.server.containerId);
+  }
   res.sendStatus(200);
 });
 
@@ -272,13 +272,13 @@ serverRouter.post("/ports", async (req: ServerRouterRequest, res) => {
     res.sendStatus(400);
     return;
   }
-  if (req.body.server.containerId) {
-    await docker.removeContainer(req.body.server.containerId);
-  }
   await db
     .update(schema.Server)
     .set({ ports: req.body.ports, containerId: null })
     .where(eq(schema.Server.id, req.body.server.id));
+  if (req.body.server.containerId) {
+    await docker.removeContainer(req.body.server.containerId);
+  }
   res.sendStatus(200);
 });
 

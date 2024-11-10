@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
+import { Input } from "./components/Input";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -47,8 +48,8 @@ function ServerList() {
   });
 
   return (
-    <div className="w-full h-full bg-background text-primary-text">
-      <div className="w-full bg-header flex items-center">
+    <div className="w-full h-full bg-neutral-100 text-primary-text">
+      <div className="w-full bg-neutral-200 flex items-center">
         <p className="p-4 my-auto text-2xl">TSR Server Manager</p>
       </div>
       <div className="flex flex-col m-4 gap-4">
@@ -76,7 +77,7 @@ function ServerList() {
             return (
               <div
                 key={server.id}
-                className="w-full bg-header flex flex-row hover:bg-border transition-colors cursor-pointer p-4 rounded"
+                className="w-full bg-neutral-200 flex flex-row hover:bg-neutral-300 transition-colors cursor-pointer p-4 rounded"
                 onClick={() => navigate(`/${server.id}`)}
               >
                 <div className="flex flex-col">
@@ -98,10 +99,10 @@ function ServerList() {
           })}
       </div>
       <div
-        className="fixed bottom-0 right-0 m-8 transition-colors bg-header flex flex-row items-center gap-2 hover:bg-border p-2 rounded"
+        className="fixed bottom-0 right-0 m-8 transition-colors bg-neutral-200 flex flex-row items-center gap-2 hover:bg-neutral-300 p-2 rounded"
         onClick={() => setCreatingServer(true)}
       >
-        <Plus className="text-green-600" size={40} />
+        <Plus className="text-primary-200" size={40} />
       </div>
       {creatingServer && serverTypes && (
         <div
@@ -109,18 +110,19 @@ function ServerList() {
           onClick={() => setCreatingServer(false)}
         >
           <div
-            className="bg-background p-4 m-auto rounded flex flex-col w-1/4"
+            className="bg-neutral-200 p-4 m-auto rounded flex flex-col w-1/4"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-2xl mb-4 text-center">Create New Server</p>
             <div className="mb-4">
               <p className="text-secondary-text">Name</p>
-              <input
-                className="rounded bg-header outline-none px-2 py-1 w-full"
-                onChange={(event) => setServerName(event.target.value)}
+              <Input
+                className="rounded"
+                onValueChange={(value) => setServerName(value)}
               />
               <p className="text-secondary-text mt-2">Type</p>
               <Dropdown
+                color="bg-neutral-300 hover:bg-neutral-400"
                 values={serverTypes.map((type) => type.name)}
                 onSelect={(value: string) =>
                   setServerType(
@@ -131,7 +133,7 @@ function ServerList() {
               />
             </div>
             <button
-              className="px-4 py-2 mt-auto bg-success rounded outline-none"
+              className="px-4 py-2 mt-auto bg-primary-100 rounded outline-none"
               onClick={() => {
                 createServer.mutate(null, {
                   onSuccess: async () => {

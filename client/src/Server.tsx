@@ -18,6 +18,8 @@ import { useMutation, useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import AnsiToHtml from "ansi-to-html";
+import { Input } from "./components/Input";
+import { Container } from "./components/Container";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -143,23 +145,11 @@ export function Server() {
     return response.body.getReader();
   };
 
-  const {
-    data: logStream,
-    refetch: reconnectLogs,
-    isRefetching,
-  } = useQuery("serverLogs", fetchLogs, {
+  const { data: logStream } = useQuery("serverLogs", fetchLogs, {
     refetchOnWindowFocus: false,
     refetchInterval: () => false,
     refetchOnMount: false,
   });
-
-  useEffect(() => {
-    if (!server) return;
-    if (server.status === "running" && !isRefetching) {
-      setLogs([]);
-      reconnectLogs();
-    }
-  }, [reconnectLogs, server]);
 
   useEffect(() => {
     if (logStream) {
@@ -201,8 +191,8 @@ export function Server() {
   if (!server) return <></>;
 
   return (
-    <div className="w-full h-full flex flex-row bg-background text-primary-text">
-      <div className="h-full flex flex-col bg-header shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl">
+    <div className="w-full h-full flex flex-row bg-neutral-100 text-primary-text">
+      <div className="h-full flex flex-col bg-neutral-200 shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl">
         <div className="p-2 rounded flex flex-col gap-2">
           <p className="text-2xl">{server.name}</p>
           <div className="flex flex-row items-center gap-2">
@@ -213,10 +203,10 @@ export function Server() {
             <PlayCircle
               size={40}
               className={
-                `p-2 rounded-l-lg border-border border-1 ` +
+                `p-2 rounded-l-lg border-neutral-400 border-1 ` +
                 (startButtonEnabled
-                  ? "bg-border hover:bg-green-800"
-                  : "bg-background")
+                  ? "bg-neutral-400 hover:bg-green-800"
+                  : "bg-neutral-200")
               }
               onClick={() => {
                 if (startButtonEnabled) {
@@ -229,10 +219,10 @@ export function Server() {
             <RotateCw
               size={40}
               className={
-                `p-2 border-border border-1 ` +
+                `p-2 border-neutral-400 border-1 ` +
                 (restartButtonEnabled
-                  ? "bg-border hover:bg-danger"
-                  : "bg-background")
+                  ? "bg-neutral-400 hover:bg-danger"
+                  : "bg-neutral-100")
               }
               onClick={() => {
                 if (restartButtonEnabled) {
@@ -245,10 +235,10 @@ export function Server() {
             <StopCircle
               size={40}
               className={
-                `p-2 border-border border-1 ` +
+                `p-2 border-neutral-400 border-1 ` +
                 (stopButtonEnabled
-                  ? "bg-border hover:bg-danger"
-                  : "bg-background")
+                  ? "bg-neutral-400 hover:bg-danger"
+                  : "bg-neutral-100")
               }
               onClick={() => {
                 if (stopButtonEnabled) {
@@ -261,10 +251,10 @@ export function Server() {
             <XCircle
               size={40}
               className={
-                `p-2 rounded-r-lg border-border border-1 ` +
+                `p-2 rounded-r-lg border-neutral-400 border-1 ` +
                 (killButtonEnabled
-                  ? "bg-border hover:bg-danger"
-                  : "bg-background")
+                  ? "bg-neutral-400 hover:bg-danger"
+                  : "bg-neutral-100")
               }
               onClick={() => {
                 if (killButtonEnabled) {
@@ -280,10 +270,10 @@ export function Server() {
           {Object.keys(tabs).map((name) => (
             <div
               className={
-                "w-full py-2 px-2 rounded border-border-hover border-l-4 cursor-pointer select-none transition-colors " +
+                "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
                 (selectedTab === name
-                  ? "bg-background border-l-accent"
-                  : "bg-header hover:bg-border")
+                  ? "bg-neutral-100 border-l-primary-100"
+                  : "bg-neutral-200 hover:bg-neutral-300")
               }
               onClick={() => setSelectedTab(name)}
               key={name}
@@ -379,18 +369,17 @@ function Console({ server, logs }: { server: ServerStatus; logs: string[] }) {
         </div>
 
         <div className="sticky bottom-0 mt-auto h-fit">
-          <input
-            className="bg-header w-full outline-none p-2"
+          <Input
             placeholder="Enter a command..."
             value={command}
-            onChange={(e) => setCommand(e.target.value)}
+            onValueChange={(value) => setCommand(value)}
             onKeyDown={handleKeyDown}
           />
         </div>
       </div>
       <div className="mx-4 w-1/3 flex flex-col gap-2">
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col bg-header p-2 rounded gap-2 shadow-[0_5px_10px_3px_rgba(0,0,0,0.3)]">
+          <Container className="flex flex-col gap-2">
             <div className="flex flex-row items-center gap-2">
               <Cpu />
               <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>
@@ -402,7 +391,7 @@ function Console({ server, logs }: { server: ServerStatus; logs: string[] }) {
                 / {Number.isNaN(availableRam) ? 0 : availableRam} GB
               </p>
             </div>
-          </div>
+          </Container>
         </div>
       </div>
     </div>
@@ -444,8 +433,8 @@ function Network({
     <div className="flex gap-2">
       {server.ports.map((port) => {
         return (
-          <div
-            className="px-4 flex items-center gap-2 rounded bg-header"
+          <Container
+            className="px-4 flex items-center gap-2 rounded bg-neutral-200"
             key={port}
           >
             <p className="text-xl">{port}</p>
@@ -460,15 +449,15 @@ function Network({
             >
               <X />
             </div>
-          </div>
+          </Container>
         );
       })}
-      <div className="w-fit flex flex-row gap-2 p-2 rounded bg-header">
-        <input
-          className="w-fit bg-border p-2 rounded outline-none"
+      <Container className="w-fit flex flex-row gap-2 p-2 rounded bg-neutral-200">
+        <Input
+          className="rounded"
           placeholder="Add port..."
-          onChange={(value) => {
-            setNewPort(value.target.value);
+          onValueChange={(value) => {
+            setNewPort(value);
           }}
         />
         <button
@@ -481,7 +470,7 @@ function Network({
         >
           Add
         </button>
-      </div>
+      </Container>
     </div>
   );
 }
@@ -528,20 +517,20 @@ function Startup({
     <div className="grid grid-cols-4 gap-2">
       {Object.entries(type.options).map(([id, option]) => {
         return (
-          <div className="p-2 rounded bg-header" key={id}>
+          <Container className="p-2 rounded bg-neutral-200" key={id}>
             <p className="text-xl mb-1">{option.name}</p>
             {option.type === "string" && (
-              <input
-                className="w-full bg-border p-2 rounded outline-none"
+              <Input
+                className="rounded"
                 value={server.options[id]}
-                onChange={(value) => {
-                  setOption(id, value.target.value);
+                onValueChange={(value) => {
+                  setOption(id, value);
                 }}
               />
             )}
             {option.type === "enum" && (
               <Dropdown
-                color="bg-border hover:bg-border-hover"
+                color="bg-neutral-300 hover:bg-neutral-400"
                 values={option.options}
                 placeholder="Select an option..."
                 onSelect={(value) => {
@@ -550,7 +539,7 @@ function Startup({
                 defaultValue={server.options[id]}
               />
             )}
-          </div>
+          </Container>
         );
       })}
     </div>
