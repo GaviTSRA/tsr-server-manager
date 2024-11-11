@@ -59,26 +59,32 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/", async (req, res) => {
+  res.setHeader("Content-Type", "text/plain");
   const servers = await db.query.Server.findMany();
+  res.write(JSON.stringify({ amount: servers.length }) + "\n");
   const result = [] as ServerStatus[];
   for (const server of servers) {
     if (!server.containerId) {
-      result.push({
-        id: server.id,
-        name: server.name,
-      });
+      res.write(
+        JSON.stringify({
+          id: server.id,
+          name: server.name,
+        }) + "\n"
+      );
       continue;
     }
     const data = await docker.inspectContainer(server.containerId);
     if (!data || !data.data) continue;
-    result.push({
-      id: server.id,
-      containerId: server.containerId,
-      name: server.name,
-      status: data.data.status,
-    });
+    res.write(
+      JSON.stringify({
+        id: server.id,
+        containerId: server.containerId,
+        name: server.name,
+        status: data.data.status,
+      }) + "\n"
+    );
   }
-  res.send(result);
+  res.end();
 });
 
 app.post("/servers/create", async (req, res) => {

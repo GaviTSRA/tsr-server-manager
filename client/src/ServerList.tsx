@@ -8,10 +8,11 @@ import {
   Settings,
   StopCircle,
 } from "react-feather";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
+import { MoonLoader } from "react-spinners";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -19,12 +20,53 @@ function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
   const [serverName, setServerName] = useState("");
   const [serverType, setServerType] = useState("");
+  const [serverCount, setServerCount] = useState(0);
+  const [servers, setServers] = useState([]);
   const navigate = useNavigate();
 
-  const { data: servers, refetch } = useQuery({
-    queryKey: "servers",
-    queryFn: () => fetch(API_BASE_URL).then((res) => res.json()),
+  const fetchServers = async () => {
+    const response = await fetch(API_BASE_URL);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    return response.body.getReader();
+  };
+
+  const { data: serversStream } = useQuery("servers", fetchServers, {
+    refetchOnWindowFocus: false,
+    refetchInterval: () => 5000,
+    refetchOnMount: false,
   });
+
+  useEffect(() => {
+    if (serversStream) {
+      const decoder = new TextDecoder("utf-8");
+
+      const readStream = async () => {
+        while (true) {
+          const { done, value } = await serversStream.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          if (chunk === "success") break;
+          chunk
+            .split("\n")
+            .filter((el) => el !== "" && el !== undefined)
+            .forEach((part) => {
+              const data = JSON.parse(part);
+              if (data.amount) {
+                setServerCount(data.amount);
+                return;
+              }
+              setServers((prev) =>
+                [...prev.filter((el) => el.id !== data.id), data].sort()
+              );
+            });
+        }
+      };
+      readStream();
+    }
+  }, [serversStream]);
 
   const { data: serverTypes } = useQuery({
     queryKey: "serverTypes",
@@ -97,6 +139,31 @@ function ServerList() {
               </div>
             );
           })}
+        {[...Array(serverCount - servers.length)].map((index) => {
+          return (
+            <div
+              key={index}
+              className="w-full bg-neutral-200 flex flex-row hover:bg-neutral-300 transition-colors cursor-pointer p-4 rounded"
+            >
+              <div className="flex flex-col">
+                {/* <p className="text-xl">{server.name}</p> */}
+                {/* <p className="text-secondary-text text-sm">
+                    {server.id.slice(0, 18)}
+                  </p>
+                  {server.containerId && (
+                    <p className="text-secondary-text text-sm">
+                      {server.containerId.slice(0, 18)}
+                    </p>
+                  )} */}
+              </div>
+              <div className="ml-auto flex items-center mr-2">
+                <div className="p-2 rounded">
+                  <MoonLoader size={30} color={"#CCCCCC"} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       <div
         className="fixed bottom-0 right-0 m-8 transition-colors bg-neutral-200 flex flex-row items-center gap-2 hover:bg-neutral-300 p-2 rounded"
@@ -137,7 +204,6 @@ function ServerList() {
               onClick={() => {
                 createServer.mutate(null, {
                   onSuccess: async () => {
-                    await refetch();
                     setCreatingServer(false);
                   },
                 });
