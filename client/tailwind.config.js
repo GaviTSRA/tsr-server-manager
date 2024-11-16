@@ -29,6 +29,8 @@ module.exports = {
         // // border: "#444466",
         "primary-text": "#CCCCCC",
         "secondary-text": "#909090",
+        "dark-text": "#222222",
+        "disabled": "#666666",
         danger: "#FF4D4D",
         success: "#28a745",
         // "border-hover": "#555577",

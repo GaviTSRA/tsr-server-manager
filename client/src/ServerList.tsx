@@ -12,12 +12,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
-import { MoonLoader } from "react-spinners";
+import { BarLoader, MoonLoader, PulseLoader } from "react-spinners";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
+  const [createServerRunning, setCreateServerRunning] = useState(false);
   const [serverName, setServerName] = useState("");
   const [serverType, setServerType] = useState("");
   const [serverCount, setServerCount] = useState(0);
@@ -54,7 +55,7 @@ function ServerList() {
             .filter((el) => el !== "" && el !== undefined)
             .forEach((part) => {
               const data = JSON.parse(part);
-              if (data.amount) {
+              if (data.amount !== null && data.amount !== undefined) {
                 setServerCount(data.amount);
                 return;
               }
@@ -200,16 +201,23 @@ function ServerList() {
               />
             </div>
             <button
-              className="px-4 py-2 mt-auto bg-primary-100 rounded outline-none"
+              className="px-4 py-2 mt-auto bg-primary-100 text-dark-text rounded outline-none disabled:bg-disabled"
               onClick={() => {
+                setCreateServerRunning(true);
                 createServer.mutate(null, {
                   onSuccess: async () => {
                     setCreatingServer(false);
+                    setCreateServerRunning(false);
                   },
                 });
               }}
+              disabled={createServerRunning}
             >
-              Create
+              {createServerRunning ? (
+                <PulseLoader size={10} color={"#333333"} />
+              ) : (
+                <p>Create</p>
+              )}
             </button>
           </div>
         </div>
