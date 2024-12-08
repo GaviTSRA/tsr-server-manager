@@ -12,6 +12,10 @@ import {
   X,
   Cpu,
   Settings,
+  Folder,
+  Trash2,
+  MoreVertical,
+  Edit2,
 } from "react-feather";
 import { ServerStatus, ServerType } from "../types";
 import { useMutation, useQuery } from "react-query";
@@ -175,17 +179,17 @@ export function Server() {
 
   const tabs = server
     ? {
-        Console: [<Terminal />, <Console server={server} logs={logs} />],
-        Files: [<File />, <Files />],
-        Network: [
-          <ServerIcon />,
-          <Network server={server} refetch={refetch} />,
-        ],
-        Startup: [
-          <PlayCircle />,
-          <Startup server={server} refetch={refetch} />,
-        ],
-      }
+      Console: [<Terminal />, <Console server={server} logs={logs} />],
+      Files: [<File />, <Files server={server} />],
+      Network: [
+        <ServerIcon />,
+        <Network server={server} refetch={refetch} />,
+      ],
+      Startup: [
+        <PlayCircle />,
+        <Startup server={server} refetch={refetch} />,
+      ],
+    }
     : {};
 
   if (!server) return <></>;
@@ -398,11 +402,239 @@ function Console({ server, logs }: { server: ServerStatus; logs: string[] }) {
   );
 }
 
-function Files() {
+function formatFileSize(size: number): string {
+  if (size < 1024) {
+    return `${size} Bytes`
+  }
+  if (size < 1024 * 1000) {
+    return `${(size / 1024).toFixed(2)} KB`
+  }
+  if (size < 1024 * 1024 * 1000) {
+    return `${(size / 1024 / 1024).toFixed(2)} MB`
+  }
+  if (size < 1024 * 1024 * 1024 * 1000) {
+    return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`
+  }
+}
+
+function FileRow({ serverId, file, path, setPath, refetch }: {
+  serverId: string;
+  path: string;
+  setPath: (newPath: string) => void;
+  file: {
+    name: string;
+    type: "file" | "folder";
+    size: number;
+    lastEdited: Date;
+  };
+  refetch: () => void;
+}): JSX.Element {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [deleteConfirmationMenuOpen, setDeleteConfirmationMenuOpen] = useState(false);
+  const [renameMenuOpen, setRenameMenuOpen] = useState(false);
+  const [newName, setNewName] = useState(undefined);
+
+  const renameFile = useMutation({
+    mutationKey: "rename",
+    mutationFn: (name: string) => {
+      const url = new URL(`${API_BASE_URL}/server/${serverId}/files/rename`);
+      url.searchParams.set("path", path + file.name);
+      return fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name
+        }),
+      });
+    },
+  });
+
+  const deleteFile = useMutation({
+    mutationKey: "delete",
+    mutationFn: () => {
+      const url = new URL(`${API_BASE_URL}/server/${serverId}/files`);
+      url.searchParams.set("path", path + file.name);
+      return fetch(url, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          path: path + file.name
+        }),
+      });
+    },
+  });
+
+  const moreOptions = [
+    {
+      label: "Rename",
+      icon: <Edit2 />,
+      onClick: () => setRenameMenuOpen(true)
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 />,
+      onClick: () => setDeleteConfirmationMenuOpen(true)
+    }
+  ]
+
   return (
-    <div>
-      <p>files</p>
+    <div className="flex flex-row gap-2 hover:bg-neutral-300 p-2 rounded cursor-pointer" onClick={() => {
+      setPath(path + file.name + (file.type === "folder" ? "/" : ""))
+    }}>
+      {file.type === "folder" && <Folder />}
+      {file.type === "file" && <File />}
+      <p>{file.name}</p>
+      <div className="ml-auto flex relative flex-row items-center gap-2">
+        {file.type === "file" && <p>{formatFileSize(file.size)}</p>}
+        <p>{new Date(file.lastEdited).toLocaleDateString('de-DE', {
+          year: 'numeric',
+          month: '2-digit',
+          day: 'numeric',
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        })}</p>
+        <MoreVertical onClick={(e) => {
+          e.stopPropagation();
+          setMoreOpen(true);
+        }} />
+        {moreOpen && (
+          <div className="absolute w-full shadow-lg">
+            <div
+              className="fixed top-0 left-0 w-full h-full z-[50]"
+              onClick={(e) => { e.stopPropagation(); setMoreOpen(false) }}
+            ></div>
+            <div>{moreOptions.map((value, index) => (
+              <div
+                className={`relative w-full z-[60] cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMoreOpen(false);
+                  value.onClick();
+                }}
+                key={index}
+              >
+                {value.icon}
+                <p>{value.label}</p>
+              </div>
+            ))}
+            </div>
+          </div>
+        )}
+      </div>
+      {renameMenuOpen && (
+        <div className="fixed w-screen h-screen bg-black/40 top-0 left-0" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-neutral-200 m-auto w-fit h-fit p-2 rounded-xl">
+            <p>Rename '{file.name}'</p>
+            <Input onValueChange={(value) => setNewName(value)} />
+            <div className="flex flex-row mt-2">
+              <button onClick={() => setRenameMenuOpen(false)}>Cancel</button>
+              <button onClick={() => {
+                if (!newName) return;
+                renameFile.mutate(newName, {
+                  onSuccess: () => {
+                    setRenameMenuOpen(false);
+                    refetch();
+                  }
+                })
+              }} className="ml-auto">Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteConfirmationMenuOpen && (
+        <div className="fixed w-screen h-screen bg-black/40 top-0 left-0">
+          <div className="bg-neutral-200 m-auto w-fit h-fit p-2 rounded-xl">
+            <p>Confirm deletion of '{file.name}'</p>
+            <div className="flex flex-row mt-2">
+              <button onClick={() => setDeleteConfirmationMenuOpen(false)}>Cancel</button>
+              <button onClick={() => {
+                deleteFile.mutate(undefined, {
+                  onSuccess: () => {
+                    setDeleteConfirmationMenuOpen(false);
+                    refetch();
+                  }
+                })
+              }} className="ml-auto">Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function Files({
+  server,
+}: {
+  server: ServerStatus;
+}) {
+  const [path, setPath] = useState("/")
+
+  const { data: files, refetch } = useQuery({
+    queryKey: ["files", path],
+    queryFn: async () => {
+      const url = new URL(`${API_BASE_URL}/server/${server.id}/files`);
+      url.searchParams.set("path", path);
+      return fetch(url).then((res) => res.json() as Promise<{
+        type: "file" | "folder";
+        content: string;
+        files?: {
+          name: string;
+          type: "file" | "folder";
+          lastEdited: Date;
+          size: number;
+        }[]
+      }>)
+    },
+    enabled: server.id !== undefined,
+  });
+
+
+  if (!files) {
+    return (<></>)
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <Container className="flex flex-row p-2 mb-2">
+        <div className="flex flex-row items-center">
+          <p
+            className="p-1 rounded cursor-pointer hover:bg-neutral-300"
+            onClick={() => { setPath("/"); refetch() }}
+          >container</p>
+          <p>/</p>
+        </div>
+        <div className="flex flex-row">
+          {path.split("/").filter(part => part !== "").map((part, index) =>
+            <div className="flex flex-row items-center" onClick={() => {
+              setPath("/" + path.split("/").filter(part => part !== "").slice(0, index + 1).join("/") + "/");
+              refetch();
+            }}>
+              <p className="p-1 rounded cursor-pointer hover:bg-neutral-300">{part}</p>
+              <p>/</p>
+            </div>
+          )}
+        </div>
+      </Container >
+      {files.type === "folder" && files.files && (
+        <Container className="flex flex-col">
+          {files.files.sort((a, b) => a.type === "folder" ? -1 : 1).map((file) => (
+            <FileRow file={file} path={path} setPath={setPath} serverId={server.id} key={file.name + file.size} refetch={refetch} />
+          ))}
+        </Container >
+      )}
+      {files.type === "file" && files.content && (
+        <Container className="h-full flex flex-row">
+          <textarea value={files.content} className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-300" />
+          <p></p>
+        </Container>
+      )}
+    </div >
   );
 }
 

@@ -1,5 +1,6 @@
-import express from "express";
+import express, { response } from "express";
 import fs from "fs";
+import path from "node:path"
 import bodyParser from "body-parser";
 import cors from "cors";
 import * as docker from "./docker";
@@ -16,11 +17,17 @@ export interface ServerRouterRequest extends express.Request {
   params: {
     serverId: string;
   };
+  query: {
+    path?: string;
+  }
   body: {
     server: schema.ServerType;
     options?: { [name: string]: string };
     ports?: string[];
     command?: string;
+    name?: string;
+    type?: "file" | "folder";
+    content?: string;
   };
 }
 
@@ -29,13 +36,13 @@ type ServerStatus = {
   containerId?: string;
   name: string;
   status?:
-    | "created"
-    | "running"
-    | "paused"
-    | "restarting"
-    | "removing"
-    | "exited"
-    | "dead";
+  | "created"
+  | "running"
+  | "paused"
+  | "restarting"
+  | "removing"
+  | "exited"
+  | "dead";
 };
 
 type ServerType = {
@@ -329,6 +336,80 @@ serverRouter.get("/connect", async (req: ServerRouterRequest, res) => {
   }
 
   stream.pipe(res);
+});
+
+serverRouter.get("/files", async (req: ServerRouterRequest, res) => {
+  if (!req.query.path || req.query.path.includes("..")) {
+    res.sendStatus(400);
+    return;
+  }
+  const root = "servers/" + req.params.serverId;
+  const target = path.normalize(path.join(root, req.query.path));
+  try {
+    const stats = fs.statSync(target);
+    if (!stats.isDirectory()) {
+      const content = fs.readFileSync(target).toString();
+      res.json({ type: "file", content })
+      return;
+    }
+  } catch (err) {
+    console.info(err)
+    res.sendStatus(404);
+    return;
+  }
+
+  const result: {
+    name: string;
+    type: "file" | "folder";
+    lastEdited: Date;
+    size: number;
+  }[] = [];
+  fs.readdirSync(target).map((filename) => {
+    const file = path.join(target, filename);
+    const stats = fs.lstatSync(file);
+    result.push({
+      name: filename,
+      type: stats.isDirectory() ? "folder" : "file",
+      lastEdited: stats.mtime,
+      size: stats.size,
+    });
+  });
+  res.json({ type: "folder", files: result });
+});
+
+serverRouter.post("/files/rename", async (req: ServerRouterRequest, res) => {
+  if (!req.query.path || req.query.path.includes("..") || !req.body.name) {
+    res.sendStatus(400);
+    return;
+  }
+  const root = "servers/" + req.params.serverId;
+  const target = path.normalize(path.join(root, req.query.path));
+  const dir = path.dirname(target);
+  const updatedPath = path.join(dir, req.body.name);
+  fs.renameSync(target, updatedPath);
+  res.sendStatus(200);
+});
+
+serverRouter.post("/files/edit", async (req: ServerRouterRequest, res) => {
+  if (!req.query.path || req.query.path.includes("..") || !req.body.content) {
+    res.sendStatus(400);
+    return;
+  }
+  const root = "servers/" + req.params.serverId;
+  const target = path.normalize(path.join(root, req.query.path));
+  fs.writeFileSync(target, req.body.content);
+  res.sendStatus(200);
+});
+
+serverRouter.delete("/files", async (req: ServerRouterRequest, res) => {
+  if (!req.query.path || req.query.path.includes("..")) {
+    res.sendStatus(400);
+    return;
+  }
+  const root = "servers/" + req.params.serverId;
+  const target = path.normalize(path.join(root, req.query.path));
+  fs.rmSync(target);
+  res.sendStatus(200);
 });
 
 const serverTypes: ServerType[] = [];
