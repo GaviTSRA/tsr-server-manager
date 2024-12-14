@@ -605,6 +605,7 @@ function FileRow({
 
 function Files({ server }: { server: ServerStatus }) {
   const [path, setPath] = useState("/");
+  const [content, setContent] = useState(undefined as string | undefined);
 
   const { data: files, refetch } = useQuery({
     queryKey: ["files", path],
@@ -615,7 +616,7 @@ function Files({ server }: { server: ServerStatus }) {
         (res) =>
           res.json() as Promise<{
             type: "file" | "folder";
-            content: string;
+            content?: string;
             files?: {
               name: string;
               type: "file" | "folder";
@@ -628,9 +629,29 @@ function Files({ server }: { server: ServerStatus }) {
     enabled: server.id !== undefined,
   });
 
+  const editFile = useMutation({
+    mutationKey: "edit",
+    mutationFn: () => {
+      const url = new URL(`${API_BASE_URL}/server/${server.id}/files/edit`);
+      url.searchParams.set("path", path);
+      return fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content,
+        }),
+      });
+    },
+  });
+
   if (!files) {
     return <></>;
   }
+
+  if (files.content && !content) setContent(files.content);
+  if (!files.content && content) setContent(undefined);
 
   return (
     <div className="h-full flex flex-col">
@@ -692,12 +713,22 @@ function Files({ server }: { server: ServerStatus }) {
         </Container>
       )}
       {files.type === "file" && files.content && (
-        <Container className="h-full flex flex-row">
+        <Container className="h-full">
           <textarea
-            value={files.content}
+            value={content}
             className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-300"
+            onChange={(event) => setContent(event.target.value)}
           />
-          <p></p>
+          <button
+            className="bg-success text-black px-2 py-1 text-2xl rounded"
+            onClick={() => {
+              if (content) {
+                editFile.mutate();
+              }
+            }}
+          >
+            Save
+          </button>
         </Container>
       )}
     </div>
