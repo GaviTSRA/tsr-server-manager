@@ -16,6 +16,8 @@ import {
   Trash2,
   MoreVertical,
   Edit2,
+  Square,
+  Play,
 } from "react-feather";
 import { ServerStatus, ServerType } from "../types";
 import { useMutation, useQuery } from "react-query";
@@ -200,19 +202,19 @@ export function Server() {
     <div className="w-full h-full flex flex-row bg-neutral-100 text-primary-text">
       <div className="h-full flex flex-col bg-neutral-200 shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl">
         <div className="p-2 rounded flex flex-col gap-2">
-          <p className="text-2xl">{server.name}</p>
+          <p className="text-2xl mx-auto">{server.name}</p>
           <div className="flex flex-row items-center gap-2">
             {statusIcon}
             <p>{status}</p>
           </div>
-          <div className="flex rounded-xl flex-row shadow-[0_0_3px_2px_rgba(0,0,0,0.3)]">
-            <PlayCircle
+          <div className="flex rounded-xl flex-row">
+            <Play
               size={40}
               className={
                 `p-2 rounded-l-lg border-neutral-400 border-1 ` +
                 (startButtonEnabled
-                  ? "bg-neutral-400 hover:bg-green-800"
-                  : "bg-neutral-200")
+                  ? "bg-neutral-300 hover:bg-green-800"
+                  : "bg-neutral-100")
               }
               onClick={() => {
                 if (startButtonEnabled) {
@@ -227,7 +229,7 @@ export function Server() {
               className={
                 `p-2 border-neutral-400 border-1 ` +
                 (restartButtonEnabled
-                  ? "bg-neutral-400 hover:bg-danger"
+                  ? "bg-neutral-300 hover:bg-danger"
                   : "bg-neutral-100")
               }
               onClick={() => {
@@ -238,12 +240,12 @@ export function Server() {
                 }
               }}
             />
-            <StopCircle
+            <Square
               size={40}
               className={
                 `p-2 border-neutral-400 border-1 ` +
                 (stopButtonEnabled
-                  ? "bg-neutral-400 hover:bg-danger"
+                  ? "bg-neutral-300 hover:bg-danger"
                   : "bg-neutral-100")
               }
               onClick={() => {
@@ -254,12 +256,12 @@ export function Server() {
                 }
               }}
             />
-            <XCircle
+            <X
               size={40}
               className={
                 `p-2 rounded-r-lg border-neutral-400 border-1 ` +
                 (killButtonEnabled
-                  ? "bg-neutral-400 hover:bg-danger"
+                  ? "bg-neutral-300 hover:bg-danger"
                   : "bg-neutral-100")
               }
               onClick={() => {

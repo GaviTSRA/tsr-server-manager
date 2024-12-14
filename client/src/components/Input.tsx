@@ -18,7 +18,7 @@ export function Input({
   return (
     <input
       className={
-        "p-2 w-full bg-neutral-300 border-b-2 border-neutral-400 focus:border-primary-100 transition-colors duration-200 outline-none " +
+        "p-2 w-full bg-neutral-300 border-b-2 border-neutral-400 focus:border-primary-100 transition-colors duration-300 outline-none " +
         className
       }
       onChange={(event) => onValueChange(event.target.value)}
