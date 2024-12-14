@@ -1,6 +1,6 @@
 import express, { response } from "express";
 import fs from "fs";
-import path from "node:path"
+import path from "node:path";
 import bodyParser from "body-parser";
 import cors from "cors";
 import * as docker from "./docker";
@@ -19,7 +19,7 @@ export interface ServerRouterRequest extends express.Request {
   };
   query: {
     path?: string;
-  }
+  };
   body: {
     server: schema.ServerType;
     options?: { [name: string]: string };
@@ -28,6 +28,10 @@ export interface ServerRouterRequest extends express.Request {
     name?: string;
     type?: "file" | "folder";
     content?: string;
+    limits: {
+      cpu: number;
+      ram: number;
+    };
   };
 }
 
@@ -36,13 +40,13 @@ type ServerStatus = {
   containerId?: string;
   name: string;
   status?:
-  | "created"
-  | "running"
-  | "paused"
-  | "restarting"
-  | "removing"
-  | "exited"
-  | "dead";
+    | "created"
+    | "running"
+    | "paused"
+    | "restarting"
+    | "removing"
+    | "exited"
+    | "dead";
 };
 
 type ServerType = {
@@ -122,6 +126,8 @@ app.post("/servers/create", async (req, res) => {
     type: type.id,
     options: defaults,
     ports: [],
+    cpuLimit: 1,
+    ramLimit: 1024,
   });
 
   res.sendStatus(201);
@@ -164,6 +170,8 @@ serverRouter.get("/", async (req: ServerRouterRequest, res) => {
     cpuUsage: result?.data?.cpuUsage,
     usedRam: result?.data?.usedRam,
     availableRam: result?.data?.availableRam,
+    cpuLimit: req.body.server.cpuLimit,
+    ramLimit: req.body.server.ramLimit,
   });
 });
 
@@ -193,7 +201,9 @@ serverRouter.post("/start", async (req: ServerRouterRequest, res) => {
           `screen -S server bash -c "/server/install.sh && ${type.command}"`,
         ],
         env,
-        req.body.server.ports
+        req.body.server.ports,
+        req.body.server.cpuLimit,
+        req.body.server.ramLimit
       );
       if (result.status !== "success" || !result.containerId) {
         res.write(result.status);
@@ -295,6 +305,25 @@ serverRouter.post("/ports", async (req: ServerRouterRequest, res) => {
   res.sendStatus(200);
 });
 
+serverRouter.post("/limits", async (req: ServerRouterRequest, res) => {
+  if (!req.body.limits) {
+    res.sendStatus(400);
+    return;
+  }
+  await db
+    .update(schema.Server)
+    .set({
+      cpuLimit: req.body.limits.cpu,
+      ramLimit: req.body.limits.ram,
+      containerId: null,
+    })
+    .where(eq(schema.Server.id, req.body.server.id));
+  if (req.body.server.containerId) {
+    await docker.removeContainer(req.body.server.containerId);
+  }
+  res.sendStatus(200);
+});
+
 serverRouter.post("/run", async (req: ServerRouterRequest, res) => {
   if (!req.body.command) {
     res.sendStatus(400);
@@ -349,11 +378,11 @@ serverRouter.get("/files", async (req: ServerRouterRequest, res) => {
     const stats = fs.statSync(target);
     if (!stats.isDirectory()) {
       const content = fs.readFileSync(target).toString();
-      res.json({ type: "file", content })
+      res.json({ type: "file", content });
       return;
     }
   } catch (err) {
-    console.info(err)
+    console.info(err);
     res.sendStatus(404);
     return;
   }

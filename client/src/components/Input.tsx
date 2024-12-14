@@ -4,6 +4,7 @@ type InputProps = {
   placeholder?: string;
   className?: string;
   value?: string;
+  type?: string;
 };
 
 export function Input({
@@ -12,6 +13,7 @@ export function Input({
   placeholder,
   className,
   value,
+  type = "text",
 }: InputProps) {
   return (
     <input
@@ -23,6 +25,7 @@ export function Input({
       placeholder={placeholder}
       value={value}
       onKeyDown={onKeyDown}
+      type={type}
     />
   );
 }

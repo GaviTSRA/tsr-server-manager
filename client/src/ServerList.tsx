@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
-import { BarLoader, MoonLoader, PulseLoader } from "react-spinners";
+import { MoonLoader, PulseLoader } from "react-spinners";
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 

@@ -104,7 +104,9 @@ export async function createContainer(
   image: string,
   cmd: string[],
   env: string[],
-  ports: string[]
+  ports: string[],
+  cpuLimit: number,
+  ramLimit: number
 ): Promise<{ status: CreateContainerResponse; containerId?: string }> {
   const hostDirectory = (process.env.SERVERS_DIR as string) + id;
   const serverDirectory = "servers/" + id;
@@ -123,6 +125,9 @@ export async function createContainer(
       HostConfig: {
         Binds: [`${hostDirectory}:/server`],
         PortBindings: portBindings,
+        Memory: ramLimit * 1024 * 1024,
+        CpuPeriod: 100000,
+        CpuQuota: 100000 * cpuLimit,
       },
       WorkingDir: "/server",
       Env: env,

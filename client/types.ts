@@ -16,6 +16,8 @@ export type ServerStatus = {
   cpuUsage: number;
   usedRam: number;
   availableRam: number;
+  cpuLimit: number;
+  ramLimit: number;
 };
 
 export type ServerType = {

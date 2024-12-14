@@ -1,4 +1,12 @@
-import { json, pgEnum, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  integer,
+  json,
+  pgEnum,
+  pgTable,
+  real,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const ServerState = pgEnum("ServerState", [
   "INSTALLED",
@@ -13,6 +21,8 @@ export const Server = pgTable("Server", {
   containerId: varchar(),
   options: json().$type<{ [name: string]: string }>().notNull(),
   ports: json().$type<string[]>().notNull(),
+  cpuLimit: real().notNull(),
+  ramLimit: integer().notNull(),
 });
 
 export type ServerType = {
@@ -23,4 +33,6 @@ export type ServerType = {
   containerId: string | null;
   options: { [name: string]: string };
   ports: string[];
+  cpuLimit: number;
+  ramLimit: number;
 };
