@@ -3,7 +3,7 @@ if [ -f "server.jar" ]; then
   exit 0
 fi
 
-output=$(curl https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.4.html | grep -oP '(?<=forge-1\.20\.4-)[^-]+(?=-installer\.jar)')
+output=$(curl https://files.minecraftforge.net/net/minecraftforge/forge/index_${VERSION}.html | grep -oP "(?<=forge-${VERSION}-)[^-]+(?=-installer\.jar)")
 FORGE_VERSION=$(echo "$output" | sed -n '2p')
 
 echo "Latest forge version for ${VERSION} is ${FORGE_VERSION}"
