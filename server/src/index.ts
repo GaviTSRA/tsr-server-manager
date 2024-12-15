@@ -359,6 +359,7 @@ serverRouter.get("/connect", async (req: ServerRouterRequest, res) => {
     res2.data.on("data", (chunk) => {
       stream.write(chunk.toString());
     });
+    }
   } catch (error) {
     console.error("Error connecting to Docker API:", error);
     res.status(500).send("Failed to connect to Docker API");

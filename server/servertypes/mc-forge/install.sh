@@ -1,4 +1,4 @@
-if [ -f "server.jar" ]; then
+if [ -f "run.sh" ]; then
   echo "server.jar already exists. No download needed."
   exit 0
 fi

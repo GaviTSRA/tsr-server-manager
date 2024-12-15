@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: tsr-server-manager
       POSTGRES_PASSWORD: postgres
   server:
+    restart: always
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -24,6 +25,7 @@ services:
     working_dir: /server
     command: ["npm", "run", "dev"]
   client:
+    restart: always
     build:
       context: ./client
       dockerfile: Dockerfile

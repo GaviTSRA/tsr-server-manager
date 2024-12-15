@@ -6,7 +6,6 @@ import {
   StopCircle,
   ArrowUpCircle,
   AlertCircle,
-  XCircle,
   RotateCw,
   Server as ServerIcon,
   X,
@@ -36,7 +35,9 @@ export function Server() {
   const { data: server, refetch } = useQuery({
     queryKey: "server",
     queryFn: () =>
-      fetch(`${API_BASE_URL}/server/${serverId}`).then((res) => res.json()),
+      fetch(`${API_BASE_URL}/server/${serverId}`).then(
+        (res) => res.json() as Promise<ServerStatus>
+      ),
     enabled: serverId !== undefined,
     refetchInterval: 1000,
   });
@@ -48,6 +49,9 @@ export function Server() {
   const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null);
   const [logs, setLogs] = useState([] as string[]);
+  const [wasOffline, setWasOffline] = useState(
+    server ? server.status !== "running" : false
+  );
 
   const startServer = useMutation("start", async () => {
     const response = await fetch(`${API_BASE_URL}/server/${serverId}/start`, {
@@ -99,6 +103,14 @@ export function Server() {
 
   useEffect(() => {
     if (!server) return;
+    if (server.status === "running") {
+      if (wasOffline) {
+        reconnectLogs();
+      }
+      setWasOffline(false);
+    } else {
+      setWasOffline(true);
+    }
     switch (server.status) {
       case undefined:
         setStartButtonEnabled(true);
@@ -152,11 +164,15 @@ export function Server() {
     return response.body.getReader();
   };
 
-  const { data: logStream } = useQuery("serverLogs", fetchLogs, {
-    refetchOnWindowFocus: false,
-    refetchInterval: () => false,
-    refetchOnMount: false,
-  });
+  const { data: logStream, refetch: reconnectLogs } = useQuery(
+    "serverLogs",
+    fetchLogs,
+    {
+      refetchOnWindowFocus: false,
+      refetchInterval: () => false,
+      refetchOnMount: false,
+    }
+  );
 
   useEffect(() => {
     if (logStream) {
@@ -169,10 +185,16 @@ export function Server() {
 
           const chunk = decoder.decode(value, { stream: true });
           if (chunk === "success") break;
-          setLogs((prev) => [
-            ...prev,
-            ...chunk.split("\n").filter((el) => el !== ""),
-          ]);
+          setLogs((prev) => {
+            let prevEntries = prev;
+            if (prev.length > 1000) {
+              prevEntries = prev.slice(prev.length - 1000, prev.length - 1);
+            }
+            return [
+              ...prevEntries,
+              ...chunk.split("\n").filter((el) => el !== ""),
+            ];
+          });
         }
       };
 
