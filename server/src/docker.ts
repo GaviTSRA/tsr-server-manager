@@ -67,7 +67,7 @@ async function request(
 ): Promise<AxiosResponse<any, any>> {
   const res = await dockerClient
     .request({
-      url: "/v1.47" + url,
+      url: "/v1.45" + url,
       method,
       params,
       data: body,
@@ -111,10 +111,12 @@ export async function createContainer(
   const hostDirectory = (process.env.SERVERS_DIR as string) + id;
   const serverDirectory = "servers/" + id;
   if (!fs.existsSync(serverDirectory)) fs.mkdirSync(serverDirectory);
-  const exposedPorts = {};
-  const portBindings = {};
+  const exposedPorts: { [port: string]: {} } = {};
+  const portBindings: { [port: string]: { HostPort: string }[] } = {};
   ports.forEach((port) => (exposedPorts[`${port}/tcp`] = {}));
+  ports.forEach((port) => (exposedPorts[`${port}/udp`] = {}));
   ports.forEach((port) => (portBindings[`${port}/tcp`] = [{ HostPort: port }]));
+  ports.forEach((port) => (portBindings[`${port}/udp`] = [{ HostPort: port }]));
   const result = await request(
     "/containers/create",
     "post",
@@ -172,7 +174,7 @@ export async function inspectContainer(
     availableRam = stats.data["memory_stats"]["limit"];
     usedRam =
       stats.data["memory_stats"]["usage"] -
-      stats.data["memory_stats"]["stats"]["cache"];
+      (stats.data["memory_stats"]["stats"]["cache"] ?? 0);
     cpu_delta =
       stats.data["cpu_stats"]["cpu_usage"]["total_usage"] -
       stats.data["precpu_stats"]["cpu_usage"]["total_usage"];
@@ -347,7 +349,7 @@ export async function downloadImage(image: string) {
     true
   );
   await new Promise((resolve, reject) => {
-    res.data.on("data", (chunk) => {
+    res.data.on("data", (chunk: any) => {
       console.log(chunk.toString());
     });
     res.data.on("end", resolve);
@@ -362,7 +364,7 @@ export async function buildImage(name: string, dockerfile: string) {
   const tarStream = new stream.PassThrough();
   tarStream.end(tarBuffer);
 
-  const res = await dockerClient.post("/v1.47/build", tarStream, {
+  const res = await dockerClient.post("/v1.45/build", tarStream, {
     headers: {
       "Content-Type": "application/x-tar",
       "Content-Length": tarBuffer.length,
@@ -374,7 +376,7 @@ export async function buildImage(name: string, dockerfile: string) {
   });
 
   await new Promise((resolve, reject) => {
-    res.data.on("data", (chunk) => {
+    res.data.on("data", (chunk: any) => {
       console.log(chunk.toString());
     });
     res.data.on("end", resolve);
