@@ -16,8 +16,11 @@ if (fs.existsSync(dockerSocketPath)) {
     baseURL: process.env.DOCKER_HOST.replace("tcp://", "http://"),
   });
 } else {
-  throw new Error(
-    "Could not detect Docker API endpoint. Make sure DOCKER_HOST is set or Docker socket is accessible."
+  dockerClient = axios.create({
+    baseURL: "http://localhost:2375",
+  });
+  console.info(
+    "Could not detect Docker API endpoint. Make sure DOCKER_HOST is set or Docker socket is accessible. Using fallback localhost"
   );
 }
 

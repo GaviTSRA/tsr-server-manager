@@ -7,6 +7,8 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 export const ServerState = pgEnum("ServerState", [
   "INSTALLED",
@@ -24,15 +26,7 @@ export const Server = pgTable("Server", {
   cpuLimit: real().notNull(),
   ramLimit: integer().notNull(),
 });
-
-export type ServerType = {
-  id: string;
-  state: string;
-  name: string;
-  type: string;
-  containerId: string | null;
-  options: { [name: string]: string };
-  ports: string[];
-  cpuLimit: number;
-  ramLimit: number;
-};
+export const ServerSchema = createSelectSchema(Server).extend({
+  ports: z.string().array(),
+});
+export type ServerType = z.infer<typeof ServerSchema>;

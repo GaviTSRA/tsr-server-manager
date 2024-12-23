@@ -1,0 +1,58 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import ServerList from "./ServerList";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Server } from "./Server";
+import type { AppRouter } from "@tsm/server";
+import { createTRPCReact, httpBatchLink, splitLink } from "@trpc/react-query";
+import { inferRouterOutputs } from "@trpc/server";
+import { unstable_httpSubscriptionLink } from "@trpc/react-query";
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <ServerList />,
+  },
+  {
+    path: "/:serverId",
+    element: <Server />,
+  },
+]);
+
+export const trpc = createTRPCReact<AppRouter>();
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type ServerStatus = RouterOutputs["server"]["status"];
+
+const trpcClient = trpc.createClient({
+  links: [
+    splitLink({
+      // uses the httpSubscriptionLink for subscriptions
+      condition: (op) => op.type === "subscription",
+      true: unstable_httpSubscriptionLink({
+        url: API_BASE_URL,
+      }),
+      false: httpBatchLink({
+        url: API_BASE_URL,
+      }),
+    }),
+  ],
+});
+const queryClient = new QueryClient();
+
+const rootEl = document.getElementById("root");
+if (!rootEl) {
+  throw new Error("Root element not found");
+}
+const root = ReactDOM.createRoot(rootEl);
+root.render(
+  <React.StrictMode>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </trpc.Provider>
+  </React.StrictMode>
+);

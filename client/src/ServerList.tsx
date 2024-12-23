@@ -1,5 +1,3 @@
-import { useMutation, useQuery } from "react-query";
-import { ServerStatus } from "../types";
 import {
   AlertCircle,
   ArrowUpCircle,
@@ -8,87 +6,77 @@ import {
   Settings,
   StopCircle,
 } from "react-feather";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
-import { MoonLoader, PulseLoader } from "react-spinners";
-
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+import { PulseLoader } from "react-spinners";
+import { trpc } from "./main";
 
 function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
   const [createServerRunning, setCreateServerRunning] = useState(false);
   const [serverName, setServerName] = useState("");
   const [serverType, setServerType] = useState("");
-  const [serverCount, setServerCount] = useState(0);
-  const [servers, setServers] = useState([]);
+  // const [serverCount, setServerCount] = useState(0);
+  // const [servers, setServers] = useState([] as any[]);
   const navigate = useNavigate();
 
-  const fetchServers = async () => {
-    const response = await fetch(API_BASE_URL);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    return response.body.getReader();
-  };
+  const { data: servers } = trpc.servers.useQuery();
+  // const fetchServers = async () => {
+  //   const response = await fetch(API_BASE_URL);
+  //   if (!response.ok || !response.body) {
+  //     throw new Error("Network response was not ok");
+  //   }
+  //   return response.body.getReader();
+  // };
 
-  const { data: serversStream } = useQuery("servers", fetchServers, {
-    refetchOnWindowFocus: false,
-    refetchInterval: () => 5000,
-    refetchOnMount: false,
-  });
+  // const { data: serversStream } = useQuery("servers", fetchServers, {
+  //   refetchOnWindowFocus: false,
+  //   refetchInterval: () => 5000,
+  //   refetchOnMount: false,
+  // });
 
-  useEffect(() => {
-    if (serversStream) {
-      const decoder = new TextDecoder("utf-8");
+  // useEffect(() => {
+  //   if (serversStream) {
+  //     const decoder = new TextDecoder("utf-8");
 
-      const readStream = async () => {
-        while (true) {
-          const { done, value } = await serversStream.read();
-          if (done) break;
+  //     const readStream = async () => {
+  //       while (true) {
+  //         const { done, value } = await serversStream.read();
+  //         if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          if (chunk === "success") break;
-          chunk
-            .split("\n")
-            .filter((el) => el !== "" && el !== undefined)
-            .forEach((part) => {
-              const data = JSON.parse(part);
-              if (data.amount !== null && data.amount !== undefined) {
-                setServerCount(data.amount);
-                return;
-              }
-              setServers((prev) =>
-                [...prev.filter((el) => el.id !== data.id), data].sort()
-              );
-            });
-        }
-      };
-      readStream();
-    }
-  }, [serversStream]);
+  //         const chunk = decoder.decode(value, { stream: true });
+  //         if (chunk === "success") break;
+  //         chunk
+  //           .split("\n")
+  //           .filter((el) => el !== "" && el !== undefined)
+  //           .forEach((part) => {
+  //             const data = JSON.parse(part);
+  //             if (data.amount !== null && data.amount !== undefined) {
+  //               setServerCount(data.amount);
+  //               return;
+  //             }
+  //             setServers((prev) =>
+  //               [...prev.filter((el) => el.id !== data.id), data].sort()
+  //             );
+  //           });
+  //       }
+  //     };
+  //     readStream();
+  //   }
+  // }, [serversStream]);
 
-  const { data: serverTypes } = useQuery({
-    queryKey: "serverTypes",
-    queryFn: () =>
-      fetch(`${API_BASE_URL}/servertypes`).then((res) => res.json()),
-  });
+  const { data: serverTypes } = trpc.serverTypes.useQuery();
+  // const { data: serverTypes } = useQuery({
+  //   queryKey: "serverTypes",
+  //   queryFn: () =>
+  //     fetch(`${API_BASE_URL}/servertypes`).then(
+  //       (res) => res.json() as Promise<any[]>
+  //     ),
+  // });
 
-  const createServer = useMutation({
-    mutationFn: () => {
-      return fetch(`${API_BASE_URL}/servers/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: serverName,
-          type: serverType,
-        }),
-      });
-    },
-  });
+  const createServer = trpc.createServer.useMutation();
 
   return (
     <div className="w-full h-full bg-neutral-100 text-primary-text">
@@ -97,7 +85,7 @@ function ServerList() {
       </div>
       <div className="flex flex-col m-4 gap-4">
         {servers &&
-          servers.map((server: ServerStatus) => {
+          servers.map((server) => {
             let status = undefined;
             switch (server.status) {
               case undefined:
@@ -140,7 +128,7 @@ function ServerList() {
               </div>
             );
           })}
-        {[...Array(serverCount - servers.length)].map((index) => {
+        {/* {[...Array(serverCount - servers.length)].map((index) => {
           return (
             <div
               key={index}
@@ -148,14 +136,14 @@ function ServerList() {
             >
               <div className="flex flex-col">
                 {/* <p className="text-xl">{server.name}</p> */}
-                {/* <p className="text-secondary-text text-sm">
+        {/* <p className="text-secondary-text text-sm">
                     {server.id.slice(0, 18)}
                   </p>
                   {server.containerId && (
                     <p className="text-secondary-text text-sm">
                       {server.containerId.slice(0, 18)}
                     </p>
-                  )} */}
+                  )} }
               </div>
               <div className="ml-auto flex items-center mr-2">
                 <div className="p-2 rounded">
@@ -164,7 +152,7 @@ function ServerList() {
               </div>
             </div>
           );
-        })}
+        })} */}
       </div>
       <div
         className="fixed bottom-0 right-0 m-8 transition-colors bg-neutral-200 flex flex-row items-center gap-2 hover:bg-neutral-300 p-2 rounded"
@@ -192,11 +180,12 @@ function ServerList() {
               <Dropdown
                 color="bg-neutral-300 hover:bg-neutral-400"
                 values={serverTypes.map((type) => type.name)}
-                onSelect={(value: string) =>
+                onSelect={(value: string) => {
+                  if (!serverTypes) return;
                   setServerType(
-                    serverTypes.find((type) => type.name === value).id
-                  )
-                }
+                    serverTypes.find((type) => type.name === value)?.id ?? ""
+                  );
+                }}
                 placeholder="Select server type..."
               />
             </div>
@@ -204,12 +193,15 @@ function ServerList() {
               className="px-4 py-2 mt-auto bg-primary-100 text-dark-text rounded outline-none disabled:bg-disabled"
               onClick={() => {
                 setCreateServerRunning(true);
-                createServer.mutate(null, {
-                  onSuccess: async () => {
-                    setCreatingServer(false);
-                    setCreateServerRunning(false);
-                  },
-                });
+                createServer.mutate(
+                  { name: serverName, type: serverType },
+                  {
+                    onSuccess: async () => {
+                      setCreatingServer(false);
+                      setCreateServerRunning(false);
+                    },
+                  }
+                );
               }}
               disabled={createServerRunning}
             >
