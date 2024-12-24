@@ -1,6 +1,6 @@
 FROM node:20
-WORKDIR /client
+COPY . /workspace
+WORKDIR /workspace/client
 EXPOSE 3001
-COPY . .
 RUN npm install
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev", "--", "--host"]
