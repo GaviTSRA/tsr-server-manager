@@ -1,14 +1,49 @@
-import { ServerStatus } from "../../types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Container } from "./Container";
 import { Input } from "./Input";
 import { trpc } from "../main";
+import { MoonLoader } from "react-spinners";
+import { Lock } from "react-feather";
 
-export function LimitsTab({ server }: { server: ServerStatus }) {
-  const [cpuLimit, setCpuLimit] = useState(server.cpuLimit);
-  const [ramLimit, setRamLimit] = useState(server.ramLimit);
+export function LimitsTab({ serverId }: { serverId: string }) {
+  const {
+    data: limits,
+    refetch,
+    error,
+  } = trpc.server.limits.read.useQuery(
+    { serverId },
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    }
+  );
+  const setLimits = trpc.server.limits.write.useMutation();
 
-  const setLimits = trpc.server.setLimits.useMutation();
+  const [cpuLimit, setCpuLimit] = useState(null as number | null);
+  const [ramLimit, setRamLimit] = useState(null as number | null);
+
+  useEffect(() => {
+    if (!limits) return;
+    setCpuLimit(limits.cpu);
+    setRamLimit(limits.ram);
+  }, [limits]);
+
+  if (error && error.data?.httpStatus === 401) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Lock className="text-danger" size={80} />
+      </div>
+    );
+  }
+
+  if (!cpuLimit || !ramLimit) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <MoonLoader size={100} color={"#FFFFFF"} />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-4 gap-2">
@@ -37,7 +72,17 @@ export function LimitsTab({ server }: { server: ServerStatus }) {
       <button
         className="fixed bottom-0 right-0 mb-4 mr-4 bg-success text-2xl text-black px-2 py-1 rounded"
         onClick={() => {
-          setLimits.mutate({ cpuLimit, ramLimit, serverId: server.id });
+          setLimits.mutate(
+            { cpuLimit, ramLimit, serverId: serverId },
+            {
+              onSuccess: () => {
+                refetch();
+              },
+              onError: (err) => {
+                alert(err);
+              },
+            }
+          );
         }}
       >
         Save

@@ -8,6 +8,7 @@ import { serverFilesRouter } from "./server/filesRouter";
 import { startupRouter } from "./server/startupRouter";
 import { networkRouter } from "./server/networkRouter";
 import { limitsRouter } from "./server/limitsRouter";
+import { powerRouter } from "./server/powerRouter";
 
 async function getServer(
   serverId: string,
@@ -57,9 +58,10 @@ function createAsyncIterable(emitter: EventEmitter) {
 }
 
 export const serverRouter = router({
+  power: powerRouter,
   files: serverFilesRouter,
-  startup: startupRouter,
   network: networkRouter,
+  startup: startupRouter,
   limits: limitsRouter,
   status: serverProcedure
     .meta({

@@ -47,10 +47,10 @@ export function Server() {
     server ? server.status !== "running" : false
   );
 
-  const startServer = trpc.server.start.useMutation();
-  const restartServer = trpc.server.restart.useMutation();
-  const stopServer = trpc.server.stop.useMutation();
-  const killServer = trpc.server.kill.useMutation();
+  const startServer = trpc.server.power.start.useMutation();
+  const restartServer = trpc.server.power.restart.useMutation();
+  const stopServer = trpc.server.power.stop.useMutation();
+  const killServer = trpc.server.power.kill.useMutation();
 
   useEffect(() => {
     if (!server) return;
@@ -135,7 +135,7 @@ export function Server() {
     Files: [<File />, server ? <FilesTab server={server} /> : <></>],
     Network: [<ServerIcon />, server ? <NetworkTab server={server} /> : <></>],
     Startup: [<PlayCircle />, server ? <StartupTab server={server} /> : <></>],
-    Limits: [<Cpu />, server ? <LimitsTab server={server} /> : <></>],
+    Limits: [<Cpu />, server ? <LimitsTab serverId={serverId} /> : <></>],
   };
 
   if (error && error.data?.code === "UNAUTHORIZED") {
