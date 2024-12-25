@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { publicProcedure, router } from "./trpc";
+import { authedProcedure, publicProcedure, router } from "./trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
 
 export const serverFilesRouter = router({
-  list: publicProcedure
+  list: authedProcedure
     .input(z.object({ path: z.string(), serverId: z.string() }))
     .query(async ({ input }) => {
       if (input.path.includes("..")) {
@@ -46,7 +46,7 @@ export const serverFilesRouter = router({
       });
       return { type: "folder" as "folder", files: result };
     }),
-  rename: publicProcedure
+  rename: authedProcedure
     .input(
       z.object({ path: z.string(), name: z.string(), serverId: z.string() })
     )
@@ -62,7 +62,7 @@ export const serverFilesRouter = router({
       const updatedPath = path.join(dir, input.name);
       fs.renameSync(target, updatedPath);
     }),
-  edit: publicProcedure
+  edit: authedProcedure
     .input(
       z.object({ path: z.string(), serverId: z.string(), content: z.string() })
     )
@@ -76,7 +76,7 @@ export const serverFilesRouter = router({
       const target = path.normalize(path.join(root, input.path));
       fs.writeFileSync(target, input.content);
     }),
-  delete: publicProcedure
+  delete: authedProcedure
     .input(z.object({ path: z.string(), serverId: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {

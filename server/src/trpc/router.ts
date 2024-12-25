@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { router, publicProcedure } from "./trpc";
+import { router, publicProcedure, authedProcedure } from "./trpc";
 import { v4 } from "uuid";
 import fs from "fs";
 import { TRPCError } from "@trpc/server";
 import { serverRouter } from "./serverRouter";
 import * as schema from "../schema";
 import * as docker from "../docker";
+import { userRouter } from "./userRouter";
 
 type ServerStatus = {
   id: string;
@@ -56,8 +57,9 @@ fs.readdirSync("servertypes").forEach((folder) => {
 });
 
 export const appRouter = router({
+  user: userRouter,
   server: serverRouter,
-  servers: publicProcedure.query(async ({ ctx }) => {
+  servers: authedProcedure.query(async ({ ctx }) => {
     // res.setHeader("Content-Type", "text/plain");
     const servers = await ctx.db.query.Server.findMany();
     // res.write(JSON.stringify({ amount: servers.length }) + "\n");
@@ -93,7 +95,7 @@ export const appRouter = router({
   serverTypes: publicProcedure.query(async () => {
     return serverTypes;
   }),
-  createServer: publicProcedure
+  createServer: authedProcedure
     .input(
       z.object({
         name: z.string(),
@@ -117,6 +119,7 @@ export const appRouter = router({
       });
       await ctx.db.insert(schema.Server).values({
         id,
+        ownerId: ctx.user.id,
         name: input.name,
         state: "NOT_INSTALLED",
         type: type.id,

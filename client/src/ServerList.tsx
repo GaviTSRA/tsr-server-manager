@@ -22,7 +22,9 @@ function ServerList() {
   // const [servers, setServers] = useState([] as any[]);
   const navigate = useNavigate();
 
-  const { data: servers } = trpc.servers.useQuery();
+  const { data: servers, error } = trpc.servers.useQuery(undefined, {
+    retry: 1,
+  });
   // const fetchServers = async () => {
   //   const response = await fetch(API_BASE_URL);
   //   if (!response.ok || !response.body) {
@@ -68,15 +70,12 @@ function ServerList() {
   // }, [serversStream]);
 
   const { data: serverTypes } = trpc.serverTypes.useQuery();
-  // const { data: serverTypes } = useQuery({
-  //   queryKey: "serverTypes",
-  //   queryFn: () =>
-  //     fetch(`${API_BASE_URL}/servertypes`).then(
-  //       (res) => res.json() as Promise<any[]>
-  //     ),
-  // });
-
   const createServer = trpc.createServer.useMutation();
+
+  if (error && error.data?.code === "UNAUTHORIZED") {
+    navigate("/login");
+    return <></>;
+  }
 
   return (
     <div className="w-full h-full bg-neutral-100 text-primary-text">
@@ -109,7 +108,7 @@ function ServerList() {
               <div
                 key={server.id}
                 className="w-full bg-neutral-200 flex flex-row hover:bg-neutral-300 transition-colors cursor-pointer p-4 rounded"
-                onClick={() => navigate(`/${server.id}`)}
+                onClick={() => navigate(`/server/${server.id}`)}
               >
                 <div className="flex flex-col">
                   <p className="text-xl">{server.name}</p>

@@ -14,7 +14,7 @@ import {
   Square,
   Play,
 } from "react-feather";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { LimitsTab } from "./components/LimitsTab";
 import { trpc } from "./main";
 import { ConsoleTab } from "./components/ConsoleTab";
@@ -27,7 +27,7 @@ export function Server() {
   const [selectedTab, setSelectedTab] = useState(
     "Console" as "Console" | "Files" | "Network" | "Startup" | "Limits"
   );
-  const { data: server } = trpc.server.status.useQuery(
+  const { data: server, error } = trpc.server.status.useQuery(
     { serverId },
     {
       enabled: serverId !== undefined,
@@ -45,6 +45,8 @@ export function Server() {
   const [wasOffline, setWasOffline] = useState(
     server ? server.status !== "running" : false
   );
+
+  const navigate = useNavigate();
 
   const startServer = trpc.server.start.useMutation();
   const restartServer = trpc.server.restart.useMutation();
@@ -137,6 +139,10 @@ export function Server() {
     Limits: [<Cpu />, server ? <LimitsTab server={server} /> : <></>],
   };
 
+  if (error && error.data?.code === "UNAUTHORIZED") {
+    navigate("/login");
+    return <></>;
+  }
   if (!server) return <></>;
 
   return (

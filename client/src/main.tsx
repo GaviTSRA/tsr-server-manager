@@ -9,6 +9,7 @@ import type { AppRouter } from "@tsm/server";
 import { createTRPCReact, httpBatchLink, splitLink } from "@trpc/react-query";
 import { inferRouterOutputs } from "@trpc/server";
 import { unstable_httpSubscriptionLink } from "@trpc/react-query";
+import { Login } from "./Login";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const router = createBrowserRouter([
@@ -17,8 +18,12 @@ const router = createBrowserRouter([
     element: <ServerList />,
   },
   {
-    path: "/:serverId",
+    path: "/server/:serverId",
     element: <Server />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
   },
 ]);
 
@@ -36,6 +41,12 @@ const trpcClient = trpc.createClient({
       }),
       false: httpBatchLink({
         url: API_BASE_URL,
+        headers: () => {
+          const token = localStorage.getItem("authToken");
+          return {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          };
+        },
       }),
     }),
   ],

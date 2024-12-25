@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import * as docker from "../docker";
-import { Context, publicProcedure, router, t } from "./trpc";
+import { authedProcedure, Context, publicProcedure, router, t } from "./trpc";
 import { z } from "zod";
 import * as schema from "../schema";
 import { eq } from "drizzle-orm";
@@ -91,7 +91,7 @@ fs.readdirSync("servertypes").forEach((folder) => {
 
 export const serverRouter = router({
   files: serverFilesRouter,
-  status: publicProcedure
+  status: authedProcedure
     .input(z.object({ serverId: z.string() }))
     .query(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
@@ -142,7 +142,7 @@ export const serverRouter = router({
         });
       }
     }),
-  start: publicProcedure
+  start: authedProcedure
     .input(z.object({ serverId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
@@ -205,7 +205,7 @@ export const serverRouter = router({
       }
       return result;
     }),
-  restart: publicProcedure
+  restart: authedProcedure
     .input(z.object({ serverId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
@@ -224,7 +224,7 @@ export const serverRouter = router({
       }
       return result;
     }),
-  stop: publicProcedure
+  stop: authedProcedure
     .input(z.object({ serverId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
@@ -251,7 +251,7 @@ export const serverRouter = router({
       }
       return result;
     }),
-  kill: publicProcedure
+  kill: authedProcedure
     .input(z.object({ serverId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
@@ -270,7 +270,7 @@ export const serverRouter = router({
       }
       return result;
     }),
-  setOptions: publicProcedure
+  setOptions: authedProcedure
     .input(
       z.object({
         serverId: z.string(),
@@ -287,7 +287,7 @@ export const serverRouter = router({
         await docker.removeContainer(server.containerId);
       }
     }),
-  setPorts: publicProcedure
+  setPorts: authedProcedure
     .input(z.object({ serverId: z.string(), ports: z.array(z.string()) }))
     .mutation(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
@@ -299,7 +299,7 @@ export const serverRouter = router({
         await docker.removeContainer(server.containerId);
       }
     }),
-  setLimits: publicProcedure
+  setLimits: authedProcedure
     .input(
       z.object({
         serverId: z.string(),
@@ -321,7 +321,7 @@ export const serverRouter = router({
         await docker.removeContainer(server.containerId);
       }
     }),
-  run: publicProcedure
+  run: authedProcedure
     .input(z.object({ serverId: z.string(), command: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const server = await getServer(input.serverId, ctx);
