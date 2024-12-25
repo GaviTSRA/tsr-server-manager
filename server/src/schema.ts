@@ -4,6 +4,7 @@ import {
   json,
   pgEnum,
   pgTable,
+  primaryKey,
   real,
   uuid,
   varchar,
@@ -35,11 +36,42 @@ export const User = pgTable("User", {
   name: varchar().notNull().unique(),
   password: varchar().notNull(),
 });
+export const Permission = pgTable(
+  "Permission",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => User.id),
+    serverId: uuid()
+      .notNull()
+      .references(() => Server.id),
+    permission: varchar().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.serverId, table.permission],
+    }),
+  ]
+);
 
-export const ServerRelations = relations(Server, ({ one }) => ({
+export const ServerRelations = relations(Server, ({ one, many }) => ({
   owner: one(User, {
     fields: [Server.ownerId],
     references: [User.id],
+  }),
+  permissions: many(Permission),
+}));
+export const UserRelations = relations(User, ({ many }) => ({
+  permissions: many(Permission),
+}));
+export const PermissionRelations = relations(Permission, ({ one }) => ({
+  user: one(User, {
+    fields: [Permission.userId],
+    references: [User.id],
+  }),
+  server: one(Server, {
+    fields: [Permission.serverId],
+    references: [Server.id],
   }),
 }));
 

@@ -4,6 +4,7 @@ import * as schema from "../schema";
 import jwt from "jsonwebtoken";
 import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
 import { z } from "zod";
+import { Permission } from "..";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -22,18 +23,24 @@ export const createContext = async ({ req }: CreateHTTPContextOptions) => {
   };
 };
 export type Context = Awaited<ReturnType<typeof createContext>>;
+export type Meta = {
+  permission?: Permission;
+};
 
-export const t = initTRPC.context<typeof createContext>().create({
-  sse: {
-    ping: {
-      enabled: true,
-      intervalMs: 3_000,
+export const t = initTRPC
+  .context<typeof createContext>()
+  .meta<Meta>()
+  .create({
+    sse: {
+      ping: {
+        enabled: true,
+        intervalMs: 3_000,
+      },
+      client: {
+        reconnectAfterInactivityMs: 5_000,
+      },
     },
-    client: {
-      reconnectAfterInactivityMs: 5_000,
-    },
-  },
-});
+  });
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
@@ -64,9 +71,14 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
 });
 export const serverProcedure = authedProcedure
   .input(z.object({ serverId: z.string() }))
-  .use(async ({ ctx, input, next }) => {
+  .use(async ({ ctx, input, next, meta }) => {
     const server = await ctx.db.query.Server.findFirst({
       where: (server, { eq }) => eq(server.id, input.serverId),
+      with: {
+        permissions: {
+          where: (permission, { eq }) => eq(permission.userId, ctx.user.id),
+        },
+      },
     });
     if (!server) {
       throw new TRPCError({
@@ -74,10 +86,26 @@ export const serverProcedure = authedProcedure
         message: "Server not found",
       });
     }
-    if (server.ownerId !== ctx.user.id) {
+    if (
+      server.ownerId !== ctx.user.id &&
+      !server.permissions
+        .map((permission) => permission.permission)
+        .includes("server")
+    ) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
       });
+    }
+    if (meta && meta.permission && server.ownerId !== ctx.user.id) {
+      if (
+        !server.permissions
+          .map((permission) => permission.permission)
+          .includes(meta.permission)
+      ) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+        });
+      }
     }
     return next({
       ctx: {

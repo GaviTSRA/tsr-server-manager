@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { router, publicProcedure, authedProcedure } from "./trpc";
 import { v4 } from "uuid";
-import fs from "fs";
 import { TRPCError } from "@trpc/server";
 import { serverRouter } from "./serverRouter";
 import * as schema from "../schema";
 import * as docker from "../docker";
 import { userRouter } from "./userRouter";
+import { serverTypes } from "..";
 
 type ServerStatus = {
   id: string;
@@ -22,48 +22,28 @@ type ServerStatus = {
     | "dead";
 };
 
-type ServerType = {
-  id: string;
-  command: string;
-  name: string;
-  image: string | null;
-  options: {
-    [name: string]:
-      | {
-          type: "string";
-          default: string;
-        }
-      | {
-          type: "enum";
-          default: string;
-          options: string[];
-        };
-  };
-};
-
-const serverTypes: ServerType[] = [];
-fs.readdirSync("servertypes").forEach((folder) => {
-  const json = fs
-    .readFileSync(`servertypes/${folder}/manifest.json`)
-    .toString();
-  const data = JSON.parse(json);
-  serverTypes.push({
-    id: folder,
-    name: data.name,
-    image: data.image,
-    command: data.command,
-    options: data.options,
-  });
-});
-
 export const appRouter = router({
   user: userRouter,
   server: serverRouter,
   servers: authedProcedure.query(async ({ ctx }) => {
-    const servers = await ctx.db.query.Server.findMany();
+    const accessableServers = (
+      await ctx.db.query.Permission.findMany({
+        where: (permission, { eq, and }) =>
+          and(
+            eq(permission.userId, ctx.user.id),
+            eq(permission.permission, "server")
+          ),
+      })
+    ).map((permission) => permission.serverId);
+    const servers = await ctx.db.query.Server.findMany({
+      where: (server, { eq, or, inArray }) =>
+        or(
+          eq(server.ownerId, ctx.user.id),
+          inArray(server.id, accessableServers)
+        ),
+    });
     const result = [] as ServerStatus[];
     for (const server of servers) {
-      if (server.ownerId !== ctx.user.id) continue;
       if (!server.containerId) {
         result.push({
           id: server.id,

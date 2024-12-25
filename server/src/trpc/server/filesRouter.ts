@@ -1,11 +1,14 @@
 import { z } from "zod";
-import { router, serverProcedure } from "./trpc";
+import { router, serverProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
 
 export const serverFilesRouter = router({
   list: serverProcedure
+    .meta({
+      permission: "files.read",
+    })
     .input(z.object({ path: z.string() }))
     .query(async ({ input }) => {
       if (input.path.includes("..")) {
@@ -47,6 +50,9 @@ export const serverFilesRouter = router({
       return { type: "folder" as "folder", files: result };
     }),
   rename: serverProcedure
+    .meta({
+      permission: "files.rename",
+    })
     .input(z.object({ path: z.string(), name: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {
@@ -61,6 +67,9 @@ export const serverFilesRouter = router({
       fs.renameSync(target, updatedPath);
     }),
   edit: serverProcedure
+    .meta({
+      permission: "files.edit",
+    })
     .input(z.object({ path: z.string(), content: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {
@@ -73,6 +82,9 @@ export const serverFilesRouter = router({
       fs.writeFileSync(target, input.content);
     }),
   delete: serverProcedure
+    .meta({
+      permission: "files.delete",
+    })
     .input(z.object({ path: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {

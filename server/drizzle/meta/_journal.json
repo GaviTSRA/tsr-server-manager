@@ -57,6 +57,13 @@
       "when": 1735125164204,
       "tag": "0007_melted_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1735141209164,
+      "tag": "0008_complex_vengeance",
+      "breakpoints": true
     }
   ]
 }

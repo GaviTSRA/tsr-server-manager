@@ -2,16 +2,12 @@ import fs from "fs";
 import cors from "cors";
 import * as docker from "./docker";
 import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "./schema";
 import { createHTTPServer } from "@trpc/server/adapters/standalone";
 import { appRouter } from "./trpc/router";
 import { createContext } from "./trpc/trpc";
 export type { AppRouter } from "./trpc/router";
 
-const db = drizzle(process.env.DATABASE_URL!, { schema });
-
-type ServerType = {
+export type ServerType = {
   id: string;
   command: string;
   name: string;
@@ -25,7 +21,7 @@ type ServerType = {
   };
 };
 
-const serverTypes: ServerType[] = [];
+export const serverTypes: ServerType[] = [];
 fs.readdirSync("servertypes").forEach((folder) => {
   const json = fs
     .readFileSync(`servertypes/${folder}/manifest.json`)
@@ -75,6 +71,22 @@ docker.getImages().then(({ data: downloadedImages, status }) => {
     }
   });
 });
+
+export type Permission =
+  | "server"
+  | "power"
+  | "console.read" // TODO
+  | "console.write" // TODO
+  | "files.read"
+  | "files.rename"
+  | "files.edit"
+  | "files.delete"
+  | "network.read"
+  | "network.write"
+  | "startup.read"
+  | "startup.write"
+  | "limits.read"
+  | "limits.write";
 
 const server = createHTTPServer({
   middleware: cors(),
