@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import jwt from "jsonwebtoken";
 import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
+import { z } from "zod";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -41,7 +42,6 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   try {
-    console.info(ctx.token);
     const res = jwt.verify(ctx.token, SECRET_KEY) as {
       id: string;
     };
@@ -62,3 +62,26 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 });
+export const serverProcedure = authedProcedure
+  .input(z.object({ serverId: z.string() }))
+  .use(async ({ ctx, input, next }) => {
+    const server = await ctx.db.query.Server.findFirst({
+      where: (server, { eq }) => eq(server.id, input.serverId),
+    });
+    if (!server) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Server not found",
+      });
+    }
+    if (server.ownerId !== ctx.user.id) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+      });
+    }
+    return next({
+      ctx: {
+        server,
+      },
+    });
+  });

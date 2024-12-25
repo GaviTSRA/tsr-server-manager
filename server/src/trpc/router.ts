@@ -60,36 +60,26 @@ export const appRouter = router({
   user: userRouter,
   server: serverRouter,
   servers: authedProcedure.query(async ({ ctx }) => {
-    // res.setHeader("Content-Type", "text/plain");
     const servers = await ctx.db.query.Server.findMany();
-    // res.write(JSON.stringify({ amount: servers.length }) + "\n");
     const result = [] as ServerStatus[];
     for (const server of servers) {
+      if (server.ownerId !== ctx.user.id) continue;
       if (!server.containerId) {
-        // res.write(
         result.push({
-          // JSON.stringify({
           id: server.id,
           name: server.name,
-          // }) + "\n"
-          // );
         });
         continue;
       }
       const data = await docker.inspectContainer(server.containerId);
       if (!data || !data.data) continue;
-      // res.write(
-      // JSON.stringify({
       result.push({
         id: server.id,
         containerId: server.containerId,
         name: server.name,
         status: data.data.status,
-        // }) + "\n"
       });
-      // );
     }
-    // res.end();
     return result;
   }),
   serverTypes: publicProcedure.query(async () => {

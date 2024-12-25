@@ -49,8 +49,7 @@ export function Login(): JSX.Element {
               register.mutate(
                 { name: username, password },
                 {
-                  onSettled: () => {
-                    setRegistering(false);
+                  onSuccess: () => {
                     setLoggingIn(true);
                     login.mutate(
                       { name: username, password },
@@ -67,6 +66,9 @@ export function Login(): JSX.Element {
                         },
                       }
                     );
+                  },
+                  onSettled: () => {
+                    setRegistering(false);
                   },
                   onError: (error) => {
                     alert(error);

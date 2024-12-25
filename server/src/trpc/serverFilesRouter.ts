@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { authedProcedure, publicProcedure, router } from "./trpc";
+import { router, serverProcedure } from "./trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
 
 export const serverFilesRouter = router({
-  list: authedProcedure
-    .input(z.object({ path: z.string(), serverId: z.string() }))
+  list: serverProcedure
+    .input(z.object({ path: z.string() }))
     .query(async ({ input }) => {
       if (input.path.includes("..")) {
         throw new TRPCError({
@@ -46,10 +46,8 @@ export const serverFilesRouter = router({
       });
       return { type: "folder" as "folder", files: result };
     }),
-  rename: authedProcedure
-    .input(
-      z.object({ path: z.string(), name: z.string(), serverId: z.string() })
-    )
+  rename: serverProcedure
+    .input(z.object({ path: z.string(), name: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {
         throw new TRPCError({
@@ -62,10 +60,8 @@ export const serverFilesRouter = router({
       const updatedPath = path.join(dir, input.name);
       fs.renameSync(target, updatedPath);
     }),
-  edit: authedProcedure
-    .input(
-      z.object({ path: z.string(), serverId: z.string(), content: z.string() })
-    )
+  edit: serverProcedure
+    .input(z.object({ path: z.string(), content: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {
         throw new TRPCError({
@@ -76,8 +72,8 @@ export const serverFilesRouter = router({
       const target = path.normalize(path.join(root, input.path));
       fs.writeFileSync(target, input.content);
     }),
-  delete: authedProcedure
-    .input(z.object({ path: z.string(), serverId: z.string() }))
+  delete: serverProcedure
+    .input(z.object({ path: z.string() }))
     .mutation(async ({ input }) => {
       if (input.path.includes("..")) {
         throw new TRPCError({

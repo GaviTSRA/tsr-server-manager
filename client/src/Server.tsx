@@ -14,7 +14,7 @@ import {
   Square,
   Play,
 } from "react-feather";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { LimitsTab } from "./components/LimitsTab";
 import { trpc } from "./main";
 import { ConsoleTab } from "./components/ConsoleTab";
@@ -31,6 +31,7 @@ export function Server() {
     { serverId },
     {
       enabled: serverId !== undefined,
+      retry: 1,
       refetchInterval: 1000,
     }
   );
@@ -45,8 +46,6 @@ export function Server() {
   const [wasOffline, setWasOffline] = useState(
     server ? server.status !== "running" : false
   );
-
-  const navigate = useNavigate();
 
   const startServer = trpc.server.start.useMutation();
   const restartServer = trpc.server.restart.useMutation();
@@ -140,8 +139,7 @@ export function Server() {
   };
 
   if (error && error.data?.code === "UNAUTHORIZED") {
-    navigate("/login");
-    return <></>;
+    return <Navigate to="/forbidden" />;
   }
   if (!server) return <></>;
 

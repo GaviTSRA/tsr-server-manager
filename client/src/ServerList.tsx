@@ -7,7 +7,7 @@ import {
   StopCircle,
 } from "react-feather";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
 import { PulseLoader } from "react-spinners";
@@ -73,8 +73,7 @@ function ServerList() {
   const createServer = trpc.createServer.useMutation();
 
   if (error && error.data?.code === "UNAUTHORIZED") {
-    navigate("/login");
-    return <></>;
+    return <Navigate to="/login" />;
   }
 
   return (
