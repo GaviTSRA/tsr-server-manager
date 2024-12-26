@@ -3,6 +3,7 @@ import { router, serverProcedure } from "../trpc";
 import { z } from "zod";
 import * as schema from "../../schema";
 import { eq } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const limitsRouter = router({
   read: serverProcedure
@@ -21,8 +22,8 @@ export const limitsRouter = router({
     })
     .input(
       z.object({
-        cpuLimit: z.number(),
-        ramLimit: z.number(),
+        cpuLimit: z.number().optional(),
+        ramLimit: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

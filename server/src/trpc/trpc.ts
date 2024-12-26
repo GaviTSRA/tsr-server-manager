@@ -46,7 +46,10 @@ export const router = t.router;
 export const publicProcedure = t.procedure;
 export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.token) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Not logged in"
+    });
   }
   try {
     const res = jwt.verify(ctx.token, SECRET_KEY) as {
@@ -58,6 +61,7 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     if (!user) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
+        message: "User not found"
       });
     }
     return next({
@@ -66,7 +70,10 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
       },
     });
   } catch (e) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Internal error while validating user"
+    });
   }
 });
 export const serverProcedure = authedProcedure
@@ -94,6 +101,7 @@ export const serverProcedure = authedProcedure
     ) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
+        message: "Missing permission 'server'"
       });
     }
     if (meta && meta.permission && server.ownerId !== ctx.user.id) {
@@ -104,6 +112,7 @@ export const serverProcedure = authedProcedure
       ) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
+          message: `Missing permission '${meta.permission}'`
         });
       }
     }

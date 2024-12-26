@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { Container } from "./Container";
-import { Input } from "./Input";
 import { trpc } from "../main";
 import { MoonLoader } from "react-spinners";
-import { Lock } from "react-feather";
+import { Error } from "./Error";
+import { UpsertInput } from "./UpsertInput";
 
 export function LimitsTab({ serverId }: { serverId: string }) {
   const {
     data: limits,
-    refetch,
     error,
   } = trpc.server.limits.read.useQuery(
     { serverId },
@@ -18,7 +17,8 @@ export function LimitsTab({ serverId }: { serverId: string }) {
       retry: 1,
     }
   );
-  const setLimits = trpc.server.limits.write.useMutation();
+  const setCpu = trpc.server.limits.write.useMutation();
+  const setRam = trpc.server.limits.write.useMutation();
 
   const [cpuLimit, setCpuLimit] = useState(null as number | null);
   const [ramLimit, setRamLimit] = useState(null as number | null);
@@ -29,12 +29,8 @@ export function LimitsTab({ serverId }: { serverId: string }) {
     setRamLimit(limits.ram);
   }, [limits]);
 
-  if (error && error.data?.httpStatus === 401) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <Lock className="text-danger" size={80} />
-      </div>
-    );
+  if (error) {
+    return <Error error={error} />
   }
 
   if (!cpuLimit || !ramLimit) {
@@ -46,47 +42,31 @@ export function LimitsTab({ serverId }: { serverId: string }) {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-3 gap-2">
       <Container className="p-2 rounded bg-neutral-200">
-        <p className="text-xl mb-1">CPU Limit</p>
-        <Input
-          className="rounded"
-          value={cpuLimit.toString()}
-          onValueChange={(value) => {
-            setCpuLimit(Number.parseFloat(value));
-          }}
-          type="number"
+        <UpsertInput
+          label="CPU Limit"
+          description="Maximum amount of CPU the server may use"
+          value={cpuLimit}
+          type="text"
+          mutate={(value) => setCpu.mutate({ cpuLimit: Number.parseFloat(value), serverId })}
+          error={setCpu.error}
+          fetching={setCpu.isPending}
+          success={setCpu.isSuccess}
         />
       </Container>
       <Container className="p-2 rounded bg-neutral-200">
-        <p className="text-xl mb-1">RAM Limit</p>
-        <Input
-          className="rounded"
-          value={ramLimit.toString()}
-          onValueChange={(value) => {
-            setRamLimit(Number.parseInt(value));
-          }}
+        <UpsertInput
+          label="RAM Limit"
+          description="Maximum amount of RAM the server may use"
+          value={ramLimit}
           type="number"
+          mutate={(value) => setRam.mutate({ ramLimit: Number.parseInt(value), serverId })}
+          error={setRam.error}
+          fetching={setRam.isPending}
+          success={setRam.isSuccess}
         />
       </Container>
-      <button
-        className="fixed bottom-0 right-0 mb-4 mr-4 bg-success text-2xl text-black px-2 py-1 rounded"
-        onClick={() => {
-          setLimits.mutate(
-            { cpuLimit, ramLimit, serverId: serverId },
-            {
-              onSuccess: () => {
-                refetch();
-              },
-              onError: (err) => {
-                alert(err);
-              },
-            }
-          );
-        }}
-      >
-        Save
-      </button>
     </div>
   );
 }

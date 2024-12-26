@@ -1,6 +1,7 @@
 type InputProps = {
-  onValueChange: (value: string) => void;
-  onKeyDown?: (event) => void;
+  onValueChange?: (value: string) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onBlur?: () => void;
   placeholder?: string;
   className?: string;
   value?: string;
@@ -10,6 +11,7 @@ type InputProps = {
 export function Input({
   onValueChange,
   onKeyDown,
+  onBlur,
   placeholder,
   className,
   value,
@@ -21,10 +23,11 @@ export function Input({
         "p-2 w-full bg-neutral-300 border-b-2 border-neutral-400 focus:border-primary-100 transition-colors duration-300 outline-none " +
         className
       }
-      onChange={(event) => onValueChange(event.target.value)}
+      onChange={(event) => onValueChange ? onValueChange(event.target.value) : {}}
       placeholder={placeholder}
-      value={value}
+      defaultValue={value}
       onKeyDown={onKeyDown}
+      onBlur={onBlur}
       type={type}
     />
   );
