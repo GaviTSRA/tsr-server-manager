@@ -5,13 +5,19 @@
   "options": {
     "version": {
       "name": "Version",
+      "description": "Minecraft version to install",
       "type": "string",
       "default": "1.20.4"
     },
     "image": {
       "name": "Image",
+      "description": "Java image to use, depending on the minecraft version",
       "type": "enum",
-      "options": ["java21", "java17", "java8"],
+      "options": [
+        "java21",
+        "java17",
+        "java8"
+      ],
       "default": "java21"
     }
   }

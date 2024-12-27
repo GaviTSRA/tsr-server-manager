@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ServerStatus, trpc } from "../main";
-import { Container } from "./Container";
+import { Container } from "../components/Container";
 import { X } from "react-feather";
-import { Input } from "./Input";
+import { Input } from "../components/Input";
 
 export function NetworkTab({ server }: { server: ServerStatus }) {
   const updatePorts = trpc.server.setPorts.useMutation();

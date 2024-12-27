@@ -1,21 +1,20 @@
-import { Input } from "./Input";
+import { Dropdown } from "./Dropdown";
 import { Error, ErrorType } from "./Error";
 import { MoonLoader } from "react-spinners";
 import { useEffect, useState } from "react";
 import { Check } from "react-feather";
 
-export function UpsertInput(
-    { label, description, value, type, mutate, error, fetching, success }: {
+export function UpsertDropdown(
+    { label, description, value, mutate, error, fetching, success, values }: {
         label: string;
         description?: string;
-        value: any;
-        type: string;
+        value: string;
+        values: string[];
         mutate: (value: string) => void;
         error?: ErrorType | null;
         fetching: boolean;
         success: boolean;
     }): JSX.Element {
-    const [currentValue, setValue] = useState(value);
     const [edited, setEdited] = useState(false);
     const [internalError, setInternalError] = useState(undefined as ErrorType | undefined | null);
     const [internalFetching, setInternalFetching] = useState(false);
@@ -60,18 +59,14 @@ export function UpsertInput(
                     </div>
                     <p className="text-secondary-text">{description}</p>
                 </div>
-                <Input
-                    value={value}
-                    type={type}
-                    onValueChange={(newValue) => {
-                        setValue(newValue);
+                <Dropdown
+                    defaultValue={value}
+                    onSelect={(value) => {
                         setEdited(true);
+                        mutate(value);
                     }}
-                    onBlur={() => {
-                        setEdited(true);
-                        mutate(currentValue);
-                    }}
-                    className="rounded"
+                    values={values}
+                    color="bg-neutral-300 hover:bg-neutral-400"
                 />
             </div>
         </div>

@@ -1,8 +1,8 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import AnsiToHtml from "ansi-to-html";
 import { ServerStatus, trpc } from "../main";
-import { Input } from "./Input";
-import { Container } from "./Container";
+import { Input } from "../components/Input";
+import { Container } from "../components/Container";
 import { Cpu, Server } from "react-feather";
 
 export function ConsoleTab({

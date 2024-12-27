@@ -15,12 +15,12 @@ import {
   Play,
 } from "react-feather";
 import { Navigate, useParams } from "react-router-dom";
-import { LimitsTab } from "./components/LimitsTab";
+import { LimitsTab } from "./tabs/LimitsTab";
 import { trpc } from "./main";
-import { ConsoleTab } from "./components/ConsoleTab";
-import { NetworkTab } from "./components/NetworkTab";
-import { StartupTab } from "./components/StartupTab";
-import { FilesTab } from "./components/FilesTab";
+import { ConsoleTab } from "./tabs/ConsoleTab";
+import { NetworkTab } from "./tabs/NetworkTab";
+import { StartupTab } from "./tabs/StartupTab";
+import { FilesTab } from "./tabs/FilesTab";
 
 export function Server() {
   const { serverId } = useParams() as { serverId: string };
@@ -134,7 +134,7 @@ export function Server() {
     ],
     Files: [<File />, server ? <FilesTab server={server} /> : <></>],
     Network: [<ServerIcon />, server ? <NetworkTab server={server} /> : <></>],
-    Startup: [<PlayCircle />, server ? <StartupTab server={server} /> : <></>],
+    Startup: [<PlayCircle />, server ? <StartupTab serverId={serverId} serverType={server.type} /> : <></>],
     Limits: [<Cpu />, server ? <LimitsTab serverId={serverId} /> : <></>],
   };
 

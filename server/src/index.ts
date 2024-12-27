@@ -13,7 +13,9 @@ export type ServerType = {
   name: string;
   image: string | null;
   options: {
-    [name: string]: {
+    [id: string]: {
+      name: string;
+      description: string;
       type: "string" | "enum";
       default: string;
       options: string[] | undefined;
@@ -73,16 +75,16 @@ docker.getImages().then(({ data: downloadedImages, status }) => {
 });
 
 export type Permission =
-  | "server"
-  | "power"
+  | "server" // TODO frontend
+  | "power" // TODO frontend
   | "console.read" // TODO
   | "console.write" // TODO
-  | "files.read"
-  | "files.rename"
-  | "files.edit"
-  | "files.delete"
-  | "network.read"
-  | "network.write"
+  | "files.read" // TODO frontend
+  | "files.rename" // TODO frontend
+  | "files.edit"// TODO frontend
+  | "files.delete"// TODO frontend
+  | "network.read"// TODO frontend
+  | "network.write"// TODO frontend
   | "startup.read"
   | "startup.write"
   | "limits.read"

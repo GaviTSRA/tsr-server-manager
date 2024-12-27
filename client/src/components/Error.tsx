@@ -45,7 +45,7 @@ export function Error({ error, size }: { error: ErrorType, size?: "small" }): JS
 
     return (
         <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
                 {icon}
                 <p className="text-2xl text-white">{message}</p>
             </div>

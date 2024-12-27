@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from "react-feather";
 type DropdownProps = {
   values: string[];
   onSelect: (value: string) => void;
-  placeholder: string;
+  placeholder?: string;
   color?: string;
   defaultValue?: string;
 };
@@ -28,7 +28,7 @@ export function Dropdown({
           (selected ? "" : "text-secondary-text")
         }
       >
-        <p>{selected ?? placeholder}</p>
+        <p>{selected ?? placeholder ?? "Select an option..."}</p>
         <div className="ml-auto mr-2 text-secondary-text">
           {open && <ChevronUp />}
           {!open && <ChevronDown />}
@@ -38,7 +38,7 @@ export function Dropdown({
         <div className="absolute w-full shadow-lg">
           <div
             className="fixed top-0 left-0 w-full h-full z-[50]"
-            onClick={(e) => setOpen(false)}
+            onClick={() => setOpen(false)}
           ></div>
           {values.map((value, index) => (
             <div

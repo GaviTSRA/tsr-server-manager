@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Container } from "./Container";
+import { Container } from "../components/Container";
 import { trpc } from "../main";
 import { MoonLoader } from "react-spinners";
-import { Error } from "./Error";
-import { UpsertInput } from "./UpsertInput";
+import { Error } from "../components/Error";
+import { UpsertInput } from "../components/UpsertInput";
 
 export function LimitsTab({ serverId }: { serverId: string }) {
   const {
@@ -17,8 +17,7 @@ export function LimitsTab({ serverId }: { serverId: string }) {
       retry: 1,
     }
   );
-  const setCpu = trpc.server.limits.write.useMutation();
-  const setRam = trpc.server.limits.write.useMutation();
+  const writeLimits = trpc.server.limits.write.useMutation();
 
   const [cpuLimit, setCpuLimit] = useState(null as number | null);
   const [ramLimit, setRamLimit] = useState(null as number | null);
@@ -43,28 +42,28 @@ export function LimitsTab({ serverId }: { serverId: string }) {
 
   return (
     <div className="grid grid-cols-3 gap-2">
-      <Container className="p-2 rounded bg-neutral-200">
+      <Container className="p-2 rounded bg-neutral-200 h-fit">
         <UpsertInput
           label="CPU Limit"
           description="Maximum amount of CPU the server may use"
           value={cpuLimit}
           type="text"
-          mutate={(value) => setCpu.mutate({ cpuLimit: Number.parseFloat(value), serverId })}
-          error={setCpu.error}
-          fetching={setCpu.isPending}
-          success={setCpu.isSuccess}
+          mutate={(value) => writeLimits.mutate({ cpuLimit: Number.parseFloat(value), serverId })}
+          error={writeLimits.error}
+          fetching={writeLimits.isPending}
+          success={writeLimits.isSuccess}
         />
       </Container>
-      <Container className="p-2 rounded bg-neutral-200">
+      <Container className="p-2 rounded bg-neutral-200 h-fit">
         <UpsertInput
           label="RAM Limit"
           description="Maximum amount of RAM the server may use"
           value={ramLimit}
           type="number"
-          mutate={(value) => setRam.mutate({ ramLimit: Number.parseInt(value), serverId })}
-          error={setRam.error}
-          fetching={setRam.isPending}
-          success={setRam.isSuccess}
+          mutate={(value) => writeLimits.mutate({ ramLimit: Number.parseInt(value), serverId })}
+          error={writeLimits.error}
+          fetching={writeLimits.isPending}
+          success={writeLimits.isSuccess}
         />
       </Container>
     </div>

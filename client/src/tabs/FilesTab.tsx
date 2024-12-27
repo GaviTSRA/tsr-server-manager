@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ServerStatus, trpc } from "../main";
-import { Container } from "./Container";
+import { Container } from "../components/Container";
 import { Edit2, Folder, Trash2, File, MoreVertical } from "react-feather";
-import { Input } from "./Input";
+import { Input } from "../components/Input";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -223,12 +223,12 @@ export function FilesTab({ server }: { server: ServerStatus }) {
                 onClick={() => {
                   setPath(
                     "/" +
-                      path
-                        .split("/")
-                        .filter((part) => part !== "")
-                        .slice(0, index + 1)
-                        .join("/") +
-                      "/"
+                    path
+                      .split("/")
+                      .filter((part) => part !== "")
+                      .slice(0, index + 1)
+                      .join("/") +
+                    "/"
                   );
                   refetch();
                 }}
