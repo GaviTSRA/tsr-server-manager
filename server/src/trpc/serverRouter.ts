@@ -10,24 +10,6 @@ import { networkRouter } from "./server/networkRouter";
 import { limitsRouter } from "./server/limitsRouter";
 import { powerRouter } from "./server/powerRouter";
 
-async function getServer(
-  serverId: string,
-  ctx: Context
-): Promise<schema.ServerType> {
-  try {
-    const result = await ctx.db.query.Server.findFirst({
-      where: (server, { eq }) => eq(server.id, serverId),
-    });
-    if (result) {
-      return result;
-    } else {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    }
-  } catch {
-    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-  }
-}
-
 function createAsyncIterable(emitter: EventEmitter) {
   return {
     [Symbol.asyncIterator]() {
@@ -63,41 +45,58 @@ export const serverRouter = router({
   network: networkRouter,
   startup: startupRouter,
   limits: limitsRouter,
-  status: serverProcedure
+  server: serverProcedure
     .meta({
       permission: "server",
     })
     .query(async ({ ctx }) => {
-      const result = ctx.server.containerId
-        ? await docker.inspectContainer(ctx.server.containerId)
-        : undefined;
-      if (result && result.status !== "success") {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: result.status,
-        });
+      let inspect = undefined;
+      if (ctx.server.containerId) {
+        inspect = await docker.inspectContainer(ctx.server.containerId ?? "");
       }
       return {
         id: ctx.server.id,
         containerId: ctx.server.containerId,
         name: ctx.server.name,
         type: ctx.server.type,
-        status: result?.data?.status,
-        cpuUsage: result?.data?.cpuUsage,
-        usedRam: result?.data?.usedRam,
-        availableRam: result?.data?.availableRam,
+        status: inspect?.data?.status
       };
     }),
-  connect: publicProcedure
-    .input(z.object({ serverId: z.string() }))
+  status: serverProcedure
+    .meta({
+      permission: "status"
+    })
     .subscription(async function* ({ ctx, input }) {
-      const server = await getServer(input.serverId, ctx);
-      if (!server.containerId) {
+      if (!ctx.server.containerId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Server not installed"
+        })
+      }
+      const result = docker.containerStats(ctx.server.containerId);
+      try {
+        for await (const part of result) {
+          yield {
+            cpuUsage: part.cpuUsage,
+            ramUsage: part.ramUsage,
+            ramAvailable: part.ramAvailable,
+          };
+        }
+      } catch (error) {
+        console.error("Error during iteration:", error);
+      }
+    }),
+  logs: serverProcedure
+    .meta({
+      permission: "console.read"
+    })
+    .subscription(async function* ({ ctx, input }) {
+      if (!ctx.server.containerId) {
         return;
       }
 
       try {
-        const res = await docker.attachToContainer(server.containerId);
+        const res = await docker.attachToContainer(ctx.server.containerId);
         const asyncIterable = createAsyncIterable(res.data);
 
         for await (const chunk of asyncIterable) {

@@ -7,9 +7,9 @@ export function Error({ error, size }: { error: ErrorType, size?: "small" }): JS
     if (!error.data) {
         return (
             <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
-                <Frown />
+                <Frown size={60} className="text-danger" />
                 <p className="text-2xl text-white">Network Error</p>
-            </div>
+            </div >
         )
     }
     let small = size === "small";

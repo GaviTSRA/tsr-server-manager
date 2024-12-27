@@ -1,7 +1,37 @@
 import axios, { AxiosResponse } from "axios";
 import tar from "tar-stream";
-import stream from "stream";
+import stream, { EventEmitter } from "stream";
 import fs from "fs";
+import { cpuUsage } from "process";
+
+function createAsyncIterable(emitter: EventEmitter) {
+  return {
+    [Symbol.asyncIterator]() {
+      const queue: any[] = [];
+      let resolve: ((value: any) => void) | null = null;
+
+      emitter.on("data", (data) => {
+        if (resolve) {
+          resolve({ value: data });
+          resolve = null;
+        } else {
+          queue.push(data);
+        }
+      });
+      return {
+        next() {
+          return new Promise((res) => {
+            if (queue.length > 0) {
+              res({ value: queue.shift() });
+            } else {
+              resolve = res;
+            }
+          });
+        },
+      };
+    },
+  };
+}
 
 const dockerSocketPath = "/var/run/docker.sock";
 let dockerClient = axios.create({});
@@ -49,13 +79,13 @@ type GetImagesResponse = BasicReponse;
 type ContainerStatus = {
   id: string;
   status:
-    | "created"
-    | "running"
-    | "paused"
-    | "restarting"
-    | "removing"
-    | "exited"
-    | "dead";
+  | "created"
+  | "running"
+  | "paused"
+  | "restarting"
+  | "removing"
+  | "exited"
+  | "dead";
   cpuUsage: number;
   usedRam: number;
   availableRam: number;
@@ -215,6 +245,53 @@ export async function inspectContainer(
     "unknown error (inspect): " + result.status + "\n" + result.statusText
   );
   return { status: "unknown error" };
+}
+
+export async function* containerStats(id: string) {
+  const res = await request(
+    `/containers/${id}/stats`,
+    "get",
+    {
+      stream: true,
+    },
+    {},
+    true
+  );
+  for await (const rawStats of createAsyncIterable(res.data)) {
+    const stats = JSON.parse(rawStats);
+    let ramUsage = 0;
+    let ramAvailable = 0;
+    let cpu_delta = 0;
+    let system_cpu_delta = 0;
+    try {
+      ramAvailable = stats["memory_stats"]["limit"];
+      ramUsage =
+        stats["memory_stats"]["usage"] -
+        (stats["memory_stats"]["stats"]["cache"] ?? 0);
+      cpu_delta =
+        stats["cpu_stats"]["cpu_usage"]["total_usage"] -
+        stats["precpu_stats"]["cpu_usage"]["total_usage"];
+      system_cpu_delta =
+        stats["cpu_stats"]["system_cpu_usage"] -
+        stats["precpu_stats"]["system_cpu_usage"];
+    } catch {
+      yield {
+        cpuUsage: 0,
+        ramUsage: 0,
+        ramAvailable: 0
+      }
+      continue;
+    }
+    yield {
+      cpuUsage:
+        (cpu_delta / system_cpu_delta) *
+        stats["cpu_stats"]["online_cpus"] *
+        100.0,
+      ramUsage,
+      ramAvailable,
+    }
+  }
+
 }
 
 export async function startContainer(

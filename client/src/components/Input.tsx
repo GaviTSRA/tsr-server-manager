@@ -5,6 +5,7 @@ type InputProps = {
   placeholder?: string;
   className?: string;
   value?: string;
+  defaultValue?: string;
   type?: string;
 };
 
@@ -15,6 +16,7 @@ export function Input({
   placeholder,
   className,
   value,
+  defaultValue,
   type = "text",
 }: InputProps) {
   return (
@@ -25,7 +27,8 @@ export function Input({
       }
       onChange={(event) => onValueChange ? onValueChange(event.target.value) : {}}
       placeholder={placeholder}
-      defaultValue={value}
+      value={value}
+      defaultValue={defaultValue}
       onKeyDown={onKeyDown}
       onBlur={onBlur}
       type={type}

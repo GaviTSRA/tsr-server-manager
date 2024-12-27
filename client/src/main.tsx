@@ -38,6 +38,10 @@ const trpcClient = trpc.createClient({
       condition: (op) => op.type === "subscription",
       true: unstable_httpSubscriptionLink({
         url: API_BASE_URL,
+        connectionParams: () => {
+          const token = localStorage.getItem("authToken");
+          return { token: token ?? undefined }
+        }
       }),
       false: httpBatchLink({
         url: API_BASE_URL,

@@ -76,6 +76,7 @@ docker.getImages().then(({ data: downloadedImages, status }) => {
 
 export type Permission =
   | "server"
+  | "status"
   | "power" // TODO frontend
   | "console.read" // TODO
   | "console.write" // TODO

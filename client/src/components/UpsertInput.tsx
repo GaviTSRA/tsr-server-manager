@@ -58,7 +58,7 @@ export function UpsertInput(
                     <p className="text-secondary-text">{description}</p>
                 </div>
                 <Input
-                    value={value}
+                    defaultValue={value}
                     type={type}
                     onValueChange={(newValue) => {
                         setValue(newValue);

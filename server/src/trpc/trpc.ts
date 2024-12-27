@@ -11,10 +11,12 @@ if (!SECRET_KEY) {
   throw new Error("SECRET_KEY is not set");
 }
 
-export const createContext = async ({ req }: CreateHTTPContextOptions) => {
+export const createContext = async ({ req, info }: CreateHTTPContextOptions) => {
   let token = null;
   if (req.headers.authorization) {
     token = req.headers.authorization.split(" ")[1];
+  } else if (info.connectionParams && info.connectionParams.token) {
+    token = info.connectionParams.token;
   }
   const db = drizzle(process.env.DATABASE_URL!, { schema });
   return {
@@ -122,3 +124,14 @@ export const serverProcedure = authedProcedure
       },
     });
   });
+
+export async function hasPermission(ctx: Context, userId: string, serverId: string, permission: Permission) {
+  const result = await ctx.db.query.Permission.findFirst({
+    where: (permissionTable, { and, eq }) => and(
+      eq(permissionTable.permission, permission),
+      eq(permissionTable.userId, userId),
+      eq(permissionTable.serverId, serverId)
+    )
+  });
+  return result !== undefined;
+}

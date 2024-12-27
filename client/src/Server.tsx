@@ -30,7 +30,7 @@ export function Server() {
   const [selectedTab, setSelectedTab] = useState(
     "Console" as "Console" | "Files" | "Network" | "Startup" | "Limits"
   );
-  const { data: server, error } = trpc.server.status.useQuery(
+  const { data: server, error } = trpc.server.server.useQuery(
     { serverId },
     {
       enabled: serverId !== undefined && queryEnabled,
@@ -51,6 +51,11 @@ export function Server() {
   const [killButtonEnabled, setKillButtonEnabled] = useState(false);
   const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
+  const [stats, setStats] = useState([] as {
+    cpuUsage: number;
+    ramUsage: number;
+    ramAvailable: number;
+  }[]);
   const [logs, setLogs] = useState([] as string[]);
   const [wasOffline, setWasOffline] = useState(
     server ? server.status !== "running" : false
@@ -65,7 +70,8 @@ export function Server() {
     if (!server) return;
     if (server.status === "running") {
       if (wasOffline) {
-        reset();
+        resetStats();
+        resetLogs();
       }
       setWasOffline(false);
     } else {
@@ -116,7 +122,15 @@ export function Server() {
     }
   }, [server]);
 
-  const { data: logsSub, reset } = trpc.server.connect.useSubscription(
+  const { data: statsSub, reset: resetStats, error: statsError } = trpc.server.status.useSubscription(
+    { serverId },
+    {
+      onError: (err) => {
+        console.error(err);
+      },
+    }
+  );
+  const { data: logsSub, reset: resetLogs, error: logsError } = trpc.server.logs.useSubscription(
     { serverId },
     {
       onError: (err) => {
@@ -126,11 +140,22 @@ export function Server() {
   );
 
   useEffect(() => {
+    if (!statsSub) return;
+    setStats((prev) => {
+      let prevEntries = prev;
+      if (prev.length > 40) {
+        prevEntries = prev.slice(prev.length - 40, prev.length);
+      }
+      console.info([...prevEntries, statsSub])
+      return [...prevEntries, statsSub];
+    });
+  }, [statsSub]);
+  useEffect(() => {
     if (!logsSub) return;
     setLogs((prev) => {
       let prevEntries = prev;
       if (prev.length > 1000) {
-        prevEntries = prev.slice(prev.length - 1000, prev.length - 1);
+        prevEntries = prev.slice(prev.length - 1000, prev.length);
       }
       return [...prevEntries, ...logsSub.split("\n").filter((el) => el !== "")];
     });
@@ -139,7 +164,7 @@ export function Server() {
   const tabs = {
     Console: [
       <Terminal />,
-      server ? <ConsoleTab server={server} logs={logs} /> : <></>,
+      server ? <ConsoleTab serverId={serverId} stats={stats} statsError={statsError} logs={logs} logsError={logsError} /> : <></>,
     ],
     Files: [<File />, server ? <FilesTab serverId={serverId} /> : <></>],
     Network: [<ServerIcon />, server ? <NetworkTab serverId={serverId} /> : <></>],
