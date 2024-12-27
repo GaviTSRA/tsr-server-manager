@@ -53,8 +53,9 @@ export function Server() {
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
   const [stats, setStats] = useState([] as {
     cpuUsage: number;
+    cpuAvailable?: number;
     ramUsage: number;
-    ramAvailable: number;
+    ramAvailable?: number;
   }[]);
   const [logs, setLogs] = useState([] as string[]);
   const [wasOffline, setWasOffline] = useState(
@@ -146,7 +147,6 @@ export function Server() {
       if (prev.length > 40) {
         prevEntries = prev.slice(prev.length - 40, prev.length);
       }
-      console.info([...prevEntries, statsSub])
       return [...prevEntries, statsSub];
     });
   }, [statsSub]);
@@ -277,7 +277,7 @@ export function Server() {
         </div>
       </div>
       {server && (
-        <div className="w-full h-full overflow-y-auto p-4">
+        <div className="w-full max-h-full overflow-y-auto p-4">
           {tabs[selectedTab][1]}
         </div>
       )}

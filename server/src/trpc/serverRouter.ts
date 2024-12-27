@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import * as docker from "../docker";
-import { Context, publicProcedure, router, serverProcedure, t } from "./trpc";
+import { Context, hasPermission, publicProcedure, router, serverProcedure, t } from "./trpc";
 import { z } from "zod";
 import * as schema from "../schema";
 import EventEmitter from "events";
@@ -74,12 +74,14 @@ export const serverRouter = router({
         })
       }
       const result = docker.containerStats(ctx.server.containerId);
+      const hasLimitPermission = await hasPermission(ctx, ctx.user.id, ctx.server.id, "limits.read");
       try {
         for await (const part of result) {
           yield {
             cpuUsage: part.cpuUsage,
+            cpuAvailable: hasLimitPermission ? ctx.server.cpuLimit : undefined,
             ramUsage: part.ramUsage,
-            ramAvailable: part.ramAvailable,
+            ramAvailable: hasLimitPermission ? part.ramAvailable : undefined,
           };
         }
       } catch (error) {

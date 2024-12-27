@@ -258,12 +258,13 @@ export async function* containerStats(id: string) {
     true
   );
   for await (const rawStats of createAsyncIterable(res.data)) {
-    const stats = JSON.parse(rawStats);
     let ramUsage = 0;
     let ramAvailable = 0;
     let cpu_delta = 0;
     let system_cpu_delta = 0;
+    let cpuUsage = 0;
     try {
+      const stats = JSON.parse(rawStats);
       ramAvailable = stats["memory_stats"]["limit"];
       ramUsage =
         stats["memory_stats"]["usage"] -
@@ -274,19 +275,13 @@ export async function* containerStats(id: string) {
       system_cpu_delta =
         stats["cpu_stats"]["system_cpu_usage"] -
         stats["precpu_stats"]["system_cpu_usage"];
+      cpuUsage = (cpu_delta / system_cpu_delta) *
+        stats["cpu_stats"]["online_cpus"] * 100;
     } catch {
-      yield {
-        cpuUsage: 0,
-        ramUsage: 0,
-        ramAvailable: 0
-      }
       continue;
     }
     yield {
-      cpuUsage:
-        (cpu_delta / system_cpu_delta) *
-        stats["cpu_stats"]["online_cpus"] *
-        100.0,
+      cpuUsage,
       ramUsage,
       ramAvailable,
     }

@@ -78,7 +78,7 @@ export type Permission =
   | "server"
   | "status"
   | "power" // TODO frontend
-  | "console.read" // TODO
+  | "console.read"
   | "console.write" // TODO
   | "files.read"
   | "files.rename" // TODO frontend

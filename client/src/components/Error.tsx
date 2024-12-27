@@ -36,7 +36,7 @@ export function Error({ error, size }: { error: ErrorType, size?: "small" }): JS
 
     if (small) {
         return (
-            <div className="flex flex-row gap-1 items-center">
+            <div className="flex flex-row gap-2 items-center">
                 {icon}
                 <p className="text-secondary-text">{details}</p>
             </div>
