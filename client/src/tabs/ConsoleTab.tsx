@@ -58,11 +58,11 @@ export function ConsoleTab({
   return (
     <div className="w-full h-full flex flex-row">
       <div
-        className="bg-black mt-auto text-secondary-text w-2/3 h-full rounded flex flex-col overflow-auto relative"
+        className="bg-black mt-auto text-secondary-text w-2/3 h-full rounded-lg flex flex-col relative"
         ref={consoleRef}
         onScroll={handleScroll}
       >
-        <div className="px-2 pb-4">
+        <div className="px-2 pb-4 overflow-auto">
           {logs.map((log, index) => (
             <div
               key={index}
@@ -79,6 +79,7 @@ export function ConsoleTab({
             value={command}
             onValueChange={(value) => setCommand(value)}
             onKeyDown={handleKeyDown}
+            className="rounded-b-lg"
           />
         </div>
       </div>

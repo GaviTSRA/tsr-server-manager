@@ -38,18 +38,18 @@ export function Error({ error, size }: { error: ErrorType, size?: "small" }): JS
         return (
             <div className="flex flex-row gap-1 items-center">
                 {icon}
-                <p className="text-secondary">{details}</p>
+                <p className="text-secondary-text">{details}</p>
             </div>
         )
     }
 
     return (
-        <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
-            <div className="flex flex-col items-center">
+        <div className="w-full h-full flex flex-col gap-1 items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
                 {icon}
                 <p className="text-2xl text-white">{message}</p>
             </div>
-            <p className="text-large text-center text-secondary">{details}</p>
+            <p className="text-large text-center text-secondary-text">{details}</p>
         </div >
     )
 }

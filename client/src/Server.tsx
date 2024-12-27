@@ -14,27 +14,36 @@ import {
   Square,
   Play,
 } from "react-feather";
-import { Navigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { Error } from "./components/Error";
 import { LimitsTab } from "./tabs/LimitsTab";
 import { trpc } from "./main";
 import { ConsoleTab } from "./tabs/ConsoleTab";
 import { NetworkTab } from "./tabs/NetworkTab";
 import { StartupTab } from "./tabs/StartupTab";
 import { FilesTab } from "./tabs/FilesTab";
+import { MoonLoader } from "react-spinners";
 
 export function Server() {
   const { serverId } = useParams() as { serverId: string };
+  const [queryEnabled, setQueryEnabled] = useState(true);
   const [selectedTab, setSelectedTab] = useState(
     "Console" as "Console" | "Files" | "Network" | "Startup" | "Limits"
   );
   const { data: server, error } = trpc.server.status.useQuery(
     { serverId },
     {
-      enabled: serverId !== undefined,
+      enabled: serverId !== undefined && queryEnabled,
       retry: 1,
       refetchInterval: 1000,
     }
   );
+
+  useEffect(() => {
+    if (error) {
+      setQueryEnabled(false);
+    }
+  }, [error])
 
   const [startButtonEnabled, setStartButtonEnabled] = useState(false);
   const [restartButtonEnabled, setRestartButtonEnabled] = useState(false);
@@ -138,10 +147,17 @@ export function Server() {
     Limits: [<Cpu />, server ? <LimitsTab serverId={serverId} /> : <></>],
   };
 
-  if (error && error.data?.code === "UNAUTHORIZED") {
-    return <Navigate to="/forbidden" />;
+  if (error) {
+    return <Error error={error} />
   }
-  if (!server) return <></>;
+
+  if (!server) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <MoonLoader size={100} color={"#FFFFFF"} />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-row bg-neutral-100 text-primary-text">
