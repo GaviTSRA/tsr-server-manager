@@ -25,10 +25,17 @@ export const serverFilesRouter = router({
           return { type: "file" as "file", content };
         }
       } catch (err) {
-        console.info(err);
-        throw new TRPCError({
-          code: "NOT_FOUND",
-        });
+        if (typeof err === "string") {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: err
+          });
+        } else if (err instanceof Error) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: err.message
+          });
+        }
       }
 
       const result: {

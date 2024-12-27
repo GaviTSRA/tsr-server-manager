@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { ServerStatus, trpc } from "../main";
+import { trpc } from "../main";
 import { Container } from "../components/Container";
 import { Edit2, Folder, Trash2, File, MoreVertical } from "react-feather";
 import { Input } from "../components/Input";
+import { MoonLoader } from "react-spinners";
+import { Error } from "../components/Error";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -179,20 +181,30 @@ function FileRow({
   );
 }
 
-export function FilesTab({ server }: { server: ServerStatus }) {
+export function FilesTab({ serverId }: { serverId: string }) {
   const [path, setPath] = useState("/");
   const [content, setContent] = useState(undefined as string | undefined);
 
-  const { data: files, refetch } = trpc.server.files.list.useQuery(
-    { path, serverId: server.id },
+  const { data: files, refetch, error } = trpc.server.files.list.useQuery(
+    { path, serverId: serverId },
     {
-      enabled: server.id !== undefined,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
     }
   );
   const editFile = trpc.server.files.edit.useMutation();
 
+  if (error) {
+    return <Error error={error} />
+  }
+
   if (!files) {
-    return <></>;
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <MoonLoader size={100} color={"#FFFFFF"} />
+      </div>
+    );
   }
 
   if (files.type === "file" && !content) setContent(files.content);
@@ -220,6 +232,7 @@ export function FilesTab({ server }: { server: ServerStatus }) {
             .map((part, index) => (
               <div
                 className="flex flex-row items-center"
+                key={index}
                 onClick={() => {
                   setPath(
                     "/" +
@@ -252,7 +265,7 @@ export function FilesTab({ server }: { server: ServerStatus }) {
                 file={file}
                 path={path}
                 setPath={setPath}
-                serverId={server.id}
+                serverId={serverId}
                 key={file.name + file.size}
                 refetch={refetch}
               />
@@ -270,7 +283,7 @@ export function FilesTab({ server }: { server: ServerStatus }) {
             className="bg-success text-black px-2 py-1 text-2xl rounded"
             onClick={() => {
               if (content) {
-                editFile.mutate({ content, path, serverId: server.id });
+                editFile.mutate({ content, path, serverId });
               }
             }}
           >

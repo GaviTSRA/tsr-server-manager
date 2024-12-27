@@ -21,7 +21,6 @@ export function UpsertDropdown(
     const [internalSuccess, setInternalSuccess] = useState(false);
 
     useEffect(() => {
-        console.info(label, edited, fetching);
         if (edited && !internalFetching) {
             setInternalFetching(fetching);
             if (fetching) {
@@ -31,7 +30,6 @@ export function UpsertDropdown(
         }
     }, [fetching])
     useEffect(() => {
-        console.info(label, "err", edited, error);
         if (edited && error) {
             setInternalError(error);
             setInternalFetching(false);
@@ -39,7 +37,6 @@ export function UpsertDropdown(
         }
     }, [error])
     useEffect(() => {
-        console.info(label, "sc", edited, success);
         if (edited && success) {
             setInternalSuccess(success);
             setInternalFetching(false);

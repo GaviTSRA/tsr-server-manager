@@ -1,16 +1,37 @@
 import { useState } from "react";
-import { ServerStatus, trpc } from "../main";
+import { trpc } from "../main";
 import { Container } from "../components/Container";
 import { X } from "react-feather";
 import { Input } from "../components/Input";
+import { MoonLoader } from "react-spinners";
+import { Error } from "../components/Error";
 
-export function NetworkTab({ server }: { server: ServerStatus }) {
-  const updatePorts = trpc.server.setPorts.useMutation();
+export function NetworkTab({ serverId }: { serverId: string }) {
+  const { data: ports, error, refetch } = trpc.server.network.read.useQuery(
+    { serverId },
+    {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    });
+  const writePorts = trpc.server.network.write.useMutation();
   const [newPort, setNewPort] = useState(null as string | null);
+
+  if (error) {
+    return <Error error={error} />
+  }
+
+  if (!ports) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <MoonLoader size={100} color={"#FFFFFF"} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-2">
-      {server.ports.map((port) => {
+      {ports.map((port) => {
         return (
           <Container
             className="px-4 flex items-center gap-2 rounded bg-neutral-200"
@@ -20,9 +41,11 @@ export function NetworkTab({ server }: { server: ServerStatus }) {
             <div
               className="p-1 bg-danger rounded"
               onClick={() =>
-                updatePorts.mutate({
-                  ports: [...server.ports.filter((el) => el !== port)],
-                  serverId: server.id,
+                writePorts.mutate({
+                  ports: [...ports.filter((el) => el !== port)],
+                  serverId,
+                }, {
+                  onSuccess: () => refetch()
                 })
               }
             >
@@ -43,9 +66,11 @@ export function NetworkTab({ server }: { server: ServerStatus }) {
           className="p-2 bg-success rounded"
           onClick={() => {
             if (!newPort) return;
-            updatePorts.mutate({
-              ports: [...server.ports, newPort],
-              serverId: server.id,
+            writePorts.mutate({
+              ports: [...ports, newPort],
+              serverId,
+            }, {
+              onSuccess: () => refetch()
             });
           }}
         >

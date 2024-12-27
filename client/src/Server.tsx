@@ -132,8 +132,8 @@ export function Server() {
       <Terminal />,
       server ? <ConsoleTab server={server} logs={logs} /> : <></>,
     ],
-    Files: [<File />, server ? <FilesTab server={server} /> : <></>],
-    Network: [<ServerIcon />, server ? <NetworkTab server={server} /> : <></>],
+    Files: [<File />, server ? <FilesTab serverId={serverId} /> : <></>],
+    Network: [<ServerIcon />, server ? <NetworkTab serverId={serverId} /> : <></>],
     Startup: [<PlayCircle />, server ? <StartupTab serverId={serverId} serverType={server.type} /> : <></>],
     Limits: [<Cpu />, server ? <LimitsTab serverId={serverId} /> : <></>],
   };

@@ -79,11 +79,11 @@ export type Permission =
   | "power" // TODO frontend
   | "console.read" // TODO
   | "console.write" // TODO
-  | "files.read" // TODO frontend
+  | "files.read"
   | "files.rename" // TODO frontend
   | "files.edit"// TODO frontend
   | "files.delete"// TODO frontend
-  | "network.read"// TODO frontend
+  | "network.read"
   | "network.write"// TODO frontend
   | "startup.read"
   | "startup.write"
