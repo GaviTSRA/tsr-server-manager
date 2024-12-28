@@ -75,7 +75,7 @@ export function UserSettings({ user, ownPermissions, serverId, refetch }: {
               <p>{permission}</p>
               <div className="ml-auto">
                 <Toggle
-                  disabled={user.owner || !ownPermissions.includes(permission)}
+                  disabled={!user.owner && !ownPermissions.includes(permission)}
                   defaultValue={user.permissions.includes(permission) || user.owner}
                   onChange={(value) => {
                     if (value) {
