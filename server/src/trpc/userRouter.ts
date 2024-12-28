@@ -1,5 +1,5 @@
 import { User } from "../schema";
-import { publicProcedure, router } from "./trpc";
+import { authedProcedure, publicProcedure, router } from "./trpc";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { TRPCError } from "@trpc/server";
@@ -62,4 +62,13 @@ export const userRouter = router({
       const token = jwt.sign({ id: user.id }, SECRET_KEY);
       return token;
     }),
+  list: authedProcedure
+    .query(({ ctx }) => {
+      return ctx.db.query.User.findMany({
+        columns: {
+          id: true,
+          name: true,
+        }
+      });
+    })
 });

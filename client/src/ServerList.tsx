@@ -107,7 +107,7 @@ function ServerList() {
               <div
                 key={server.id}
                 className="w-full bg-neutral-200 flex flex-row hover:bg-neutral-300 transition-colors cursor-pointer p-4 rounded"
-                onClick={() => navigate(`/server/${server.id}`)}
+                onClick={() => navigate(`/server/${server.id}/Console`)}
               >
                 <div className="flex flex-col">
                   <p className="text-xl">{server.name}</p>

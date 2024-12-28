@@ -9,6 +9,7 @@ import { startupRouter } from "./server/startupRouter";
 import { networkRouter } from "./server/networkRouter";
 import { limitsRouter } from "./server/limitsRouter";
 import { powerRouter } from "./server/powerRouter";
+import { usersRouter } from "./server/usersRouter";
 
 function createAsyncIterable(emitter: EventEmitter) {
   return {
@@ -45,6 +46,7 @@ export const serverRouter = router({
   network: networkRouter,
   startup: startupRouter,
   limits: limitsRouter,
+  users: usersRouter,
   server: serverProcedure
     .meta({
       permission: "server",
@@ -74,7 +76,7 @@ export const serverRouter = router({
         })
       }
       const result = docker.containerStats(ctx.server.containerId);
-      const hasLimitPermission = await hasPermission(ctx, ctx.user.id, ctx.server.id, "limits.read");
+      const hasLimitPermission = await hasPermission(ctx, ctx.user.id, ctx.server, "limits.read");
       try {
         for await (const part of result) {
           yield {

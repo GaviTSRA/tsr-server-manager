@@ -13,6 +13,7 @@ import {
   Settings,
   Square,
   Play,
+  Users,
 } from "react-feather";
 import { Link, useParams } from "react-router-dom";
 import { Error } from "./components/Error";
@@ -23,6 +24,7 @@ import { NetworkTab } from "./tabs/NetworkTab";
 import { StartupTab } from "./tabs/StartupTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { MoonLoader } from "react-spinners";
+import { UsersTab } from "./tabs/UsersTab";
 
 export function Server() {
   const { serverId, tab } = useParams() as {
@@ -164,35 +166,37 @@ export function Server() {
   const tabs = {
     Console: [
       <Terminal />,
-      server ? <ConsoleTab serverId={serverId} stats={stats} statsError={statsError} logs={logs} logsError={logsError} /> : <></>,
+      <ConsoleTab serverId={serverId} stats={stats} statsError={statsError} logs={logs} logsError={logsError} />,
     ],
-    Files: [<File />, server ? <FilesTab serverId={serverId} /> : <></>],
-    Network: [<ServerIcon />, server ? <NetworkTab serverId={serverId} /> : <></>],
+    Files: [<File />, <FilesTab serverId={serverId} />],
+    Network: [<ServerIcon />, <NetworkTab serverId={serverId} />],
     Startup: [<PlayCircle />, server ? <StartupTab serverId={serverId} serverType={server.type} /> : <></>],
-    Limits: [<Cpu />, server ? <LimitsTab serverId={serverId} /> : <></>],
+    Limits: [<Cpu />, <LimitsTab serverId={serverId} />],
+    Users: [<Users />, <UsersTab serverId={serverId} />]
   };
 
   if (error) {
     return <Error error={error} />
   }
 
-  if (!server) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <MoonLoader size={100} color={"#FFFFFF"} />
-      </div>
-    );
-  }
-
   return (
     <div className="w-full h-full flex flex-row bg-neutral-100 text-primary-text">
       <div className="h-full flex flex-col bg-neutral-200 shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl">
         <div className="p-2 rounded flex flex-col gap-2">
-          <p className="text-2xl mx-auto">{server.name}</p>
-          <div className="flex flex-row items-center gap-2">
-            {statusIcon}
-            <p>{status}</p>
-          </div>
+          {!server && (
+            <div className="w-full py-2 flex items-center justify-center">
+              <MoonLoader size={30} color={"#FFFFFF"} />
+            </div>
+          )}
+          {server && (
+            <div className="flex flex-col">
+              <p className="text-2xl mx-auto">{server.name}</p>
+              <div className="flex flex-row items-center gap-2">
+                {statusIcon}
+                <p>{status}</p>
+              </div>
+            </div>
+          )}
           <div className="flex rounded-xl flex-row">
             <Play
               size={40}
@@ -275,7 +279,7 @@ export function Server() {
       {!tabs[tab] &&
         <Error error={{ data: { httpStatus: 404, code: "NOT_FOUND" }, message: "", shape: undefined }} />
       }
-      {server && tabs[tab] && (
+      {tabs[tab] && (
         <div className="w-full max-h-full overflow-y-auto p-4">
           {tabs[tab][1]}
         </div>

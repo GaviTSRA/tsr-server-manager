@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
 import { z } from "zod";
 import { Permission } from "..";
+import { ServerType } from "../schema";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -125,12 +126,13 @@ export const serverProcedure = authedProcedure
     });
   });
 
-export async function hasPermission(ctx: Context, userId: string, serverId: string, permission: Permission) {
+export async function hasPermission(ctx: Context, userId: string, server: ServerType, permission: string) {
+  if (server.ownerId === userId) return true;
   const result = await ctx.db.query.Permission.findFirst({
     where: (permissionTable, { and, eq }) => and(
       eq(permissionTable.permission, permission),
       eq(permissionTable.userId, userId),
-      eq(permissionTable.serverId, serverId)
+      eq(permissionTable.serverId, server.id)
     )
   });
   return result !== undefined;
