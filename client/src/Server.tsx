@@ -14,7 +14,7 @@ import {
   Square,
   Play,
 } from "react-feather";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Error } from "./components/Error";
 import { LimitsTab } from "./tabs/LimitsTab";
 import { trpc } from "./main";
@@ -25,11 +25,11 @@ import { FilesTab } from "./tabs/FilesTab";
 import { MoonLoader } from "react-spinners";
 
 export function Server() {
-  const { serverId } = useParams() as { serverId: string };
+  const { serverId, tab } = useParams() as {
+    serverId: string,
+    tab: "Console" | "Files" | "Network" | "Startup" | "Limits"
+  };
   const [queryEnabled, setQueryEnabled] = useState(true);
-  const [selectedTab, setSelectedTab] = useState(
-    "Console" as "Console" | "Files" | "Network" | "Startup" | "Limits"
-  );
   const { data: server, error } = trpc.server.server.useQuery(
     { serverId },
     {
@@ -254,31 +254,30 @@ export function Server() {
         </div>
         <div className="w-full h-full gap-2 flex flex-col items-center p-2">
           {Object.entries(tabs).map(([name, [icon]]) => (
-            <div
+            <Link
               className={
                 "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
-                (selectedTab === name
+                (tab === name
                   ? "bg-neutral-100 border-l-primary-100"
                   : "bg-neutral-200 hover:bg-neutral-300")
               }
-              onClick={() =>
-                setSelectedTab(
-                  name as "Console" | "Files" | "Network" | "Startup" | "Limits"
-                )
-              }
+              to={`/server/${serverId}/${name}`}
               key={name}
             >
               <div className="mx-auto flex flex-row gap-2">
                 {icon}
                 <p>{name}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
-      {server && (
+      {!tabs[tab] &&
+        <Error error={{ data: { httpStatus: 404, code: "NOT_FOUND" }, message: "", shape: undefined }} />
+      }
+      {server && tabs[tab] && (
         <div className="w-full max-h-full overflow-y-auto p-4">
-          {tabs[selectedTab][1]}
+          {tabs[tab][1]}
         </div>
       )}
     </div>

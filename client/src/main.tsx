@@ -18,8 +18,9 @@ const router = createBrowserRouter([
     element: <ServerList />,
   },
   {
-    path: "/server/:serverId",
+    path: "/server/:serverId/:tab",
     element: <Server />,
+
   },
   {
     path: "/login",

@@ -79,7 +79,7 @@ export type Permission =
   | "status"
   | "power" // TODO frontend
   | "console.read"
-  | "console.write" // TODO
+  | "console.write"
   | "files.read"
   | "files.rename" // TODO frontend
   | "files.edit"// TODO frontend
