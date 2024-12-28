@@ -28,7 +28,7 @@ const PERMISSIONS = [
   "users.write"
 ] as Permission[];
 
-export function UserSettings({ user, ownPermissions, serverId, refetch }: {
+export function UserSettings({ user, ownPermissions, serverId, refetch, isOwner }: {
   user: {
     id: string;
     name: string;
@@ -36,6 +36,7 @@ export function UserSettings({ user, ownPermissions, serverId, refetch }: {
     permissions: Permission[];
   },
   ownPermissions: Permission[];
+  isOwner: boolean;
   serverId: string;
   refetch: () => void;
 }) {
@@ -75,7 +76,7 @@ export function UserSettings({ user, ownPermissions, serverId, refetch }: {
               <p>{permission}</p>
               <div className="ml-auto">
                 <Toggle
-                  disabled={!user.owner && !ownPermissions.includes(permission)}
+                  disabled={user.owner || (!ownPermissions.includes(permission) && !isOwner)}
                   defaultValue={user.permissions.includes(permission) || user.owner}
                   onChange={(value) => {
                     if (value) {
@@ -131,6 +132,7 @@ export function UsersTab({ serverId }: { serverId: string }) {
   const { data: users, error, refetch: refetchUsers } = trpc.server.users.read.useQuery({ serverId });
   const { data: allUsers, error: usersError, refetch: refetchAllUsers } = trpc.user.list.useQuery();
   const [ownPermissions, setOwnPermissions] = useState([] as Permission[]);
+  const [isOwner, setIsOwner] = useState(false);
   const [newUser, setNewUser] = useState(null as string | null);
 
   const addUser = trpc.server.users.addUser.useMutation();
@@ -139,6 +141,7 @@ export function UsersTab({ serverId }: { serverId: string }) {
     if (!users) return;
     const self = users.find(user => user.self);
     if (!self) return;
+    setIsOwner(self.owner);
     setOwnPermissions(self.permissions);
   }, [users]);
 
@@ -162,7 +165,7 @@ export function UsersTab({ serverId }: { serverId: string }) {
   return (
     <div className="grid grid-cols-4 gap-2">
       {users.map(user => (
-        <UserSettings user={user} ownPermissions={ownPermissions} serverId={serverId} key={user.id} refetch={refetch} />
+        <UserSettings user={user} ownPermissions={ownPermissions} serverId={serverId} isOwner={isOwner} key={user.id} refetch={refetch} />
       ))}
       <Container className="h-fit">
         <div className="w-full flex items-center justify-center">
