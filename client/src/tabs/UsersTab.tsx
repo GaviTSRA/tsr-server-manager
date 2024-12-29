@@ -163,7 +163,7 @@ export function UsersTab({ serverId }: { serverId: string }) {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
       {users.map(user => (
         <UserSettings user={user} ownPermissions={ownPermissions} serverId={serverId} isOwner={isOwner} key={user.id} refetch={refetch} />
       ))}

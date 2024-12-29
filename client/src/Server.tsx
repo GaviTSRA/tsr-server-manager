@@ -14,6 +14,7 @@ import {
   Square,
   Play,
   Users,
+  Menu,
 } from "react-feather";
 import { Link, useParams } from "react-router-dom";
 import { Error } from "./components/Error";
@@ -63,6 +64,17 @@ export function Server() {
   const [wasOffline, setWasOffline] = useState(
     server ? server.status !== "running" : false
   );
+  const [sidebarOpen, setsidebarOpen] = useState(true);
+
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const startServer = trpc.server.power.start.useMutation();
   const restartServer = trpc.server.power.restart.useMutation();
@@ -180,102 +192,116 @@ export function Server() {
   }
 
   return (
-    <div className="w-full h-full flex flex-row bg-neutral-100 text-primary-text">
-      <div className="h-full flex flex-col bg-neutral-200 shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl">
-        <div className="p-2 rounded flex flex-col gap-2">
-          {!server && (
-            <div className="w-full py-2 flex items-center justify-center">
-              <MoonLoader size={30} color={"#FFFFFF"} />
-            </div>
-          )}
-          {server && (
-            <div className="flex flex-col">
-              <p className="text-2xl mx-auto">{server.name}</p>
-              <div className="flex flex-row items-center gap-2">
-                {statusIcon}
-                <p>{status}</p>
+    <div className="w-full flex flex-row h-full bg-neutral-100 text-primary-text" >
+      {sidebarOpen && (
+        <div
+          className={"h-full flex flex-col bg-neutral-200 shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl" +
+            (screenWidth < 600 ? " absolute z-50" : "")
+          }
+        >
+          <div className="p-2 rounded flex flex-col gap-2">
+            {!server && (
+              <div className="w-full py-2 flex items-center justify-center">
+                {screenWidth < 600 && <Menu size={30} onClick={() => setsidebarOpen(!sidebarOpen)} />}
+                <MoonLoader size={30} color={"#FFFFFF"} />
               </div>
+            )}
+            {server && (
+              <div className="flex flex-col">
+                <div className="flex flex-row">
+                  {screenWidth < 600 && <Menu size={30} onClick={() => setsidebarOpen(!sidebarOpen)} />}
+                  <p className="text-2xl mx-auto">{server.name}</p>
+
+                </div>
+                <div className="flex flex-row items-center gap-2">
+                  {statusIcon}
+                  <p>{status}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex rounded-xl flex-row">
+              <Play
+                size={40}
+                className={
+                  `p-2 rounded-l-lg border-neutral-400 border-1 ` +
+                  (startButtonEnabled
+                    ? "bg-neutral-300 hover:bg-green-800"
+                    : "bg-neutral-100")
+                }
+                onClick={() => {
+                  if (startButtonEnabled) {
+                    startServer.mutate({ serverId });
+                  }
+                }}
+              />
+              <RotateCw
+                size={40}
+                className={
+                  `p-2 border-neutral-400 border-1 ` +
+                  (restartButtonEnabled
+                    ? "bg-neutral-300 hover:bg-danger"
+                    : "bg-neutral-100")
+                }
+                onClick={() => {
+                  if (restartButtonEnabled) {
+                    restartServer.mutate({ serverId });
+                  }
+                }}
+              />
+              <Square
+                size={40}
+                className={
+                  `p-2 border-neutral-400 border-1 ` +
+                  (stopButtonEnabled
+                    ? "bg-neutral-300 hover:bg-danger"
+                    : "bg-neutral-100")
+                }
+                onClick={() => {
+                  if (stopButtonEnabled) {
+                    stopServer.mutate({ serverId });
+                  }
+                }}
+              />
+              <X
+                size={40}
+                className={
+                  `p-2 rounded-r-lg border-neutral-400 border-1 ` +
+                  (killButtonEnabled
+                    ? "bg-neutral-300 hover:bg-danger"
+                    : "bg-neutral-100")
+                }
+                onClick={() => {
+                  if (killButtonEnabled) {
+                    killServer.mutate({ serverId });
+                  }
+                }}
+              />
             </div>
-          )}
-          <div className="flex rounded-xl flex-row">
-            <Play
-              size={40}
-              className={
-                `p-2 rounded-l-lg border-neutral-400 border-1 ` +
-                (startButtonEnabled
-                  ? "bg-neutral-300 hover:bg-green-800"
-                  : "bg-neutral-100")
-              }
-              onClick={() => {
-                if (startButtonEnabled) {
-                  startServer.mutate({ serverId });
+          </div>
+          <div className="w-full h-full gap-2 flex flex-col items-center p-2">
+            {Object.entries(tabs).map(([name, [icon]]) => (
+              <Link
+                className={
+                  "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
+                  (tab === name
+                    ? "bg-neutral-100 border-l-primary-100"
+                    : "bg-neutral-200 hover:bg-neutral-300")
                 }
-              }}
-            />
-            <RotateCw
-              size={40}
-              className={
-                `p-2 border-neutral-400 border-1 ` +
-                (restartButtonEnabled
-                  ? "bg-neutral-300 hover:bg-danger"
-                  : "bg-neutral-100")
-              }
-              onClick={() => {
-                if (restartButtonEnabled) {
-                  restartServer.mutate({ serverId });
-                }
-              }}
-            />
-            <Square
-              size={40}
-              className={
-                `p-2 border-neutral-400 border-1 ` +
-                (stopButtonEnabled
-                  ? "bg-neutral-300 hover:bg-danger"
-                  : "bg-neutral-100")
-              }
-              onClick={() => {
-                if (stopButtonEnabled) {
-                  stopServer.mutate({ serverId });
-                }
-              }}
-            />
-            <X
-              size={40}
-              className={
-                `p-2 rounded-r-lg border-neutral-400 border-1 ` +
-                (killButtonEnabled
-                  ? "bg-neutral-300 hover:bg-danger"
-                  : "bg-neutral-100")
-              }
-              onClick={() => {
-                if (killButtonEnabled) {
-                  killServer.mutate({ serverId });
-                }
-              }}
-            />
+                to={`/server/${serverId}/${name}`}
+                key={name}
+              >
+                <div className="mx-auto flex flex-row gap-2">
+                  {icon}
+                  <p>{name}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
-        <div className="w-full h-full gap-2 flex flex-col items-center p-2">
-          {Object.entries(tabs).map(([name, [icon]]) => (
-            <Link
-              className={
-                "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
-                (tab === name
-                  ? "bg-neutral-100 border-l-primary-100"
-                  : "bg-neutral-200 hover:bg-neutral-300")
-              }
-              to={`/server/${serverId}/${name}`}
-              key={name}
-            >
-              <div className="mx-auto flex flex-row gap-2">
-                {icon}
-                <p>{name}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      )}
+      {!sidebarOpen && (
+        <Menu size={30} onClick={() => setsidebarOpen(!sidebarOpen)} className="flex m-2" />
+      )}
       {!tabs[tab] &&
         <Error error={{ data: { httpStatus: 404, code: "NOT_FOUND" }, message: "", shape: undefined }} />
       }

@@ -83,8 +83,8 @@ export function ConsoleTab({
   }
 
   return (
-    <div className="w-full h-full flex flex-row">
-      <div className="bg-black mt-auto text-secondary-text w-2/3 h-full rounded-lg flex flex-col relative">
+    <div className="w-full h-full flex flex-col lg:flex-row">
+      <div className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-lg flex flex-col relative">
         {logsError ? (
           <Container className="h-full">
             <Error error={logsError} />
@@ -124,13 +124,13 @@ export function ConsoleTab({
           </div>
         </div>
       </div>
-      <div className="mx-4 w-1/3 flex flex-col gap-2">
+      <div className="lg:mx-4 w-full mt-4 lg:mt-0 lg:w-1/3 flex flex-col gap-2">
         {statsError ? (
           <Container className="h-full" >
             <Error error={statsError} />
           </Container>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row lg:flex-col gap-4">
             <Container className="flex flex-col">
               <div className="flex flex-row items-center gap-2 p-2">
                 <Cpu />

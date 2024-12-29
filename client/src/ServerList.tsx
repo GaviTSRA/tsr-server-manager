@@ -164,7 +164,7 @@ function ServerList() {
           onClick={() => setCreatingServer(false)}
         >
           <div
-            className="bg-neutral-200 p-4 m-auto rounded flex flex-col w-1/4"
+            className="bg-neutral-200 p-4 m-auto rounded flex flex-col w-full sm:w-3/4 md:w-2/4 lg:w-1/4"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-2xl mb-4 text-center">Create New Server</p>

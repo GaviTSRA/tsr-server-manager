@@ -18,7 +18,7 @@ export function Login(): JSX.Element {
 
   return (
     <div className="w-full h-full flex items-center bg-neutral-100 text-white">
-      <div className="w-1/4 m-auto bg-neutral-200 rounded-2xl p-4">
+      <div className="w-2/3 md:w-2/4 lg:w-1/4 m-auto bg-neutral-200 rounded-2xl p-4">
         <div className="flex flex-col">
           <div className="flex flex-row items-center pr-2 py-2 gap-2">
             <User />
@@ -37,7 +37,7 @@ export function Login(): JSX.Element {
             type="password"
           />
         </div>
-        <div className="w-full flex items-center justify-center mt-8 gap-8">
+        <div className="w-full flex flex-col sm:flex-row items-center justify-center mt-8 gap-2 sm:gap-8">
           <button
             disabled={!username || !password || loggingIn || registering}
             className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded px-4 py-2 text-white gap-2"
