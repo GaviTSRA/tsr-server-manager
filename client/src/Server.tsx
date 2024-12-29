@@ -86,7 +86,7 @@ export function Server() {
         setRestartButtonEnabled(false);
         setStopButtonEnabled(false);
         setKillButtonEnabled(false);
-        setStatusIcon(<Settings size={40} className="text-gray-500" />);
+        setStatusIcon(<Settings size={30} className="text-gray-500" />);
         setStatus("Not Configured");
         break;
       case "created":

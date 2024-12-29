@@ -22,6 +22,7 @@ export const powerRouter = router({
         Object.entries(ctx.server.options).map(([id, value]) => {
           env.push(`${id.toUpperCase()}=${value}`);
         });
+        env.push(`SERVER_RAM=${ctx.server.ramLimit}`);
 
         if (!containerId) {
           const result = await docker.createContainer(
@@ -31,7 +32,7 @@ export const powerRouter = router({
             [
               "/bin/bash",
               "-c",
-              `screen -S server bash -c "/server/install.sh && ${type.command}"`,
+              `screen -S server bash -c "/server/install.sh && ${type.command.replace("${SERVER_RAM}", ctx.server.ramLimit.toString())}"`,
             ],
             env,
             ctx.server.ports,
