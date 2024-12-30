@@ -13,13 +13,13 @@ type ServerStatus = {
   containerId?: string;
   name: string;
   status?:
-    | "created"
-    | "running"
-    | "paused"
-    | "restarting"
-    | "removing"
-    | "exited"
-    | "dead";
+  | "created"
+  | "running"
+  | "paused"
+  | "restarting"
+  | "removing"
+  | "exited"
+  | "dead";
 };
 
 export const appRouter = router({
@@ -91,7 +91,6 @@ export const appRouter = router({
         id,
         ownerId: ctx.user.id,
         name: input.name,
-        state: "NOT_INSTALLED",
         type: type.id,
         options: defaults,
         ports: [],

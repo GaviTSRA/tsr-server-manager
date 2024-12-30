@@ -139,7 +139,9 @@ export async function createContainer(
   env: string[],
   ports: string[],
   cpuLimit: number,
-  ramLimit: number
+  ramLimit: number,
+  restartPolicy: "no" | "on-failure" | "unless-stopped" | "always",
+  restartRetryCount: number,
 ): Promise<{ status: CreateContainerResponse; containerId?: string }> {
   const hostDirectory = (process.env.SERVERS_DIR as string) + id;
   const serverDirectory = "servers/" + id;
@@ -163,6 +165,10 @@ export async function createContainer(
         Memory: ramLimit * 1024 * 1024,
         CpuPeriod: 100000,
         CpuQuota: 100000 * cpuLimit,
+        RestartPolicy: {
+          Name: restartPolicy,
+          MaximumRetryCount: restartPolicy === "on-failure" ? restartRetryCount : undefined
+        }
       },
       WorkingDir: "/server",
       Env: env,
@@ -174,6 +180,8 @@ export async function createContainer(
     case 201:
       return { status: "success", containerId: result.data["Id"] };
     case 400:
+      console.info(restartPolicy, restartRetryCount)
+      console.info(result.statusText)
       return { status: "bad paramater" };
     case 404:
       return { status: "no such image" };

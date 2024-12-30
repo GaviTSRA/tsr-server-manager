@@ -12,9 +12,11 @@ import {
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const ServerState = pgEnum("ServerState", [
-  "INSTALLED",
-  "NOT_INSTALLED",
+export const ResetartPolicy = pgEnum("RestartPolicy", [
+  "no",
+  "on-failure",
+  "unless-stopped",
+  "always"
 ]);
 
 export const Server = pgTable("Server", {
@@ -23,13 +25,14 @@ export const Server = pgTable("Server", {
     .notNull()
     .references(() => User.id),
   name: varchar().notNull(),
-  state: ServerState().notNull(),
   type: varchar().notNull(),
   containerId: varchar(),
   options: json().$type<{ [name: string]: string }>().notNull(),
   ports: json().$type<string[]>().notNull(),
   cpuLimit: real().notNull(),
   ramLimit: integer().notNull(),
+  restartPolicy: ResetartPolicy().notNull().default("no"),
+  restartRetryCount: integer().notNull().default(1),
 });
 export const User = pgTable("User", {
   id: uuid().defaultRandom().primaryKey(),

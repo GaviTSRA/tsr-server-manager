@@ -64,6 +64,20 @@
       "when": 1735141209164,
       "tag": "0008_complex_vengeance",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1735555925738,
+      "tag": "0009_bent_hobgoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1735556252148,
+      "tag": "0010_rich_talkback",
+      "breakpoints": true
     }
   ]
 }

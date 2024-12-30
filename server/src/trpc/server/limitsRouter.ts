@@ -14,6 +14,8 @@ export const limitsRouter = router({
       return {
         cpu: ctx.server.cpuLimit,
         ram: ctx.server.ramLimit,
+        restartPolicy: ctx.server.restartPolicy,
+        restartRetryCount: ctx.server.restartRetryCount
       };
     }),
   write: serverProcedure
@@ -24,6 +26,8 @@ export const limitsRouter = router({
       z.object({
         cpuLimit: z.number().optional(),
         ramLimit: z.number().optional(),
+        restartPolicy: z.enum(["no", "on-failure", "unless-stopped", "always"]).optional(),
+        restartRetryCount: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -32,6 +36,8 @@ export const limitsRouter = router({
         .set({
           cpuLimit: input.cpuLimit,
           ramLimit: input.ramLimit,
+          restartPolicy: input.restartPolicy,
+          restartRetryCount: input.restartRetryCount,
           containerId: null,
         })
         .where(eq(schema.Server.id, ctx.server.id));

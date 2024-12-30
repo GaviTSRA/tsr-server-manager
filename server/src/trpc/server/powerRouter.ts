@@ -13,7 +13,7 @@ export const powerRouter = router({
     })
     .mutation(async ({ ctx }) => {
       let containerId = ctx.server.containerId;
-      if (ctx.server.state === "NOT_INSTALLED") {
+      if (!containerId) {
         const type = serverTypes.find(
           (type) => type.id === ctx.server.type
         ) as ServerType;
@@ -37,7 +37,9 @@ export const powerRouter = router({
             env,
             ctx.server.ports,
             ctx.server.cpuLimit,
-            ctx.server.ramLimit
+            ctx.server.ramLimit,
+            ctx.server.restartPolicy,
+            ctx.server.restartRetryCount
           );
           if (result.status !== "success" || !result.containerId) {
             console.error(result);
