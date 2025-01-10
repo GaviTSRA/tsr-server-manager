@@ -145,9 +145,18 @@ export function Server() {
       },
     }
   );
-  const { data: logsSub, reset: resetLogs, error: logsError } = trpc.server.logs.useSubscription(
+  const { reset: resetLogs, error: logsError } = trpc.server.logs.useSubscription(
     { serverId },
     {
+      onData: (data) => {
+        setLogs((prev) => {
+          let prevEntries = prev;
+          if (prev.length > 1000) {
+            prevEntries = prev.slice(prev.length - 1000, prev.length);
+          }
+          return [...prevEntries, ...data.split("\n").filter((el) => el !== "")];
+        });
+      },
       onError: (err) => {
         console.error(err);
       },
@@ -164,16 +173,6 @@ export function Server() {
       return [...prevEntries, statsSub];
     });
   }, [statsSub]);
-  useEffect(() => {
-    if (!logsSub) return;
-    setLogs((prev) => {
-      let prevEntries = prev;
-      if (prev.length > 1000) {
-        prevEntries = prev.slice(prev.length - 1000, prev.length);
-      }
-      return [...prevEntries, ...logsSub.split("\n").filter((el) => el !== "")];
-    });
-  }, [logsSub]);
 
   const tabs = {
     Console: [
