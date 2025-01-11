@@ -47,7 +47,7 @@ export function ConsoleTab({
   const [cpuUsage, setCPUUsage] = useState(0);
   const [availableCpu, setAvailableCpu] = useState(undefined as number | undefined);
   const [usedRam, setUsedRam] = useState(0);
-  const [availableRam, setAvailableRam] = useState(undefined as number | undefined);
+  const [availableRam, setAvailableRam] = useState(0);
   useEffect(() => {
     if (!stats || stats.length === 0) return;
     const latestStats = stats[stats.length - 1];
@@ -199,9 +199,9 @@ export function ConsoleTab({
                   dependentAxis
                   tickValues={
                     range(0,
-                      (availableRam ?? usedRam) * 1024 * 1024 * 1024,
-                      ((availableRam ?? usedRam) >= 8192
-                        ? ((availableRam ?? usedRam) >= 16384 ? 2048 : 1024)
+                      availableRam * 1024 * 1024 * 1024,
+                      (availableRam >= 8192
+                        ? (availableRam >= 16384 ? 2048 : 1024)
                         : 512)
                       * 1024 * 1024
                     )
