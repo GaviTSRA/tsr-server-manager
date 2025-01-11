@@ -2,15 +2,8 @@
 if [ -f "run.sh" ]; then
   echo "server.jar already exists. No download needed."
 
-  for file in forge-*-shim.jar; do
-    if [[ -f $file ]]; then
-      FORGE=$(echo "$file" | sed -E 's/^forge-([0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+)-shim.jar$/\1/')
-      echo "Found version $FORGE"
-    fi
-  done
-
   echo "Setting correct args"
-  file="libraries/net/minecraftforge/forge/${FORGE}/unix_args.txt"
+  file="libraries/net/minecraftforge/forge/${VERSION}-${FORGE_VERSION}/unix_args.txt"
   updated_params="-Dterminal.jline=false -Dterminal.ansi=true -Xms128M -Xmx${SERVER_RAM}M"
 
   if grep -qE "^-Dterminal\.jline=.*-Xms[0-9]+M -Xmx[0-9]+M" "$file"; then
@@ -27,9 +20,6 @@ if [ -f "run.sh" ]; then
 
   exit 0
 fi
-
-output=$(curl https://files.minecraftforge.net/net/minecraftforge/forge/index_${VERSION}.html | grep -oP "(?<=forge-${VERSION}-)[^-]+(?=-installer\.jar)")
-FORGE_VERSION=$(echo "$output" | sed -n '2p')
 
 echo "Latest forge version for ${VERSION} is ${FORGE_VERSION}"
 FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/${VERSION}-${FORGE_VERSION}/forge-${VERSION}-${FORGE_VERSION}-installer.jar"

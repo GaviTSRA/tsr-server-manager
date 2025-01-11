@@ -48,7 +48,7 @@ export function UpsertDropdown(
   return (
     <Container title={<>
       <p className="font-bold mr-auto">{label}</p>
-      {internalFetching && <MoonLoader size={20} color="white" />}
+      {internalFetching && <MoonLoader size={18} color="white" />}
       {internalError && <Error error={internalError} size="small" />}
       {internalSuccess && <Check size={20} color={"green"} strokeWidth={4} />}
     </>}>

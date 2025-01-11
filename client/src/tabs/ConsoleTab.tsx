@@ -87,9 +87,11 @@ export function ConsoleTab({
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row">
-      <div className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-lg flex flex-col relative">
+      <div
+        className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative"
+      >
         {logsError ? (
-          <Container className="h-full">
+          <Container className="h-full !rounded-b-none" expanded={true}>
             <Error error={logsError} />
           </Container>
         ) : (
@@ -127,9 +129,9 @@ export function ConsoleTab({
           </div>
         </div>
       </div>
-      <div className="lg:mx-4 w-full mt-4 lg:mt-0 lg:w-1/3 flex flex-col gap-2">
+      <div className="lg:mx-4 w-full mt-4 lg:mt-0 lg:w-1/3 flex flex-col gap-2 h-full">
         {statsError ? (
-          <Container className="h-full" >
+          <Container expanded={true} className="h-full">
             <Error error={statsError} />
           </Container>
         ) : (

@@ -9,6 +9,12 @@
       "type": "string",
       "default": "1.20.4"
     },
+    "forge_version": {
+      "name": "Forge Version",
+      "description": "Forge version to install",
+      "type": "string",
+      "default": "49.1.0"
+    },
     "image": {
       "name": "Image",
       "description": "Java image to use, depending on the minecraft version",
