@@ -55,10 +55,13 @@ export function ConsoleTab({
     if (latestStats.cpuAvailable) setAvailableCpu(latestStats.cpuAvailable * 100);
     if (latestStats.ramUsage)
       setUsedRam(Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100);
-    if (latestStats.ramAvailable)
+    if (latestStats.ramAvailable) {
       setAvailableRam(
         Math.round((latestStats.ramAvailable / 1024 / 1024 / 1024) * 100) / 100
       );
+    } else if (latestStats.ramUsage) {
+      setAvailableRam(Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100)
+    }
   }, [stats]);
 
   const [command, setCommand] = useState("");
