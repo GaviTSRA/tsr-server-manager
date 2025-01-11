@@ -10,6 +10,7 @@ import { networkRouter } from "./server/networkRouter";
 import { limitsRouter } from "./server/limitsRouter";
 import { powerRouter } from "./server/powerRouter";
 import { usersRouter } from "./server/usersRouter";
+import { logsRouter } from "./server/logsRouter";
 
 function createAsyncIterable(emitter: EventEmitter) {
   return {
@@ -47,6 +48,7 @@ export const serverRouter = router({
   startup: startupRouter,
   limits: limitsRouter,
   users: usersRouter,
+  logs: logsRouter,
   server: serverProcedure
     .meta({
       permission: "server",
@@ -90,7 +92,7 @@ export const serverRouter = router({
         console.error("Error during iteration:", error);
       }
     }),
-  logs: serverProcedure
+  consoleLogs: serverProcedure
     .meta({
       permission: "console.read"
     })

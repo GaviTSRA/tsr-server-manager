@@ -62,7 +62,7 @@ export function StartupTab({ serverId, serverType }: { serverId: string, serverT
                 success={writeStartup.isSuccess}
               />
             ) : (
-              <></>
+              <div className="hidden"></div>
             )}
             {option.type === "enum" ? (
               <UpsertDropdown
@@ -78,7 +78,7 @@ export function StartupTab({ serverId, serverType }: { serverId: string, serverT
                 success={writeStartup.isSuccess}
               />
             ) : (
-              <></>
+              <div className="hidden"></div>
             )}
           </Container>
         );

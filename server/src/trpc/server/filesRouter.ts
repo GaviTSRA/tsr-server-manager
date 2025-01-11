@@ -64,7 +64,7 @@ export const serverFilesRouter = router({
     .input(z.object({ path: z.string(), name: z.string() }))
     .mutation(async ({ input, ctx }) => {
       if (input.path.includes("..")) {
-        log(`Rename file '${path}' to '${input.name}'`, false, ctx);
+        log(`Rename file '${input.path}' to '${input.name}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -74,7 +74,7 @@ export const serverFilesRouter = router({
       const dir = path.dirname(target);
       const updatedPath = path.join(dir, input.name);
       fs.renameSync(target, updatedPath);
-      log(`Rename file '${path}' to '${input.name}'`, true, ctx);
+      log(`Rename file '${input.path}' to '${input.name}'`, true, ctx);
     }),
   edit: serverProcedure
     .meta({
@@ -83,7 +83,7 @@ export const serverFilesRouter = router({
     .input(z.object({ path: z.string(), content: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
-        log(`Edit file '${path}' with '${input.content}'`, false, ctx);
+        log(`Edit file '${input.path}' with '${input.content}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -91,7 +91,7 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.writeFileSync(target, input.content);
-      log(`Edit file '${path}' with '${input.content}'`, true, ctx);
+      log(`Edit file '${input.path}' with '${input.content}'`, true, ctx);
     }),
   delete: serverProcedure
     .meta({
@@ -100,7 +100,7 @@ export const serverFilesRouter = router({
     .input(z.object({ path: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
-        log(`Delete file '${path}'`, false, ctx);
+        log(`Delete file '${input.path}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -108,6 +108,6 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.rmSync(target);
-      log(`Delete file '${path}'`, true, ctx);
+      log(`Delete file '${input.path}'`, true, ctx);
     }),
 });

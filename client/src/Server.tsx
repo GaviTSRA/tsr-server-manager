@@ -15,6 +15,7 @@ import {
   Play,
   Users,
   Menu,
+  Book,
 } from "react-feather";
 import { Link, useParams } from "react-router-dom";
 import { Error } from "./components/Error";
@@ -26,6 +27,7 @@ import { StartupTab } from "./tabs/StartupTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { MoonLoader } from "react-spinners";
 import { UsersTab } from "./tabs/UsersTab";
+import { LogsTab } from "./tabs/LogsTab";
 
 export function Server() {
   const { serverId, tab } = useParams() as {
@@ -145,7 +147,7 @@ export function Server() {
       },
     }
   );
-  const { reset: resetLogs, error: logsError } = trpc.server.logs.useSubscription(
+  const { reset: resetLogs, error: logsError } = trpc.server.consoleLogs.useSubscription(
     { serverId },
     {
       onData: (data) => {
@@ -181,9 +183,10 @@ export function Server() {
     ],
     Files: [<File />, <FilesTab serverId={serverId} />],
     Network: [<ServerIcon />, <NetworkTab serverId={serverId} />],
-    Startup: [<PlayCircle />, server ? <StartupTab serverId={serverId} serverType={server.type} /> : <></>],
+    Startup: [<PlayCircle />, server ? <StartupTab serverId={serverId} serverType={server.type} /> : <div></div>],
     Limits: [<Cpu />, <LimitsTab serverId={serverId} />],
-    Users: [<Users />, <UsersTab serverId={serverId} />]
+    Users: [<Users />, <UsersTab serverId={serverId} />],
+    Logs: [<Book />, <LogsTab serverId={serverId} />]
   };
 
   if (error) {
