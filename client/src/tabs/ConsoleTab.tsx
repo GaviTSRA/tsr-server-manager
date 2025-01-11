@@ -147,7 +147,11 @@ export function ConsoleTab({
               >
                 <VictoryAxis
                   dependentAxis
-                  tickValues={availableCpu ? range(0, availableCpu, 50) : undefined}
+                  tickValues={availableCpu
+                    ? range(0, availableCpu,
+                      availableCpu >= 500 ? 100 : 50
+                    )
+                    : undefined}
                   tickFormat={(value) => `${value}%`}
                   style={{
                     tickLabels: {
@@ -190,7 +194,15 @@ export function ConsoleTab({
               >
                 <VictoryAxis
                   dependentAxis
-                  tickValues={range(0, (availableRam ?? usedRam) * 1024 * 1024 * 1024, 512 * 1024 * 1024)}
+                  tickValues={
+                    range(0,
+                      (availableRam ?? usedRam) * 1024 * 1024 * 1024,
+                      ((availableRam ?? usedRam) >= 8192
+                        ? ((availableRam ?? usedRam) >= 16384 ? 2048 : 1024)
+                        : 512)
+                      * 1024 * 1024
+                    )
+                  }
                   tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
                   style={{
                     tickLabels: {
