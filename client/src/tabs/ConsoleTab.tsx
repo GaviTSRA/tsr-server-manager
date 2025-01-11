@@ -134,16 +134,21 @@ export function ConsoleTab({
           </Container>
         ) : (
           <div className="flex flex-col md:flex-row lg:flex-col gap-4">
-            <Container className="flex flex-col">
-              <div className="flex flex-row items-center gap-2 p-2">
-                <Cpu />
-                <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>
-                {availableCpu && (
-                  <p className="text-secondary-text">
-                    / {availableCpu} %
-                  </p>
-                )}
-              </div>
+            <Container
+              className="overflow-hidden flex flex-col !p-0"
+              title={<>
+                <Cpu size={20} />
+                <p className="font-bold">CPU Usage</p>
+                <div className="ml-auto flex flex-row gap-2">
+                  <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>
+                  {availableCpu && (
+                    <p className="text-secondary-text">
+                      / {availableCpu} %
+                    </p>
+                  )}
+                </div>
+              </>}
+            >
               <VictoryChart
                 theme={VictoryTheme.clean}
                 padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
@@ -182,59 +187,66 @@ export function ConsoleTab({
                 />
               </VictoryChart>
             </Container>
-            <Container className="overflow-hidden">
-              <div className="flex flex-row items-center gap-2 p-2">
-                <Server />
-                <p>{Number.isNaN(usedRam) ? 0 : usedRam} GB </p>
-                {availableRam && (
-                  <p className="text-secondary-text">
-                    / {availableRam} GB
-                  </p>
-                )}
+            <Container
+              className="overflow-hidden flex flex-col !p-0"
+              title={<>
+                <Server size={20} />
+                <p className="font-bold">RAM Usage</p>
+                <div className="ml-auto flex flex-row gap-2">
+                  <p>{Number.isNaN(usedRam) ? 0 : usedRam} GB</p>
+                  {availableRam && (
+                    <p className="text-secondary-text">
+                      / {availableRam} GB
+                    </p>
+                  )}
+                </div>
+              </>}
+            >
+              <div className="px-2">
+                <VictoryChart
+                  theme={VictoryTheme.clean}
+                  padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
+                  domainPadding={{ y: 0 }}
+                >
+                  <VictoryAxis
+                    dependentAxis
+                    tickValues={
+                      availableRam
+                        ? range(0, availableRam * 1024 * 1024 * 1024,
+                          (availableRam * 1024 >= 4096
+                            ? availableRam * 1024 >= 8192
+                              ? 2048
+                              : 1024
+                            : 512
+                          ) * 1024 * 1024
+                        )
+                        : undefined
+                    }
+                    tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
+                    style={{
+                      tickLabels: {
+                        fill: "#909090"
+                      },
+                      grid: {
+                        stroke: "#444",
+                      },
+                    }}
+                  />
+                  <VictoryArea
+                    data={
+                      stats.map((stat, i) => ({ x: i, y: stat.ramUsage }))
+                    }
+                    style={{
+                      data: {
+                        fill: "#6F6",
+                        fillOpacity: 0.3,
+                        stroke: "#6F6",
+                        strokeWidth: 2,
+                      },
+                    }}
+                  />
+                </VictoryChart>
               </div>
-              <VictoryChart
-                theme={VictoryTheme.clean}
-                padding={{ top: 10, bottom: 40, left: 50, right: 20 }}
-                domainPadding={{ y: 0 }}
-              >
-                <VictoryAxis
-                  dependentAxis
-                  tickValues={
-                    availableRam
-                      ? range(0, availableRam * 1024 * 1024 * 1024,
-                        (availableRam * 1024 >= 4096
-                          ? availableRam * 1024 >= 8192
-                            ? 2048
-                            : 1024
-                          : 512
-                        ) * 1024 * 1024
-                      )
-                      : undefined
-                  }
-                  tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
-                  style={{
-                    tickLabels: {
-                      fill: "#909090"
-                    },
-                    grid: {
-                      stroke: "#444",
-                    },
-                  }}
-                />
-                <VictoryArea
-                  data={
-                    stats.map((stat, i) => ({ x: i, y: stat.ramUsage }))
-                  }
-                  style={{
-                    data: {
-                      fill: "#6F6",
-                      fillOpacity: 0.3,
-                      stroke: "#6F6",
-                      strokeWidth: 2,
-                    },
-                  }}
-                />
-              </VictoryChart>
             </Container>
           </div >
         )}

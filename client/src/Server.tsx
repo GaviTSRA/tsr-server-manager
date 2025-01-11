@@ -197,7 +197,7 @@ export function Server() {
     <div className="w-full flex flex-row h-full bg-neutral-100 text-primary-text" >
       {sidebarOpen && (
         <div
-          className={"h-full flex flex-col bg-neutral-200 shadow-[0px_0_10px_10px_rgba(0,0,0,0.2)] rounded-r-xl" +
+          className={"h-full flex flex-col bg-neutral-200" +
             (screenWidth < 600 ? " absolute z-50" : "")
           }
         >

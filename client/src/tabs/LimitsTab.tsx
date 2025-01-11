@@ -48,56 +48,48 @@ export function LimitsTab({ serverId }: { serverId: string }) {
   return (
     <div className="flex flex-col lg:flex-row gap-2">
       <div className="flex flex-col gap-2 w-full lg:w-1/2">
-        <Container className="p-2 rounded bg-neutral-200">
-          <UpsertInput
-            label="CPU Limit"
-            description="Maximum amount of CPU the server may use"
-            value={cpuLimit}
-            type="text"
-            mutate={(value) => writeLimits.mutate({ cpuLimit: Number.parseFloat(value), serverId })}
-            error={writeLimits.error}
-            fetching={writeLimits.isPending}
-            success={writeLimits.isSuccess}
-          />
-        </Container>
-        <Container className="p-2 rounded bg-neutral-200">
-          <UpsertInput
-            label="RAM Limit"
-            description="Maximum amount of RAM the server may use"
-            value={ramLimit}
-            type="number"
-            mutate={(value) => writeLimits.mutate({ ramLimit: Number.parseInt(value), serverId })}
-            error={writeLimits.error}
-            fetching={writeLimits.isPending}
-            success={writeLimits.isSuccess}
-          />
-        </Container>
+        <UpsertInput
+          label="CPU Limit"
+          description="Maximum amount of CPU the server may use"
+          value={cpuLimit}
+          type="text"
+          mutate={(value) => writeLimits.mutate({ cpuLimit: Number.parseFloat(value), serverId })}
+          error={writeLimits.error}
+          fetching={writeLimits.isPending}
+          success={writeLimits.isSuccess}
+        />
+        <UpsertInput
+          label="RAM Limit"
+          description="Maximum amount of RAM the server may use"
+          value={ramLimit}
+          type="number"
+          mutate={(value) => writeLimits.mutate({ ramLimit: Number.parseInt(value), serverId })}
+          error={writeLimits.error}
+          fetching={writeLimits.isPending}
+          success={writeLimits.isSuccess}
+        />
       </div>
       <div className="flex flex-col gap-2 w-full lg:w-1/2">
-        <Container className="p-2 rounded bg-neutral-200">
-          <UpsertDropdown
-            label="Restart Policy"
-            description="The restart policy to use. no means not to restart, on-failure means to restart when there is a bad exit code, unless-stopped means to restart when the server wasn't stopped by the user and always means to always restart the container"
-            values={["no", "on-failure", "unless-stopped", "always"]}
-            value={restartPolicy}
-            mutate={(value) => writeLimits.mutate({ restartPolicy: value as "no" | "on-failure" | "unless-stopped" | "always", serverId })}
-            error={writeLimits.error}
-            fetching={writeLimits.isPending}
-            success={writeLimits.isSuccess}
-          />
-        </Container>
-        <Container className="p-2 rounded bg-neutral-200">
-          <UpsertInput
-            label="Restart Retry Count"
-            description="How often to try restarting when using the on-failure restart policy"
-            value={restartRetryCount}
-            type="number"
-            mutate={(value) => writeLimits.mutate({ restartRetryCount: Number.parseInt(value), serverId })}
-            error={writeLimits.error}
-            fetching={writeLimits.isPending}
-            success={writeLimits.isSuccess}
-          />
-        </Container>
+        <UpsertDropdown
+          label="Restart Policy"
+          description="The restart policy to use. no means not to restart, on-failure means to restart when there is a bad exit code, unless-stopped means to restart when the server wasn't stopped by the user and always means to always restart the container"
+          values={["no", "on-failure", "unless-stopped", "always"]}
+          value={restartPolicy}
+          mutate={(value) => writeLimits.mutate({ restartPolicy: value as "no" | "on-failure" | "unless-stopped" | "always", serverId })}
+          error={writeLimits.error}
+          fetching={writeLimits.isPending}
+          success={writeLimits.isSuccess}
+        />
+        <UpsertInput
+          label="Restart Retry Count"
+          description="How often to try restarting when using the on-failure restart policy"
+          value={restartRetryCount}
+          type="number"
+          mutate={(value) => writeLimits.mutate({ restartRetryCount: Number.parseInt(value), serverId })}
+          error={writeLimits.error}
+          fetching={writeLimits.isPending}
+          success={writeLimits.isSuccess}
+        />
       </div>
     </div>
   );

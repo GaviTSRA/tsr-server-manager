@@ -49,7 +49,7 @@ export function StartupTab({ serverId, serverType }: { serverId: string, serverT
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
       {Object.entries(type.options).map(([id, option]) => {
         return (
-          <Container className="p-2 rounded bg-neutral-200 h-fit" key={id}>
+          <div key={id}>
             {option.type === "string" ? (
               <UpsertInput
                 label={option.name}
@@ -80,7 +80,7 @@ export function StartupTab({ serverId, serverType }: { serverId: string, serverT
             ) : (
               <div className="hidden"></div>
             )}
-          </Container>
+          </div>
         );
       })}
     </div>
