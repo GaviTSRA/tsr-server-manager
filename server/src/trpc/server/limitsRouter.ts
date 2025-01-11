@@ -1,9 +1,8 @@
 import * as docker from "../../docker";
-import { router, serverProcedure } from "../trpc";
+import { log, router, serverProcedure } from "../trpc";
 import { z } from "zod";
 import * as schema from "../../schema";
 import { eq } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
 
 export const limitsRouter = router({
   read: serverProcedure
@@ -44,5 +43,6 @@ export const limitsRouter = router({
       if (ctx.server.containerId) {
         await docker.removeContainer(ctx.server.containerId);
       }
+      log(`Update limits configuration: ${JSON.stringify(input)}`, true, ctx);
     }),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE "Log" ADD COLUMN "success" boolean NOT NULL;

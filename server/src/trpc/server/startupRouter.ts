@@ -1,4 +1,4 @@
-import { router, serverProcedure } from "../trpc";
+import { log, router, serverProcedure } from "../trpc";
 import * as schema from "../../schema";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
@@ -29,5 +29,6 @@ export const startupRouter = router({
       if (ctx.server.containerId) {
         await docker.removeContainer(ctx.server.containerId);
       }
+      log(`Update startup parameters: ${JSON.stringify(input.options)}`, true, ctx);
     }),
 });

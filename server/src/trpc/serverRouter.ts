@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import * as docker from "../docker";
-import { Context, hasPermission, publicProcedure, router, serverProcedure, t } from "./trpc";
+import { Context, hasPermission, log, publicProcedure, router, serverProcedure, t } from "./trpc";
 import { z } from "zod";
 import * as schema from "../schema";
 import EventEmitter from "events";
@@ -117,10 +117,12 @@ export const serverRouter = router({
   run: serverProcedure
     .meta({
       permission: "console.write",
+      log: "Run command"
     })
     .input(z.object({ command: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
+        log(`Run command: '${input.command}'`, false, ctx)
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
@@ -134,5 +136,6 @@ export const serverRouter = router({
         "stuff",
         input.command + "^M",
       ]);
+      log(`Run command: '${input.command}'`, true, ctx)
     }),
 });

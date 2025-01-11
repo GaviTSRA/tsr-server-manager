@@ -25,7 +25,8 @@ const PERMISSIONS = [
   "limits.read",
   "limits.write",
   "users.read",
-  "users.write"
+  "users.write",
+  "logs.read"
 ] as Permission[];
 
 export function UserSettings({ user, ownPermissions, serverId, refetch, isOwner }: {

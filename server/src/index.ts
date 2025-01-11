@@ -91,7 +91,8 @@ export type Permission =
   | "limits.read"
   | "limits.write"
   | "users.read"
-  | "users.write";
+  | "users.write"
+  | "logs.read"; // TODO
 
 const server = createHTTPServer({
   middleware: cors(),

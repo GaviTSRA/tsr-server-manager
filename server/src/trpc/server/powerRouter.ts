@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { router, serverProcedure } from "../trpc";
+import { log, router, serverProcedure } from "../trpc";
 import * as docker from "../../docker";
 import { ServerType, serverTypes } from "../..";
 import * as schema from "../../schema";
@@ -43,6 +43,7 @@ export const powerRouter = router({
           );
           if (result.status !== "success" || !result.containerId) {
             console.error(result);
+            log("Start server", false, ctx);
             return result.status;
           }
           await ctx.db
@@ -56,10 +57,12 @@ export const powerRouter = router({
           );
         }
         await docker.startContainer(containerId);
+        log("Start server", true, ctx);
         return;
       }
 
       if (!ctx.server.containerId) {
+        log("Start server", false, ctx);
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
@@ -67,11 +70,13 @@ export const powerRouter = router({
       }
       const result = await docker.startContainer(ctx.server.containerId);
       if (result !== "success") {
+        log("Start server", false, ctx);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: result,
         });
       }
+      log("Start server", true, ctx);
       return result;
     }),
   restart: serverProcedure
@@ -80,6 +85,7 @@ export const powerRouter = router({
     })
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
+        log("Restart server", false, ctx);
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
@@ -87,11 +93,13 @@ export const powerRouter = router({
       }
       const result = await docker.restartContainer(ctx.server.containerId);
       if (result !== "success") {
+        log("Restart server", false, ctx);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: result,
         });
       }
+      log("Restart server", true, ctx);
       return result;
     }),
   stop: serverProcedure
@@ -100,6 +108,7 @@ export const powerRouter = router({
     })
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
+        log("Stop server", false, ctx);
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
@@ -115,11 +124,13 @@ export const powerRouter = router({
       ]);
       const result = await docker.stopContainer(ctx.server.containerId);
       if (result !== "success") {
+        log("Stop server", false, ctx);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: result,
         });
       }
+      log("Stop server", true, ctx);
       return result;
     }),
   kill: serverProcedure
@@ -128,6 +139,7 @@ export const powerRouter = router({
     })
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
+        log("Kill server", false, ctx);
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
@@ -135,11 +147,13 @@ export const powerRouter = router({
       }
       const result = await docker.killContainer(ctx.server.containerId);
       if (result !== "success") {
+        log("Kill server", false, ctx);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: result,
         });
       }
+      log("Kill server", true, ctx);
       return result;
     }),
 });

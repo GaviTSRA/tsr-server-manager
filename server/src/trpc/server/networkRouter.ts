@@ -1,5 +1,5 @@
 import * as docker from "../../docker";
-import { router, serverProcedure } from "../trpc";
+import { log, router, serverProcedure } from "../trpc";
 import { z } from "zod";
 import * as schema from "../../schema";
 import { eq } from "drizzle-orm";
@@ -25,5 +25,6 @@ export const networkRouter = router({
       if (ctx.server.containerId) {
         await docker.removeContainer(ctx.server.containerId);
       }
+      log(`Update network configuration: ${JSON.stringify(input.ports)}`, true, ctx);
     }),
 });

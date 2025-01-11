@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { router, serverProcedure } from "../trpc";
+import { log, router, serverProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
+import { truncate } from "fs/promises";
 
 export const serverFilesRouter = router({
   list: serverProcedure
@@ -61,8 +62,9 @@ export const serverFilesRouter = router({
       permission: "files.rename",
     })
     .input(z.object({ path: z.string(), name: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       if (input.path.includes("..")) {
+        log(`Rename file '${path}' to '${input.name}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -72,14 +74,16 @@ export const serverFilesRouter = router({
       const dir = path.dirname(target);
       const updatedPath = path.join(dir, input.name);
       fs.renameSync(target, updatedPath);
+      log(`Rename file '${path}' to '${input.name}'`, true, ctx);
     }),
   edit: serverProcedure
     .meta({
       permission: "files.edit",
     })
     .input(z.object({ path: z.string(), content: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
+        log(`Edit file '${path}' with '${input.content}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -87,14 +91,16 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.writeFileSync(target, input.content);
+      log(`Edit file '${path}' with '${input.content}'`, true, ctx);
     }),
   delete: serverProcedure
     .meta({
       permission: "files.delete",
     })
     .input(z.object({ path: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
+        log(`Delete file '${path}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -102,5 +108,6 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.rmSync(target);
+      log(`Delete file '${path}'`, true, ctx);
     }),
 });

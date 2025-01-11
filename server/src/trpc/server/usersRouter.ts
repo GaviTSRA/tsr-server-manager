@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { Permission } from "../..";
 import { Permission as PermissionTable } from "../../schema";
-import { hasPermission, router, serverProcedure } from "../trpc";
+import { hasPermission, log, router, serverProcedure } from "../trpc";
 import { z } from "zod";
 
 export const usersRouter = router({
@@ -76,7 +76,6 @@ export const usersRouter = router({
           removePermissions.push(permission);
         }
       }
-      console.info(addPermissions)
 
       if (addPermissions.length > 0) {
         await ctx.db.insert(PermissionTable).values(addPermissions.map(permission => ({
@@ -91,6 +90,18 @@ export const usersRouter = router({
         eq(PermissionTable.userId, input.userId),
         inArray(PermissionTable.permission, removePermissions)
       ));
+      const user = await ctx.db.query.User.findFirst({
+        where: (user, { eq }) => eq(user.id, input.userId)
+      });
+
+      const addedPermissions = addPermissions.length > 0 ? `Add ${addPermissions.join(", ")} ` : ""
+      const removedPermissions = removePermissions.length > 0 ? `Remove ${removePermissions.join(", ")}` : ""
+
+      if (user) {
+        log(`Update permissions of user ${user.name}: ${addedPermissions}${removedPermissions}`, true, ctx);
+      } else {
+        log(`Update permissions of user ${input.userId}: ${addedPermissions}${removedPermissions}`, true, ctx);
+      };
     }),
   addUser: serverProcedure
     .meta({
@@ -105,6 +116,14 @@ export const usersRouter = router({
         serverId: ctx.server.id,
         permission: "server"
       });
+      const user = await ctx.db.query.User.findFirst({
+        where: (user, { eq }) => eq(user.id, input.userId)
+      });
+      if (user) {
+        log(`Added user ${user.name} to server`, true, ctx);
+      } else {
+        log(`Added user ${input.userId} to server`, true, ctx);
+      }
     }),
   deleteUser: serverProcedure
     .meta({
@@ -120,5 +139,13 @@ export const usersRouter = router({
           eq(PermissionTable.serverId, ctx.server.id)
         )
       )
+      const user = await ctx.db.query.User.findFirst({
+        where: (user, { eq }) => eq(user.id, input.userId)
+      });
+      if (user) {
+        log(`Removed user ${user.name} from server`, true, ctx);
+      } else {
+        log(`Removed user ${input.userId} from server`, true, ctx);
+      }
     })
 })

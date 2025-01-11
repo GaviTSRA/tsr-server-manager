@@ -1,4 +1,4 @@
-import { initTRPC, TRPCError } from "@trpc/server";
+import { inferProcedureBuilderResolverOptions, initTRPC, TRPCError } from "@trpc/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import jwt from "jsonwebtoken";
@@ -28,6 +28,7 @@ export const createContext = async ({ req, info }: CreateHTTPContextOptions) => 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 export type Meta = {
   permission?: Permission;
+  log?: string;
 };
 
 export const t = initTRPC
@@ -125,6 +126,18 @@ export const serverProcedure = authedProcedure
       },
     });
   });
+
+type ServerContext = inferProcedureBuilderResolverOptions<typeof serverProcedure>["ctx"];
+
+export async function log(log: string, success: boolean, ctx: ServerContext) {
+  await ctx.db.insert(schema.Log).values({
+    serverId: ctx.server.id,
+    userId: ctx.user.id,
+    log: log,
+    success: success,
+    date: new Date()
+  })
+}
 
 export async function hasPermission(ctx: Context, userId: string, server: ServerType, permission: string) {
   if (server.ownerId === userId) return true;
