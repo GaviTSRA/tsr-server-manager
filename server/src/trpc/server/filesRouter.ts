@@ -3,7 +3,6 @@ import { log, router, serverProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
-import { truncate } from "fs/promises";
 
 export const serverFilesRouter = router({
   list: serverProcedure
@@ -91,7 +90,7 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.writeFileSync(target, input.content);
-      log(`Edit file '${input.path}' with '${input.content}'`, true, ctx);
+      log(`Edit file '${input.path}'`, true, ctx);
     }),
   delete: serverProcedure
     .meta({

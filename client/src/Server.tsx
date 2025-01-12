@@ -308,7 +308,7 @@ export function Server() {
         <Error error={{ data: { httpStatus: 404, code: "NOT_FOUND" }, message: "", shape: undefined }} />
       }
       {tabs[tab] && (
-        <div className="w-full max-h-full overflow-y-auto p-4">
+        <div className="w-full h-screen box-border overflow-y-auto p-4">
           {tabs[tab][1]}
         </div>
       )}

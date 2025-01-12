@@ -2,8 +2,10 @@ import { trpc } from "../main";
 import { Container } from "../components/Container";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
-import { createColumnHelper, useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { createColumnHelper, useReactTable, getCoreRowModel, flexRender, Row } from "@tanstack/react-table";
+import { useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Check, X } from "react-feather";
 
 type Log = {
   user: {
@@ -27,21 +29,28 @@ export function LogsTab({ serverId }: { serverId: string }) {
 
   const columns = useMemo(() => [
     columnHelper.accessor("success", {
+      size: 35,
       header: () => (<p></p>),
       cell: (cell) => (
-        <div
-          className={`border-solid rounded border-x-4 w-0 ${cell.getValue() ? "border-success" : "border-danger"}`}
-        ><p className="opacity-0">a</p></div>)
+        <div>
+          {cell.getValue()
+            ? <Check className="text-success" />
+            : <X className="text-danger" />
+          }
+        </div>)
     }),
     columnHelper.accessor("user.name", {
-      header: () => (<p>User</p>),
+      size: 120,
+      header: () => (<p className="py-1">User</p>),
       cell: (cell) => (<p className="px-2">{cell.getValue()}</p>)
     }),
     columnHelper.accessor("date", {
+      size: 160,
       header: () => (<p>Date</p>),
       cell: (cell) => new Date(cell.getValue()).toLocaleString()
     }),
     columnHelper.accessor("log", {
+      size: 800,
       header: () => (<p>Log</p>),
       cell: (cell) => cell.getValue()
     })
@@ -50,8 +59,28 @@ export function LogsTab({ serverId }: { serverId: string }) {
   const table = useReactTable<Log>({
     columns,
     data: logs ?? [],
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
+    debugTable: true
   });
+
+  const { rows } = table.getRowModel()
+
+  //The virtualizer needs to know the scrollable container element
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  console.info(rows.length)
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    estimateSize: () => 33, //estimate row height for accurate scrollbar dragging
+    getScrollElement: () => tableContainerRef.current,
+    //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    measureElement:
+      typeof window !== 'undefined' &&
+        navigator.userAgent.indexOf('Firefox') === -1
+        ? element => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 5,
+  })
 
   if (error) {
     return <Error error={error} />
@@ -66,51 +95,81 @@ export function LogsTab({ serverId }: { serverId: string }) {
   }
 
   return (
-    <Container className="h-full overflow-y-auto">
-      <table className="table-auto w-full">
-        <thead>
+    <Container className="overflow-auto relative h-full !p-0" expanded={true} innerRef={tableContainerRef}>
+      <table className="grid">
+        <thead className="grid sticky top-0 z-10 bg-dark-100">
           {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map(header => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                </th>
-              ))}
+            <tr key={headerGroup.id} className="flex w-full items-center">
+              {headerGroup.headers.map(header => {
+                return (
+                  <th
+                    key={header.id}
+                    className="flex items-center border-r-2 h-full last:border-r-0 border-dark-200 px-2 py-1"
+                    style={{
+                      width: header.getSize(),
+                    }}
+                  >
+                    <div
+                      {...{
+                        className: header.column.getCanSort()
+                          ? 'cursor-pointer select-none'
+                          : '',
+                        onClick: header.column.getToggleSortingHandler(),
+                      }}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {{
+                        asc: ' 🔼',
+                        desc: ' 🔽',
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </div>
+                  </th>
+                )
+              })}
             </tr>
           ))}
         </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map(cell => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
+        <tbody
+          className="grid relative w-full"
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map(virtualRow => {
+            const row = rows[virtualRow.index] as Row<Log>
+            return (
+              <tr
+                data-index={virtualRow.index}
+                ref={node => rowVirtualizer.measureElement(node)}
+                key={row.id}
+                className="flex absolute w-full border-b-2 last:border-b-0 border-neutral-300"
+                style={{
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {row.getVisibleCells().map(cell => {
+                  return (
+                    <td
+                      key={cell.id}
+                      className="flex items-center border-r-2 last:border-r-0 border-neutral-300 px-1 py-1"
+                      style={{
+                        width: cell.column.getSize(),
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  )
+                })}
+              </tr>
+            )
+          })}
         </tbody>
-        <tfoot>
-          {table.getFooterGroups().map(footerGroup => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map(header => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                      header.column.columnDef.footer,
-                      header.getContext()
-                    )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </tfoot>
       </table>
     </Container>
   );

@@ -23,7 +23,10 @@ module.exports = {
           400: "#1d333b",
           500: "#23404a"
         },
-        dark: "#0e0f10",
+        dark: {
+          100: "#0e0f10",
+          200: "#18191a"
+        },
         "primary-text": "#CCCCCC",
         "secondary-text": "#909090",
         "dark-text": "#222222",
