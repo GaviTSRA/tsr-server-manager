@@ -25,6 +25,10 @@ export const networkRouter = router({
       if (ctx.server.containerId) {
         await docker.removeContainer(ctx.server.containerId);
       }
-      log(`Update network configuration: ${JSON.stringify(input.ports)}`, true, ctx);
+      await log(
+        `Update network configuration: ${JSON.stringify(input.ports)}`,
+        true,
+        ctx
+      );
     }),
 });

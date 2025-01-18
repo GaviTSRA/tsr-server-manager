@@ -29,6 +29,10 @@ export const startupRouter = router({
       if (ctx.server.containerId) {
         await docker.removeContainer(ctx.server.containerId);
       }
-      log(`Update startup parameters: ${JSON.stringify(input.options)}`, true, ctx);
+      await log(
+        `Update startup parameters: ${JSON.stringify(input.options)}`,
+        true,
+        ctx
+      );
     }),
 });

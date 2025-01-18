@@ -14,7 +14,7 @@ export const limitsRouter = router({
         cpu: ctx.server.cpuLimit,
         ram: ctx.server.ramLimit,
         restartPolicy: ctx.server.restartPolicy,
-        restartRetryCount: ctx.server.restartRetryCount
+        restartRetryCount: ctx.server.restartRetryCount,
       };
     }),
   write: serverProcedure
@@ -25,7 +25,9 @@ export const limitsRouter = router({
       z.object({
         cpuLimit: z.number().optional(),
         ramLimit: z.number().optional(),
-        restartPolicy: z.enum(["no", "on-failure", "unless-stopped", "always"]).optional(),
+        restartPolicy: z
+          .enum(["no", "on-failure", "unless-stopped", "always"])
+          .optional(),
         restartRetryCount: z.number().optional(),
       })
     )
@@ -43,6 +45,10 @@ export const limitsRouter = router({
       if (ctx.server.containerId) {
         await docker.removeContainer(ctx.server.containerId);
       }
-      log(`Update limits configuration: ${JSON.stringify(input)}`, true, ctx);
+      await log(
+        `Update limits configuration: ${JSON.stringify(input)}`,
+        true,
+        ctx
+      );
     }),
 });

@@ -7,21 +7,22 @@ import { z } from "zod";
 export const usersRouter = router({
   read: serverProcedure
     .meta({
-      permission: "users.read"
+      permission: "users.read",
     })
     .query(async ({ ctx, input }) => {
       const users = await ctx.db.query.User.findMany({
         with: {
           permissions: {
-            where: (permission, { eq, or }) => or(
-              eq(permission.serverId, ctx.server.id),
-              eq(permission.userId, ctx.server.ownerId)
-            ),
+            where: (permission, { eq, or }) =>
+              or(
+                eq(permission.serverId, ctx.server.id),
+                eq(permission.userId, ctx.server.ownerId)
+              ),
             columns: {
-              permission: true
-            }
-          }
-        }
+              permission: true,
+            },
+          },
+        },
       });
       const finalUsers = [] as {
         id: string;
@@ -31,7 +32,9 @@ export const usersRouter = router({
         self: boolean;
       }[];
       for (const user of users) {
-        const permissions = user.permissions.map(permission => permission.permission) as Permission[];
+        const permissions = user.permissions.map(
+          (permission) => permission.permission
+        ) as Permission[];
         const owner = user.id === ctx.server.ownerId;
         if (!permissions.includes("server") && !owner) continue;
         finalUsers.push({
@@ -39,20 +42,22 @@ export const usersRouter = router({
           name: user.name,
           permissions,
           owner,
-          self: user.id === ctx.user.id
+          self: user.id === ctx.user.id,
         });
       }
       return finalUsers;
     }),
   writePermissions: serverProcedure
     .meta({
-      permission: "users.write"
+      permission: "users.write",
     })
-    .input(z.object({
-      userId: z.string(),
-      addPermissions: z.string().array(),
-      removePermissions: z.string().array()
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        addPermissions: z.string().array(),
+        removePermissions: z.string().array(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const addPermissions = [] as string[];
       const removePermissions = [] as string[];
@@ -60,7 +65,12 @@ export const usersRouter = router({
       for (const permission of input.addPermissions) {
         let canAdd = ctx.user.id === ctx.server.ownerId;
         if (!canAdd) {
-          canAdd = await hasPermission(ctx, ctx.user.id, ctx.server, permission);
+          canAdd = await hasPermission(
+            ctx,
+            ctx.user.id,
+            ctx.server,
+            permission
+          );
         }
         if (canAdd) {
           addPermissions.push(permission);
@@ -70,7 +80,12 @@ export const usersRouter = router({
       for (const permission of input.removePermissions) {
         let canRemove = ctx.user.id === ctx.server.ownerId;
         if (!canRemove) {
-          canRemove = await hasPermission(ctx, ctx.user.id, ctx.server, permission);
+          canRemove = await hasPermission(
+            ctx,
+            ctx.user.id,
+            ctx.server,
+            permission
+          );
         }
         if (canRemove) {
           removePermissions.push(permission);
@@ -78,74 +93,101 @@ export const usersRouter = router({
       }
 
       if (addPermissions.length > 0) {
-        await ctx.db.insert(PermissionTable).values(addPermissions.map(permission => ({
-          userId: input.userId,
-          serverId: ctx.server.id,
-          permission
-        }))).onConflictDoNothing();
+        await ctx.db
+          .insert(PermissionTable)
+          .values(
+            addPermissions.map((permission) => ({
+              userId: input.userId,
+              serverId: ctx.server.id,
+              permission,
+            }))
+          )
+          .onConflictDoNothing();
       }
 
-      await ctx.db.delete(PermissionTable).where(and(
-        eq(PermissionTable.serverId, ctx.server.id),
-        eq(PermissionTable.userId, input.userId),
-        inArray(PermissionTable.permission, removePermissions)
-      ));
+      await ctx.db
+        .delete(PermissionTable)
+        .where(
+          and(
+            eq(PermissionTable.serverId, ctx.server.id),
+            eq(PermissionTable.userId, input.userId),
+            inArray(PermissionTable.permission, removePermissions)
+          )
+        );
       const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId)
+        where: (user, { eq }) => eq(user.id, input.userId),
       });
 
-      const addedPermissions = addPermissions.length > 0 ? `Add ${addPermissions.join(", ")} ` : ""
-      const removedPermissions = removePermissions.length > 0 ? `Remove ${removePermissions.join(", ")}` : ""
+      const addedPermissions =
+        addPermissions.length > 0 ? `Add ${addPermissions.join(", ")} ` : "";
+      const removedPermissions =
+        removePermissions.length > 0
+          ? `Remove ${removePermissions.join(", ")}`
+          : "";
 
       if (user) {
-        log(`Update permissions of user ${user.name}: ${addedPermissions}${removedPermissions}`, true, ctx);
+        await log(
+          `Update permissions of user ${user.name}: ${addedPermissions}${removedPermissions}`,
+          true,
+          ctx
+        );
       } else {
-        log(`Update permissions of user ${input.userId}: ${addedPermissions}${removedPermissions}`, true, ctx);
-      };
+        await log(
+          `Update permissions of user ${input.userId}: ${addedPermissions}${removedPermissions}`,
+          true,
+          ctx
+        );
+      }
     }),
   addUser: serverProcedure
     .meta({
       permission: "users.write",
     })
-    .input(z.object({
-      userId: z.string()
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       await ctx.db.insert(PermissionTable).values({
         userId: input.userId,
         serverId: ctx.server.id,
-        permission: "server"
+        permission: "server",
       });
       const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId)
+        where: (user, { eq }) => eq(user.id, input.userId),
       });
       if (user) {
-        log(`Added user ${user.name} to server`, true, ctx);
+        await log(`Added user ${user.name} to server`, true, ctx);
       } else {
-        log(`Added user ${input.userId} to server`, true, ctx);
+        await log(`Added user ${input.userId} to server`, true, ctx);
       }
     }),
   deleteUser: serverProcedure
     .meta({
-      permission: "users.write"
+      permission: "users.write",
     })
-    .input(z.object({
-      userId: z.string()
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.delete(PermissionTable).where(
-        and(
-          eq(PermissionTable.userId, input.userId),
-          eq(PermissionTable.serverId, ctx.server.id)
-        )
-      )
+      await ctx.db
+        .delete(PermissionTable)
+        .where(
+          and(
+            eq(PermissionTable.userId, input.userId),
+            eq(PermissionTable.serverId, ctx.server.id)
+          )
+        );
       const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId)
+        where: (user, { eq }) => eq(user.id, input.userId),
       });
       if (user) {
-        log(`Removed user ${user.name} from server`, true, ctx);
+        await log(`Removed user ${user.name} from server`, true, ctx);
       } else {
-        log(`Removed user ${input.userId} from server`, true, ctx);
+        await log(`Removed user ${input.userId} from server`, true, ctx);
       }
-    })
-})
+    }),
+});

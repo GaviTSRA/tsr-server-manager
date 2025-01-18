@@ -28,12 +28,12 @@ export const serverFilesRouter = router({
         if (typeof err === "string") {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: err
+            message: err,
           });
         } else if (err instanceof Error) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: err.message
+            message: err.message,
           });
         }
       }
@@ -82,7 +82,11 @@ export const serverFilesRouter = router({
     .input(z.object({ path: z.string(), content: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
-        log(`Edit file '${input.path}' with '${input.content}'`, false, ctx);
+        await log(
+          `Edit file '${input.path}' with '${input.content}'`,
+          false,
+          ctx
+        );
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -90,7 +94,7 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.writeFileSync(target, input.content);
-      log(`Edit file '${input.path}'`, true, ctx);
+      await log(`Edit file '${input.path}'`, true, ctx);
     }),
   delete: serverProcedure
     .meta({
@@ -99,7 +103,7 @@ export const serverFilesRouter = router({
     .input(z.object({ path: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
-        log(`Delete file '${input.path}'`, false, ctx);
+        await log(`Delete file '${input.path}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -107,6 +111,6 @@ export const serverFilesRouter = router({
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
       fs.rmSync(target);
-      log(`Delete file '${input.path}'`, true, ctx);
+      await log(`Delete file '${input.path}'`, true, ctx);
     }),
 });
