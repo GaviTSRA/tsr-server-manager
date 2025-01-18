@@ -1,10 +1,13 @@
-import fs from "fs";
+import fs, { readdirSync } from "fs";
 import cors from "cors";
 import * as docker from "./docker";
 import "dotenv/config";
-import { createHTTPServer } from "@trpc/server/adapters/standalone";
+import { createHTTPHandler } from "@trpc/server/adapters/standalone";
 import { appRouter } from "./trpc/router";
 import { createContext } from "./trpc/trpc";
+import https from "https";
+import { readFileSync } from "fs";
+
 export type { AppRouter } from "./trpc/router";
 
 export type ServerType = {
@@ -82,21 +85,32 @@ export type Permission =
   | "console.write"
   | "files.read"
   | "files.rename" // TODO frontend
-  | "files.edit"// TODO frontend
-  | "files.delete"// TODO frontend
+  | "files.edit" // TODO frontend
+  | "files.delete" // TODO frontend
   | "network.read"
-  | "network.write"// TODO frontend
+  | "network.write" // TODO frontend
   | "startup.read"
   | "startup.write"
   | "limits.read"
   | "limits.write"
   | "users.read"
   | "users.write"
-  | "logs.read"; // TODO
+  | "logs.read";
 
-const server = createHTTPServer({
-  middleware: cors(),
-  router: appRouter,
-  createContext,
-});
+let options = {};
+if (process.env.HTTPS) {
+  options = {
+    key: readFileSync("private-key.pem"),
+    cert: readFileSync("certificate.pem"),
+  };
+}
+
+const server = https.createServer(
+  options,
+  createHTTPHandler({
+    middleware: cors(),
+    router: appRouter,
+    createContext,
+  })
+);
 server.listen(3000);
