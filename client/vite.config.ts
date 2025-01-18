@@ -8,6 +8,7 @@ if (process.env.HTTPS === "true") {
     key: readFileSync("private-key.pem"),
     cert: readFileSync("certificate.pem"),
   };
+  console.info("HTTPS Enabled");
 }
 
 // https://vite.dev/config/

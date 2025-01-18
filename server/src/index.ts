@@ -103,6 +103,7 @@ if (process.env.HTTPS) {
     key: readFileSync("private-key.pem"),
     cert: readFileSync("certificate.pem"),
   };
+  console.info("HTTPS Enabled");
 }
 
 const server = https.createServer(
