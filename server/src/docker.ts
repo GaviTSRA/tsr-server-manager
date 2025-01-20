@@ -2,9 +2,8 @@ import axios, { AxiosResponse } from "axios";
 import tar from "tar-stream";
 import stream, { EventEmitter } from "stream";
 import fs from "fs";
-import { cpuUsage } from "process";
 
-function createAsyncIterable(emitter: EventEmitter) {
+export function createAsyncIterable(emitter: EventEmitter) {
   return {
     [Symbol.asyncIterator]() {
       const queue: any[] = [];
@@ -79,13 +78,13 @@ type GetImagesResponse = BasicReponse;
 type ContainerStatus = {
   id: string;
   status:
-  | "created"
-  | "running"
-  | "paused"
-  | "restarting"
-  | "removing"
-  | "exited"
-  | "dead";
+    | "created"
+    | "running"
+    | "paused"
+    | "restarting"
+    | "removing"
+    | "exited"
+    | "dead";
   cpuUsage: number;
   usedRam: number;
   availableRam: number;
@@ -141,7 +140,7 @@ export async function createContainer(
   cpuLimit: number,
   ramLimit: number,
   restartPolicy: "no" | "on-failure" | "unless-stopped" | "always",
-  restartRetryCount: number,
+  restartRetryCount: number
 ): Promise<{ status: CreateContainerResponse; containerId?: string }> {
   const hostDirectory = (process.env.SERVERS_DIR as string) + id;
   const serverDirectory = "servers/" + id;
@@ -167,8 +166,9 @@ export async function createContainer(
         CpuQuota: 100000 * cpuLimit,
         RestartPolicy: {
           Name: restartPolicy,
-          MaximumRetryCount: restartPolicy === "on-failure" ? restartRetryCount : undefined
-        }
+          MaximumRetryCount:
+            restartPolicy === "on-failure" ? restartRetryCount : undefined,
+        },
       },
       WorkingDir: "/server",
       Env: env,
@@ -180,8 +180,6 @@ export async function createContainer(
     case 201:
       return { status: "success", containerId: result.data["Id"] };
     case 400:
-      console.info(restartPolicy, restartRetryCount)
-      console.info(result.statusText)
       return { status: "bad paramater" };
     case 404:
       return { status: "no such image" };
@@ -283,8 +281,10 @@ export async function* containerStats(id: string) {
       system_cpu_delta =
         stats["cpu_stats"]["system_cpu_usage"] -
         stats["precpu_stats"]["system_cpu_usage"];
-      cpuUsage = (cpu_delta / system_cpu_delta) *
-        stats["cpu_stats"]["online_cpus"] * 100;
+      cpuUsage =
+        (cpu_delta / system_cpu_delta) *
+        stats["cpu_stats"]["online_cpus"] *
+        100;
     } catch {
       continue;
     }
@@ -292,9 +292,8 @@ export async function* containerStats(id: string) {
       cpuUsage,
       ramUsage,
       ramAvailable,
-    }
+    };
   }
-
 }
 
 export async function startContainer(

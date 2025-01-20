@@ -5,7 +5,7 @@ import { readFileSync } from "fs";
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  let https = {};
+  let https = undefined;
 
   if (env.HTTPS === "true") {
     https = {
@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
     server: {
       strictPort: true,
       port: parseInt(env.PORT ?? "3001"),
-      https,
+      https: https,
     },
   };
 });

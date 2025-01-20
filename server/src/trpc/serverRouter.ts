@@ -1,9 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import * as docker from "../docker";
-import { Context, hasPermission, log, publicProcedure, router, serverProcedure, t } from "./trpc";
+import { hasPermission, log, router, serverProcedure, t } from "./trpc";
 import { z } from "zod";
-import * as schema from "../schema";
-import EventEmitter from "events";
 import { serverFilesRouter } from "./server/filesRouter";
 import { startupRouter } from "./server/startupRouter";
 import { networkRouter } from "./server/networkRouter";
@@ -11,35 +9,6 @@ import { limitsRouter } from "./server/limitsRouter";
 import { powerRouter } from "./server/powerRouter";
 import { usersRouter } from "./server/usersRouter";
 import { logsRouter } from "./server/logsRouter";
-
-function createAsyncIterable(emitter: EventEmitter) {
-  return {
-    [Symbol.asyncIterator]() {
-      const queue: any[] = [];
-      let resolve: ((value: any) => void) | null = null;
-
-      emitter.on("data", (data) => {
-        if (resolve) {
-          resolve({ value: data });
-          resolve = null;
-        } else {
-          queue.push(data);
-        }
-      });
-      return {
-        next() {
-          return new Promise((res) => {
-            if (queue.length > 0) {
-              res({ value: queue.shift() });
-            } else {
-              resolve = res;
-            }
-          });
-        },
-      };
-    },
-  };
-}
 
 export const serverRouter = router({
   power: powerRouter,
@@ -63,22 +32,27 @@ export const serverRouter = router({
         containerId: ctx.server.containerId,
         name: ctx.server.name,
         type: ctx.server.type,
-        status: inspect?.data?.status
+        status: inspect?.data?.status,
       };
     }),
   status: serverProcedure
     .meta({
-      permission: "status"
+      permission: "status",
     })
     .subscription(async function* ({ ctx, input }) {
       if (!ctx.server.containerId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Server not installed"
-        })
+          message: "Server not installed",
+        });
       }
       const result = docker.containerStats(ctx.server.containerId);
-      const hasLimitPermission = await hasPermission(ctx, ctx.user.id, ctx.server, "limits.read");
+      const hasLimitPermission = await hasPermission(
+        ctx,
+        ctx.user.id,
+        ctx.server,
+        "limits.read"
+      );
       try {
         for await (const part of result) {
           yield {
@@ -94,7 +68,7 @@ export const serverRouter = router({
     }),
   consoleLogs: serverProcedure
     .meta({
-      permission: "console.read"
+      permission: "console.read",
     })
     .subscription(async function* ({ ctx, input }) {
       if (!ctx.server.containerId) {
@@ -103,7 +77,7 @@ export const serverRouter = router({
 
       try {
         const res = await docker.attachToContainer(ctx.server.containerId);
-        const asyncIterable = createAsyncIterable(res.data);
+        const asyncIterable = docker.createAsyncIterable(res.data);
 
         for await (const chunk of asyncIterable) {
           yield chunk.toString() as string;
@@ -119,12 +93,12 @@ export const serverRouter = router({
   run: serverProcedure
     .meta({
       permission: "console.write",
-      log: "Run command"
+      log: "Run command",
     })
     .input(z.object({ command: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
-        log(`Run command: '${input.command}'`, false, ctx)
+        await log(`Run command: '${input.command}'`, false, ctx);
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
@@ -138,6 +112,6 @@ export const serverRouter = router({
         "stuff",
         input.command + "^M",
       ]);
-      log(`Run command: '${input.command}'`, true, ctx)
+      await log(`Run command: '${input.command}'`, true, ctx);
     }),
 });

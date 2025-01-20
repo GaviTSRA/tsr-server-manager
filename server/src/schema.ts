@@ -20,7 +20,7 @@ export const ResetartPolicy = pgEnum("RestartPolicy", [
   "no",
   "on-failure",
   "unless-stopped",
-  "always"
+  "always",
 ]);
 
 // Tables
@@ -38,6 +38,7 @@ export const Server = pgTable("Server", {
   ramLimit: integer().notNull(),
   restartPolicy: ResetartPolicy().notNull().default("no"),
   restartRetryCount: integer().notNull().default(1),
+  metadata: json().$type<{ [key: string]: any }>().notNull().default({}),
 });
 
 export const User = pgTable("User", {
@@ -75,7 +76,7 @@ export const Log = pgTable(
       .references(() => Server.id),
     log: text().notNull(),
     date: timestamp({ mode: "date" }).notNull(),
-    success: boolean().notNull()
+    success: boolean().notNull(),
   },
   (table) => [
     primaryKey({
@@ -91,12 +92,12 @@ export const ServerRelations = relations(Server, ({ one, many }) => ({
     references: [User.id],
   }),
   permissions: many(Permission),
-  logs: many(Log)
+  logs: many(Log),
 }));
 
 export const UserRelations = relations(User, ({ many }) => ({
   permissions: many(Permission),
-  logs: many(Log)
+  logs: many(Log),
 }));
 
 export const PermissionRelations = relations(Permission, ({ one }) => ({

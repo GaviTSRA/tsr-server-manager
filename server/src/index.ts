@@ -1,14 +1,20 @@
-import fs, { readdirSync } from "fs";
+import fs from "fs";
 import cors from "cors";
 import * as docker from "./docker";
 import "dotenv/config";
 import { createHTTPHandler } from "@trpc/server/adapters/standalone";
 import { appRouter } from "./trpc/router";
 import { createContext } from "./trpc/trpc";
+import http from "http";
 import https from "https";
 import { readFileSync } from "fs";
+import { emitLogEvent, PlatformEvent } from "./events";
+import { drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "./schema";
 
 export type { AppRouter } from "./trpc/router";
+
+export const db = drizzle(process.env.DATABASE_URL!, { schema });
 
 export type ServerType = {
   id: string;
@@ -24,20 +30,23 @@ export type ServerType = {
       options: string[] | undefined;
     };
   };
+  eventHandler: (event: PlatformEvent) => Promise<void>;
 };
 
 export const serverTypes: ServerType[] = [];
-fs.readdirSync("servertypes").forEach((folder) => {
+fs.readdirSync("servertypes").forEach(async (folder) => {
   const json = fs
     .readFileSync(`servertypes/${folder}/manifest.json`)
     .toString();
   const data = JSON.parse(json);
+  let imported = await import(`../servertypes/${folder}/handler.ts`);
   serverTypes.push({
     id: folder,
     name: data.name,
     image: data.image,
     command: data.command,
     options: data.options,
+    eventHandler: imported.handleEvent,
   });
 });
 
@@ -97,21 +106,50 @@ export type Permission =
   | "users.write"
   | "logs.read";
 
-let options = {};
-if (process.env.HTTPS) {
-  options = {
-    key: readFileSync("private-key.pem"),
-    cert: readFileSync("certificate.pem"),
-  };
-  console.info("HTTPS Enabled");
-}
+db.query.Server.findMany().then((servers) => {
+  for (const server of servers) {
+    if (server.containerId) {
+      docker.inspectContainer(server.containerId).then(async (result) => {
+        if (result.status === "success" && result.data?.status === "running") {
+          console.info("Restarting watcher for", server.name);
 
-const server = https.createServer(
-  options,
-  createHTTPHandler({
-    middleware: cors(),
-    router: appRouter,
-    createContext,
-  })
-);
-server.listen(3000);
+          const res = await docker.attachToContainer(server.containerId ?? "");
+          const asyncIterable = docker.createAsyncIterable(res.data);
+
+          for await (const chunk of asyncIterable) {
+            const data = chunk.toString() as string;
+            data.split("\n").map(async (log) => {
+              await emitLogEvent(server.id, log, server.type);
+            });
+          }
+        }
+      });
+    }
+  }
+});
+
+if (process.env.HTTPS === "true") {
+  const server = https.createServer(
+    {
+      key: readFileSync("private-key.pem"),
+      cert: readFileSync("certificate.pem"),
+    },
+    createHTTPHandler({
+      middleware: cors(),
+      router: appRouter,
+      createContext,
+    })
+  );
+  console.info("HTTPS Enabled");
+  server.listen(3000);
+} else {
+  const server = http.createServer(
+    {},
+    createHTTPHandler({
+      middleware: cors(),
+      router: appRouter,
+      createContext,
+    })
+  );
+  server.listen(3000);
+}

@@ -1,4 +1,8 @@
-import { inferProcedureBuilderResolverOptions, initTRPC, TRPCError } from "@trpc/server";
+import {
+  inferProcedureBuilderResolverOptions,
+  initTRPC,
+  TRPCError,
+} from "@trpc/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import jwt from "jsonwebtoken";
@@ -12,7 +16,10 @@ if (!SECRET_KEY) {
   throw new Error("SECRET_KEY is not set");
 }
 
-export const createContext = async ({ req, info }: CreateHTTPContextOptions) => {
+export const createContext = async ({
+  req,
+  info,
+}: CreateHTTPContextOptions) => {
   let token = null;
   if (req.headers.authorization) {
     token = req.headers.authorization.split(" ")[1];
@@ -52,7 +59,7 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.token) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "Not logged in"
+      message: "Not logged in",
     });
   }
   try {
@@ -65,7 +72,7 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     if (!user) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "User not found"
+        message: "User not found",
       });
     }
     return next({
@@ -76,7 +83,7 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
   } catch (e) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "Internal error while validating user"
+      message: "Internal error while validating user",
     });
   }
 });
@@ -105,7 +112,7 @@ export const serverProcedure = authedProcedure
     ) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Missing permission 'server'"
+        message: "Missing permission 'server'",
       });
     }
     if (meta && meta.permission && server.ownerId !== ctx.user.id) {
@@ -116,7 +123,7 @@ export const serverProcedure = authedProcedure
       ) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: `Missing permission '${meta.permission}'`
+          message: `Missing permission '${meta.permission}'`,
         });
       }
     }
@@ -127,7 +134,9 @@ export const serverProcedure = authedProcedure
     });
   });
 
-type ServerContext = inferProcedureBuilderResolverOptions<typeof serverProcedure>["ctx"];
+type ServerContext = inferProcedureBuilderResolverOptions<
+  typeof serverProcedure
+>["ctx"];
 
 export async function log(log: string, success: boolean, ctx: ServerContext) {
   await ctx.db.insert(schema.Log).values({
@@ -135,18 +144,24 @@ export async function log(log: string, success: boolean, ctx: ServerContext) {
     userId: ctx.user.id,
     log: log,
     success: success,
-    date: new Date()
-  })
+    date: new Date(),
+  });
 }
 
-export async function hasPermission(ctx: Context, userId: string, server: ServerType, permission: string) {
+export async function hasPermission(
+  ctx: Context,
+  userId: string,
+  server: ServerType,
+  permission: string
+) {
   if (server.ownerId === userId) return true;
   const result = await ctx.db.query.Permission.findFirst({
-    where: (permissionTable, { and, eq }) => and(
-      eq(permissionTable.permission, permission),
-      eq(permissionTable.userId, userId),
-      eq(permissionTable.serverId, server.id)
-    )
+    where: (permissionTable, { and, eq }) =>
+      and(
+        eq(permissionTable.permission, permission),
+        eq(permissionTable.userId, userId),
+        eq(permissionTable.serverId, server.id)
+      ),
   });
   return result !== undefined;
 }
