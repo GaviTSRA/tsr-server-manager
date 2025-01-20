@@ -31,8 +31,8 @@ import { LogsTab } from "./tabs/LogsTab";
 
 export function Server() {
   const { serverId, tab } = useParams() as {
-    serverId: string,
-    tab: "Console" | "Files" | "Network" | "Startup" | "Limits"
+    serverId: string;
+    tab: "Console" | "Files" | "Network" | "Startup" | "Limits";
   };
   const [queryEnabled, setQueryEnabled] = useState(true);
   const { data: server, error } = trpc.server.server.useQuery(
@@ -48,7 +48,7 @@ export function Server() {
     if (error) {
       setQueryEnabled(false);
     }
-  }, [error])
+  }, [error]);
 
   const [startButtonEnabled, setStartButtonEnabled] = useState(false);
   const [restartButtonEnabled, setRestartButtonEnabled] = useState(false);
@@ -56,12 +56,14 @@ export function Server() {
   const [killButtonEnabled, setKillButtonEnabled] = useState(false);
   const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
-  const [stats, setStats] = useState([] as {
-    cpuUsage: number;
-    cpuAvailable?: number;
-    ramUsage: number;
-    ramAvailable?: number;
-  }[]);
+  const [stats, setStats] = useState(
+    [] as {
+      cpuUsage: number;
+      cpuAvailable?: number;
+      ramUsage: number;
+      ramAvailable?: number;
+    }[]
+  );
   const [logs, setLogs] = useState([] as string[]);
   const [wasOffline, setWasOffline] = useState(
     server ? server.status !== "running" : false
@@ -139,7 +141,11 @@ export function Server() {
     }
   }, [server]);
 
-  const { data: statsSub, reset: resetStats, error: statsError } = trpc.server.status.useSubscription(
+  const {
+    data: statsSub,
+    reset: resetStats,
+    error: statsError,
+  } = trpc.server.status.useSubscription(
     { serverId },
     {
       onError: (err) => {
@@ -147,23 +153,27 @@ export function Server() {
       },
     }
   );
-  const { reset: resetLogs, error: logsError } = trpc.server.consoleLogs.useSubscription(
-    { serverId },
-    {
-      onData: (data) => {
-        setLogs((prev) => {
-          let prevEntries = prev;
-          if (prev.length > 1000) {
-            prevEntries = prev.slice(prev.length - 1000, prev.length);
-          }
-          return [...prevEntries, ...data.split("\n").filter((el) => el !== "")];
-        });
-      },
-      onError: (err) => {
-        console.error(err);
-      },
-    }
-  );
+  const { reset: resetLogs, error: logsError } =
+    trpc.server.consoleLogs.useSubscription(
+      { serverId },
+      {
+        onData: (data) => {
+          setLogs((prev) => {
+            let prevEntries = prev;
+            if (prev.length > 1000) {
+              prevEntries = prev.slice(prev.length - 1000, prev.length);
+            }
+            return [
+              ...prevEntries,
+              ...data.split("\n").filter((el) => el !== ""),
+            ];
+          });
+        },
+        onError: (err) => {
+          console.error(err);
+        },
+      }
+    );
 
   useEffect(() => {
     if (!statsSub) return;
@@ -179,41 +189,64 @@ export function Server() {
   const tabs = {
     Console: [
       <Terminal />,
-      <ConsoleTab serverId={serverId} stats={stats} statsError={statsError} logs={logs} logsError={logsError} />,
+      <ConsoleTab
+        serverId={serverId}
+        stats={stats}
+        statsError={statsError}
+        logs={logs}
+        logsError={logsError}
+      />,
     ],
     Files: [<File />, <FilesTab serverId={serverId} />],
     Network: [<ServerIcon />, <NetworkTab serverId={serverId} />],
-    Startup: [<PlayCircle />, server ? <StartupTab serverId={serverId} serverType={server.type} /> : <div></div>],
+    Startup: [
+      <PlayCircle />,
+      server ? (
+        <StartupTab serverId={serverId} serverType={server.type} />
+      ) : (
+        <div></div>
+      ),
+    ],
     Limits: [<Cpu />, <LimitsTab serverId={serverId} />],
     Users: [<Users />, <UsersTab serverId={serverId} />],
-    Logs: [<Book />, <LogsTab serverId={serverId} />]
+    Logs: [<Book />, <LogsTab serverId={serverId} />],
   };
 
   if (error) {
-    return <Error error={error} />
+    return <Error error={error} />;
   }
 
   return (
-    <div className="w-full flex flex-row h-full bg-neutral-100 text-primary-text" >
+    <div className="w-full flex flex-row h-full bg-neutral-100 text-primary-text">
       {sidebarOpen && (
         <div
-          className={"h-full flex flex-col bg-neutral-200" +
+          className={
+            "h-full flex flex-col bg-neutral-200" +
             (screenWidth < 600 ? " absolute z-50" : "")
           }
         >
           <div className="p-2 rounded flex flex-col gap-2">
             {!server && (
               <div className="w-full py-2 flex items-center justify-center">
-                {screenWidth < 600 && <Menu size={30} onClick={() => setsidebarOpen(!sidebarOpen)} />}
+                {screenWidth < 600 && (
+                  <Menu
+                    size={30}
+                    onClick={() => setsidebarOpen(!sidebarOpen)}
+                  />
+                )}
                 <MoonLoader size={30} color={"#FFFFFF"} />
               </div>
             )}
             {server && (
               <div className="flex flex-col">
                 <div className="flex flex-row">
-                  {screenWidth < 600 && <Menu size={30} onClick={() => setsidebarOpen(!sidebarOpen)} />}
+                  {screenWidth < 600 && (
+                    <Menu
+                      size={30}
+                      onClick={() => setsidebarOpen(!sidebarOpen)}
+                    />
+                  )}
                   <p className="text-2xl mx-auto">{server.name}</p>
-
                 </div>
                 <div className="flex flex-row items-center gap-2">
                   {statusIcon}
@@ -302,11 +335,21 @@ export function Server() {
         </div>
       )}
       {!sidebarOpen && (
-        <Menu size={30} onClick={() => setsidebarOpen(!sidebarOpen)} className="flex m-2" />
+        <Menu
+          size={30}
+          onClick={() => setsidebarOpen(!sidebarOpen)}
+          className="flex m-2"
+        />
       )}
-      {!tabs[tab] &&
-        <Error error={{ data: { httpStatus: 404, code: "NOT_FOUND" }, message: "", shape: undefined }} />
-      }
+      {!tabs[tab] && (
+        <Error
+          error={{
+            data: { httpStatus: 404, code: "NOT_FOUND" },
+            message: "",
+            shape: undefined,
+          }}
+        />
+      )}
       {tabs[tab] && (
         <div className="w-full h-screen box-border overflow-y-auto p-4">
           {tabs[tab][1]}

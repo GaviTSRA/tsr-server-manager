@@ -7,18 +7,23 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 
 export function NetworkTab({ serverId }: { serverId: string }) {
-  const { data: ports, error, refetch } = trpc.server.network.read.useQuery(
+  const {
+    data: ports,
+    error,
+    refetch,
+  } = trpc.server.network.read.useQuery(
     { serverId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       retry: 1,
-    });
+    }
+  );
   const writePorts = trpc.server.network.write.useMutation();
   const [newPort, setNewPort] = useState(null as string | null);
 
   if (error) {
-    return <Error error={error} />
+    return <Error error={error} />;
   }
 
   if (!ports) {
@@ -41,12 +46,15 @@ export function NetworkTab({ serverId }: { serverId: string }) {
             <div
               className="p-1 bg-danger rounded"
               onClick={() =>
-                writePorts.mutate({
-                  ports: [...ports.filter((el) => el !== port)],
-                  serverId,
-                }, {
-                  onSuccess: () => refetch()
-                })
+                writePorts.mutate(
+                  {
+                    ports: [...ports.filter((el) => el !== port)],
+                    serverId,
+                  },
+                  {
+                    onSuccess: () => refetch(),
+                  }
+                )
               }
             >
               <X />
@@ -66,12 +74,15 @@ export function NetworkTab({ serverId }: { serverId: string }) {
           className="p-2 bg-success rounded"
           onClick={() => {
             if (!newPort) return;
-            writePorts.mutate({
-              ports: [...ports, newPort],
-              serverId,
-            }, {
-              onSuccess: () => refetch()
-            });
+            writePorts.mutate(
+              {
+                ports: [...ports, newPort],
+                serverId,
+              },
+              {
+                onSuccess: () => refetch(),
+              }
+            );
           }}
         >
           Add

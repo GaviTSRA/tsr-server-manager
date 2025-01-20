@@ -185,7 +185,11 @@ export function FilesTab({ serverId }: { serverId: string }) {
   const [path, setPath] = useState("/");
   const [content, setContent] = useState(undefined as string | undefined);
 
-  const { data: files, refetch, error } = trpc.server.files.list.useQuery(
+  const {
+    data: files,
+    refetch,
+    error,
+  } = trpc.server.files.list.useQuery(
     { path, serverId: serverId },
     {
       refetchOnWindowFocus: false,
@@ -196,7 +200,7 @@ export function FilesTab({ serverId }: { serverId: string }) {
   const editFile = trpc.server.files.edit.useMutation();
 
   if (error) {
-    return <Error error={error} />
+    return <Error error={error} />;
   }
 
   if (!files) {
@@ -236,12 +240,12 @@ export function FilesTab({ serverId }: { serverId: string }) {
                 onClick={() => {
                   setPath(
                     "/" +
-                    path
-                      .split("/")
-                      .filter((part) => part !== "")
-                      .slice(0, index + 1)
-                      .join("/") +
-                    "/"
+                      path
+                        .split("/")
+                        .filter((part) => part !== "")
+                        .slice(0, index + 1)
+                        .join("/") +
+                      "/"
                   );
                   refetch();
                 }}

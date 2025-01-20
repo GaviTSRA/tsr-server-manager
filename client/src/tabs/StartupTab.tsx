@@ -1,15 +1,25 @@
 import { trpc } from "../main";
-import { Container } from "../components/Container";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
 
-export function StartupTab({ serverId, serverType }: { serverId: string, serverType: string }) {
-  const { data: serverTypes, error: serverTypesError } = trpc.serverTypes.useQuery();
-  const { data: options, refetch: refetchOptions, error: optionsError } = trpc.server.startup.read.useQuery(
+export function StartupTab({
+  serverId,
+  serverType,
+}: {
+  serverId: string;
+  serverType: string;
+}) {
+  const { data: serverTypes, error: serverTypesError } =
+    trpc.serverTypes.useQuery();
+  const {
+    data: options,
+    refetch: refetchOptions,
+    error: optionsError,
+  } = trpc.server.startup.read.useQuery(
     {
-      serverId
+      serverId,
     },
     {
       refetchOnWindowFocus: false,
@@ -20,10 +30,10 @@ export function StartupTab({ serverId, serverType }: { serverId: string, serverT
   const writeStartup = trpc.server.startup.write.useMutation();
 
   if (serverTypesError) {
-    return <Error error={serverTypesError} />
+    return <Error error={serverTypesError} />;
   }
   if (optionsError) {
-    return <Error error={optionsError} />
+    return <Error error={optionsError} />;
   }
 
   if (!serverTypes || !options) {
@@ -40,9 +50,12 @@ export function StartupTab({ serverId, serverType }: { serverId: string, serverT
     if (!options) return;
     const newOptions = options;
     newOptions[id] = value;
-    writeStartup.mutate({ serverId: serverId, options: newOptions }, {
-      onSuccess: () => refetchOptions()
-    });
+    writeStartup.mutate(
+      { serverId: serverId, options: newOptions },
+      {
+        onSuccess: () => refetchOptions(),
+      }
+    );
   }
 
   return (

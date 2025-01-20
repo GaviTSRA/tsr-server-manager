@@ -22,9 +22,9 @@ export function ConsoleTab({
     ramUsage: number;
     ramAvailable?: number;
   }[];
-  statsError: ErrorType | null,
+  statsError: ErrorType | null;
   logs: string[];
-  logsError: ErrorType | null,
+  logsError: ErrorType | null;
 }) {
   const ansiConverter = new AnsiToHtml();
   const consoleRef = useRef(null as HTMLDivElement | null);
@@ -45,22 +45,32 @@ export function ConsoleTab({
   };
 
   const [cpuUsage, setCPUUsage] = useState(0);
-  const [availableCpu, setAvailableCpu] = useState(undefined as number | undefined);
+  const [availableCpu, setAvailableCpu] = useState(
+    undefined as number | undefined
+  );
   const [usedRam, setUsedRam] = useState(0);
-  const [availableRam, setAvailableRam] = useState(undefined as number | undefined);
+  const [availableRam, setAvailableRam] = useState(
+    undefined as number | undefined
+  );
   useEffect(() => {
     if (!stats || stats.length === 0) return;
     const latestStats = stats[stats.length - 1];
-    if (latestStats.cpuUsage) setCPUUsage(Math.round(latestStats.cpuUsage * 100) / 100);
-    if (latestStats.cpuAvailable) setAvailableCpu(latestStats.cpuAvailable * 100);
+    if (latestStats.cpuUsage)
+      setCPUUsage(Math.round(latestStats.cpuUsage * 100) / 100);
+    if (latestStats.cpuAvailable)
+      setAvailableCpu(latestStats.cpuAvailable * 100);
     if (latestStats.ramUsage)
-      setUsedRam(Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100);
+      setUsedRam(
+        Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100
+      );
     if (latestStats.ramAvailable) {
       setAvailableRam(
         Math.round((latestStats.ramAvailable / 1024 / 1024 / 1024) * 100) / 100
       );
     } else if (latestStats.ramUsage) {
-      setAvailableRam(Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100)
+      setAvailableRam(
+        Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100
+      );
     }
   }, [stats]);
 
@@ -71,25 +81,27 @@ export function ConsoleTab({
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      runCommand.mutate({ command, serverId }, {
-        onSuccess: () => setCommand("")
-      });
+      runCommand.mutate(
+        { command, serverId },
+        {
+          onSuccess: () => setCommand(""),
+        }
+      );
     }
   };
 
   function range(start: number, stop: number, step: number) {
-    var a = [start], b = start;
+    const a = [start];
+    let b = start;
     while (b < stop) {
-      a.push(b += step || 1);
+      a.push((b += step || 1));
     }
     return a;
   }
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row">
-      <div
-        className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative"
-      >
+      <div className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
         {logsError ? (
           <Container className="h-full !rounded-b-none" expanded={true}>
             <Error error={logsError} />
@@ -120,12 +132,14 @@ export function ConsoleTab({
             onKeyDown={handleKeyDown}
             className="rounded-bl-lg peer"
           />
-          <div
-            className="px-1 flex items-center bg-neutral-300 rounded-br-lg border-b-2 border-neutral-400 peer-focus:border-primary-100 transition-colors duration-300"
-          >
+          <div className="px-1 flex items-center bg-neutral-300 rounded-br-lg border-b-2 border-neutral-400 peer-focus:border-primary-100 transition-colors duration-300">
             {runCommand.isPending && <MoonLoader size={20} color="white" />}
-            {runCommand.error && <Error error={runCommand.error} size="small" />}
-            {runCommand.isSuccess && <Check size={20} color={"green"} strokeWidth={4} />}
+            {runCommand.error && (
+              <Error error={runCommand.error} size="small" />
+            )}
+            {runCommand.isSuccess && (
+              <Check size={20} color={"green"} strokeWidth={4} />
+            )}
           </div>
         </div>
       </div>
@@ -138,18 +152,18 @@ export function ConsoleTab({
           <div className="flex flex-col md:flex-row lg:flex-col gap-4">
             <Container
               className="overflow-hidden flex flex-col !p-0"
-              title={<>
-                <Cpu size={20} />
-                <p className="font-bold">CPU Usage</p>
-                <div className="ml-auto flex flex-row gap-2">
-                  <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>
-                  {availableCpu && (
-                    <p className="text-secondary-text">
-                      / {availableCpu} %
-                    </p>
-                  )}
-                </div>
-              </>}
+              title={
+                <>
+                  <Cpu size={20} />
+                  <p className="font-bold">CPU Usage</p>
+                  <div className="ml-auto flex flex-row gap-2">
+                    <p>{Number.isNaN(cpuUsage) ? 0 : cpuUsage} %</p>
+                    {availableCpu && (
+                      <p className="text-secondary-text">/ {availableCpu} %</p>
+                    )}
+                  </div>
+                </>
+              }
             >
               <VictoryChart
                 theme={VictoryTheme.clean}
@@ -159,15 +173,13 @@ export function ConsoleTab({
                   dependentAxis
                   tickValues={
                     availableCpu
-                      ? range(0, availableCpu,
-                        availableCpu >= 500 ? 100 : 50
-                      )
+                      ? range(0, availableCpu, availableCpu >= 500 ? 100 : 50)
                       : undefined
                   }
                   tickFormat={(value) => `${value}%`}
                   style={{
                     tickLabels: {
-                      fill: "#909090"
+                      fill: "#909090",
                     },
                     grid: {
                       stroke: "#444",
@@ -175,9 +187,9 @@ export function ConsoleTab({
                   }}
                 />
                 <VictoryArea
-                  data={
-                    stats.filter(el => el.cpuUsage !== null).map((stat, i) => ({ x: i, y: stat.cpuUsage }))
-                  }
+                  data={stats
+                    .filter((el) => el.cpuUsage !== null)
+                    .map((stat, i) => ({ x: i, y: stat.cpuUsage }))}
                   style={{
                     data: {
                       fill: "#66F",
@@ -191,18 +203,18 @@ export function ConsoleTab({
             </Container>
             <Container
               className="overflow-hidden flex flex-col !p-0"
-              title={<>
-                <Server size={20} />
-                <p className="font-bold">RAM Usage</p>
-                <div className="ml-auto flex flex-row gap-2">
-                  <p>{Number.isNaN(usedRam) ? 0 : usedRam} GB</p>
-                  {availableRam && (
-                    <p className="text-secondary-text">
-                      / {availableRam} GB
-                    </p>
-                  )}
-                </div>
-              </>}
+              title={
+                <>
+                  <Server size={20} />
+                  <p className="font-bold">RAM Usage</p>
+                  <div className="ml-auto flex flex-row gap-2">
+                    <p>{Number.isNaN(usedRam) ? 0 : usedRam} GB</p>
+                    {availableRam && (
+                      <p className="text-secondary-text">/ {availableRam} GB</p>
+                    )}
+                  </div>
+                </>
+              }
             >
               <div className="px-2">
                 <VictoryChart
@@ -214,20 +226,23 @@ export function ConsoleTab({
                     dependentAxis
                     tickValues={
                       availableRam
-                        ? range(0, availableRam * 1024 * 1024 * 1024,
-                          (availableRam * 1024 >= 4096
-                            ? availableRam * 1024 >= 8192
-                              ? 2048
-                              : 1024
-                            : 512
-                          ) * 1024 * 1024
-                        )
+                        ? range(
+                            0,
+                            availableRam * 1024 * 1024 * 1024,
+                            (availableRam * 1024 >= 4096
+                              ? availableRam * 1024 >= 8192
+                                ? 2048
+                                : 1024
+                              : 512) *
+                              1024 *
+                              1024
+                          )
                         : undefined
                     }
                     tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
                     style={{
                       tickLabels: {
-                        fill: "#909090"
+                        fill: "#909090",
                       },
                       grid: {
                         stroke: "#444",
@@ -235,9 +250,7 @@ export function ConsoleTab({
                     }}
                   />
                   <VictoryArea
-                    data={
-                      stats.map((stat, i) => ({ x: i, y: stat.ramUsage }))
-                    }
+                    data={stats.map((stat, i) => ({ x: i, y: stat.ramUsage }))}
                     style={{
                       data: {
                         fill: "#6F6",
@@ -250,9 +263,9 @@ export function ConsoleTab({
                 </VictoryChart>
               </div>
             </Container>
-          </div >
+          </div>
         )}
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Container } from "../components/Container";
 import { trpc } from "../main";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
@@ -7,10 +6,7 @@ import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
 
 export function LimitsTab({ serverId }: { serverId: string }) {
-  const {
-    data: limits,
-    error,
-  } = trpc.server.limits.read.useQuery(
+  const { data: limits, error } = trpc.server.limits.read.useQuery(
     { serverId },
     {
       refetchOnWindowFocus: false,
@@ -22,8 +18,12 @@ export function LimitsTab({ serverId }: { serverId: string }) {
 
   const [cpuLimit, setCpuLimit] = useState(null as number | null);
   const [ramLimit, setRamLimit] = useState(null as number | null);
-  const [restartPolicy, setRestartPolicy] = useState(null as "no" | "on-failure" | "unless-stopped" | "always" | null);
-  const [restartRetryCount, setRestartRetryCount] = useState(null as number | null);
+  const [restartPolicy, setRestartPolicy] = useState(
+    null as "no" | "on-failure" | "unless-stopped" | "always" | null
+  );
+  const [restartRetryCount, setRestartRetryCount] = useState(
+    null as number | null
+  );
 
   useEffect(() => {
     if (!limits) return;
@@ -34,7 +34,7 @@ export function LimitsTab({ serverId }: { serverId: string }) {
   }, [limits]);
 
   if (error) {
-    return <Error error={error} />
+    return <Error error={error} />;
   }
 
   if (!cpuLimit || !ramLimit || !restartPolicy || !restartRetryCount) {
@@ -53,7 +53,9 @@ export function LimitsTab({ serverId }: { serverId: string }) {
           description="Maximum amount of CPU the server may use"
           value={cpuLimit}
           type="text"
-          mutate={(value) => writeLimits.mutate({ cpuLimit: Number.parseFloat(value), serverId })}
+          mutate={(value) =>
+            writeLimits.mutate({ cpuLimit: Number.parseFloat(value), serverId })
+          }
           error={writeLimits.error}
           fetching={writeLimits.isPending}
           success={writeLimits.isSuccess}
@@ -63,7 +65,9 @@ export function LimitsTab({ serverId }: { serverId: string }) {
           description="Maximum amount of RAM the server may use"
           value={ramLimit}
           type="number"
-          mutate={(value) => writeLimits.mutate({ ramLimit: Number.parseInt(value), serverId })}
+          mutate={(value) =>
+            writeLimits.mutate({ ramLimit: Number.parseInt(value), serverId })
+          }
           error={writeLimits.error}
           fetching={writeLimits.isPending}
           success={writeLimits.isSuccess}
@@ -75,7 +79,16 @@ export function LimitsTab({ serverId }: { serverId: string }) {
           description="The restart policy to use. no means not to restart, on-failure means to restart when there is a bad exit code, unless-stopped means to restart when the server wasn't stopped by the user and always means to always restart the container"
           values={["no", "on-failure", "unless-stopped", "always"]}
           value={restartPolicy}
-          mutate={(value) => writeLimits.mutate({ restartPolicy: value as "no" | "on-failure" | "unless-stopped" | "always", serverId })}
+          mutate={(value) =>
+            writeLimits.mutate({
+              restartPolicy: value as
+                | "no"
+                | "on-failure"
+                | "unless-stopped"
+                | "always",
+              serverId,
+            })
+          }
           error={writeLimits.error}
           fetching={writeLimits.isPending}
           success={writeLimits.isSuccess}
@@ -85,7 +98,12 @@ export function LimitsTab({ serverId }: { serverId: string }) {
           description="How often to try restarting when using the on-failure restart policy"
           value={restartRetryCount}
           type="number"
-          mutate={(value) => writeLimits.mutate({ restartRetryCount: Number.parseInt(value), serverId })}
+          mutate={(value) =>
+            writeLimits.mutate({
+              restartRetryCount: Number.parseInt(value),
+              serverId,
+            })
+          }
           error={writeLimits.error}
           fetching={writeLimits.isPending}
           success={writeLimits.isSuccess}

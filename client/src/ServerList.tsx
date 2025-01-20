@@ -22,7 +22,11 @@ function ServerList() {
   // const [servers, setServers] = useState([] as any[]);
   const navigate = useNavigate();
 
-  const { data: servers, error, refetch } = trpc.servers.useQuery(undefined, {
+  const {
+    data: servers,
+    error,
+    refetch,
+  } = trpc.servers.useQuery(undefined, {
     retry: 1,
   });
   // const fetchServers = async () => {

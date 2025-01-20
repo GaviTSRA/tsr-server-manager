@@ -20,12 +20,11 @@ const router = createBrowserRouter([
   {
     path: "/server/:serverId/:tab",
     element: <Server />,
-
   },
   {
     path: "/login",
     element: <Login />,
-  }
+  },
 ]);
 
 export const trpc = createTRPCReact<AppRouter>();
@@ -41,8 +40,8 @@ const trpcClient = trpc.createClient({
         url: API_BASE_URL,
         connectionParams: () => {
           const token = localStorage.getItem("authToken");
-          return { token: token ?? undefined }
-        }
+          return { token: token ?? undefined };
+        },
       }),
       false: httpBatchLink({
         url: API_BASE_URL,
