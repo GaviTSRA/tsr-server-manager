@@ -9,7 +9,14 @@ type InputProps = {
   innerRef?: LegacyRef<HTMLDivElement>;
 };
 
-export function Container({ title, className, children, onClick, expanded, innerRef }: InputProps) {
+export function Container({
+  title,
+  className,
+  children,
+  onClick,
+  expanded,
+  innerRef,
+}: InputProps) {
   return (
     <div onClick={onClick} className={expanded ? "h-full" : ""}>
       {title && (
@@ -19,13 +26,14 @@ export function Container({ title, className, children, onClick, expanded, inner
       )}
       <div
         className={
-          "bg-neutral-200 rounded-b-xl p-2 " + (!title && "rounded-t-xl ") +
+          "bg-neutral-200 rounded-b-xl p-2 " +
+          (title ? "" : "rounded-t-xl ") +
           className
         }
         ref={innerRef}
       >
         {children}
       </div>
-    </div >
+    </div>
   );
 }

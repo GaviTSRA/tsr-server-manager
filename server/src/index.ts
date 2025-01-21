@@ -30,6 +30,7 @@ export type ServerType = {
       options: string[] | undefined;
     };
   };
+  tabs?: string[];
   eventHandler: (event: PlatformEvent) => Promise<void>;
 };
 
@@ -46,6 +47,7 @@ fs.readdirSync("servertypes").forEach(async (folder) => {
     image: data.image,
     command: data.command,
     options: data.options,
+    tabs: data.tabs,
     eventHandler: imported.handleEvent,
   });
 });

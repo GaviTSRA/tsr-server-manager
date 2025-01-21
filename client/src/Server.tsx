@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   PlayCircle,
   Terminal,
@@ -16,6 +16,7 @@ import {
   Users,
   Menu,
   Book,
+  Rss,
 } from "react-feather";
 import { Link, useParams } from "react-router-dom";
 import { Error } from "./components/Error";
@@ -28,6 +29,7 @@ import { FilesTab } from "./tabs/FilesTab";
 import { MoonLoader } from "react-spinners";
 import { UsersTab } from "./tabs/UsersTab";
 import { LogsTab } from "./tabs/LogsTab";
+import { MinecraftPlayersTab } from "./tabs/custom/MinecraftPlayersTab";
 
 export function Server() {
   const { serverId, tab } = useParams() as {
@@ -43,6 +45,21 @@ export function Server() {
       refetchInterval: 1000,
     }
   );
+  const { data: serverTypes, error: serverTypesError } =
+    trpc.serverTypes.useQuery();
+
+  const [customTabs, setCustomTabs] = useState([] as string[]);
+
+  useEffect(() => {
+    if (server && server.type && serverTypes) {
+      const type = serverTypes.find((type) => type.id === server.type);
+      if (type && type.tabs) {
+        setCustomTabs(type.tabs);
+      } else {
+        setCustomTabs([]);
+      }
+    }
+  }, [server, serverTypes]);
 
   useEffect(() => {
     if (error) {
@@ -186,34 +203,79 @@ export function Server() {
     });
   }, [statsSub]);
 
-  const tabs = {
-    Console: [
-      <Terminal />,
-      <ConsoleTab
-        serverId={serverId}
-        stats={stats}
-        statsError={statsError}
-        logs={logs}
-        logsError={logsError}
-      />,
+  const tabs = useMemo(
+    () => [
+      {
+        id: "console",
+        title: "Console",
+        icon: <Terminal />,
+        tab: (
+          <ConsoleTab
+            serverId={serverId}
+            stats={stats}
+            statsError={statsError}
+            logs={logs}
+            logsError={logsError}
+          />
+        ),
+      },
+      {
+        id: "files",
+        title: "Files",
+        icon: <File />,
+        tab: <FilesTab serverId={serverId} />,
+      },
+      {
+        id: "network",
+        title: "Network",
+        icon: <ServerIcon />,
+        tab: <NetworkTab serverId={serverId} />,
+      },
+      {
+        id: "startup",
+        title: "Startup",
+        icon: <PlayCircle />,
+        tab: <StartupTab serverId={serverId} serverType={server?.type} />,
+      },
+      {
+        id: "limits",
+        title: "Limits",
+        icon: <Cpu />,
+        tab: <LimitsTab serverId={serverId} />,
+      },
+      {
+        id: "users",
+        title: "Users",
+        icon: <Users />,
+        tab: <UsersTab serverId={serverId} />,
+      },
+      {
+        id: "logs",
+        title: "Logs",
+        icon: <Book />,
+        tab: <LogsTab serverId={serverId} />,
+      },
+      {
+        id: "mc-players",
+        title: "Players",
+        icon: <Rss />,
+        tab: <MinecraftPlayersTab server={server} />,
+        custom: true,
+      },
     ],
-    Files: [<File />, <FilesTab serverId={serverId} />],
-    Network: [<ServerIcon />, <NetworkTab serverId={serverId} />],
-    Startup: [
-      <PlayCircle />,
-      server ? (
-        <StartupTab serverId={serverId} serverType={server.type} />
-      ) : (
-        <div></div>
-      ),
-    ],
-    Limits: [<Cpu />, <LimitsTab serverId={serverId} />],
-    Users: [<Users />, <UsersTab serverId={serverId} />],
-    Logs: [<Book />, <LogsTab serverId={serverId} />],
-  };
+    [server, serverId, stats, statsError, logs, logsError]
+  );
+
+  const selectedTab = useMemo(
+    () => tabs.find((data) => data.id === tab),
+    [tabs, tab]
+  );
 
   if (error) {
     return <Error error={error} />;
+  }
+  if (serverTypesError) {
+    return <Error error={serverTypesError} />;
   }
 
   return (
@@ -314,23 +376,26 @@ export function Server() {
             </div>
           </div>
           <div className="w-full h-full gap-2 flex flex-col items-center p-2">
-            {Object.entries(tabs).map(([name, [icon]]) => (
-              <Link
-                className={
-                  "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
-                  (tab === name
-                    ? "bg-neutral-100 border-l-primary-100"
-                    : "bg-neutral-200 hover:bg-neutral-300")
-                }
-                to={`/server/${serverId}/${name}`}
-                key={name}
-              >
-                <div className="mx-auto flex flex-row gap-2">
-                  {icon}
-                  <p>{name}</p>
-                </div>
-              </Link>
-            ))}
+            {tabs.map((data) => {
+              if (data.custom && !customTabs.includes(data.id)) return;
+              return (
+                <Link
+                  className={
+                    "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
+                    (tab === data.id
+                      ? "bg-neutral-100 border-l-primary-100"
+                      : "bg-neutral-200 hover:bg-neutral-300")
+                  }
+                  to={`/server/${serverId}/${data.id}`}
+                  key={data.id}
+                >
+                  <div className="mx-auto flex flex-row gap-2">
+                    {data.icon}
+                    <p>{data.title}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
@@ -341,7 +406,7 @@ export function Server() {
           className="flex m-2"
         />
       )}
-      {!tabs[tab] && (
+      {!selectedTab && (
         <Error
           error={{
             data: { httpStatus: 404, code: "NOT_FOUND" },
@@ -350,9 +415,9 @@ export function Server() {
           }}
         />
       )}
-      {tabs[tab] && (
+      {selectedTab && (
         <div className="w-full h-screen box-border overflow-y-auto p-4">
-          {tabs[tab][1]}
+          {selectedTab.tab}
         </div>
       )}
     </div>

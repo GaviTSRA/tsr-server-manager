@@ -33,6 +33,7 @@ export const serverRouter = router({
         name: ctx.server.name,
         type: ctx.server.type,
         status: inspect?.data?.status,
+        metadata: ctx.server.metadata,
       };
     }),
   status: serverProcedure

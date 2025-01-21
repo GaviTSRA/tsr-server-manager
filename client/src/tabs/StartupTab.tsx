@@ -9,7 +9,7 @@ export function StartupTab({
   serverType,
 }: {
   serverId: string;
-  serverType: string;
+  serverType: string | undefined;
 }) {
   const { data: serverTypes, error: serverTypesError } =
     trpc.serverTypes.useQuery();
@@ -36,7 +36,7 @@ export function StartupTab({
     return <Error error={optionsError} />;
   }
 
-  if (!serverTypes || !options) {
+  if (!serverTypes || !options || !serverType) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <MoonLoader size={100} color={"#FFFFFF"} />

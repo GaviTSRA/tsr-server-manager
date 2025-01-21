@@ -29,6 +29,7 @@ const router = createBrowserRouter([
 
 export const trpc = createTRPCReact<AppRouter>();
 type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type Server = RouterOutputs["server"]["server"];
 export type ServerStatus = RouterOutputs["server"]["status"];
 
 const trpcClient = trpc.createClient({
