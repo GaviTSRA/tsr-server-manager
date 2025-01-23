@@ -21,6 +21,12 @@
       "type": "enum",
       "options": ["java21", "java17", "java8"],
       "default": "java21"
+    },
+    "notifyWebhook": {
+      "name": "Notify Webhook",
+      "description": "Webhook to notify about server events",
+      "type": "string",
+      "default": ""
     }
   },
   "tabs": ["mc-players"]

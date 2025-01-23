@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { getServer, setMetadata, type PlatformEvent } from "../../src/events";
+import {
+  getServer,
+  sendEmbed,
+  setMetadata,
+  type PlatformEvent,
+} from "../../src/events";
+import axios from "axios";
 
 const dataSchema = z.object({
   players: z.string().array().optional(),
@@ -15,52 +21,124 @@ async function getMetadata(event: PlatformEvent) {
   return dataSchema.parse(server);
 }
 
+function justHappened(time: string) {
+  const now = new Date();
+  const [hours, minutes, seconds] = time.split(":").map(Number);
+  const givenDate = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    hours,
+    minutes,
+    seconds
+  );
+  const givenTimestamp = givenDate.getTime() / 1000;
+  const currentTimestamp = Date.now() / 1000;
+  return Math.abs(currentTimestamp - givenTimestamp) <= 10;
+}
+
 export async function handleEvent(event: PlatformEvent) {
   switch (event.type) {
     case "power":
-      const metadata = await getMetadata(event);
+      const server = await getServer(event);
+      const metadata = dataSchema.parse(server);
       await update(event.serverId, {
         ...metadata,
         players: [],
       });
+      if (server.options.notifyWebhook) {
+        const title =
+          event.data === "start"
+            ? "Server is now starting..."
+            : event.data === "kill"
+            ? "Server is now offline!"
+            : "Server is now stopping...";
+        const color = event.data === "start" ? 13369291 : 16711680;
+        sendEmbed(server.options.notifyWebhook, title, color);
+      }
+
       break;
 
     case "log":
-      const serverStart =
-        /\[[0-9:]+] \[main\/INFO\] \[cp.mo.mo.Launcher\/MODLAUNCHER\]: ModLauncher [0-9.]+ starting/;
+      const serverOnline =
+        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO\] \[minecraft\/DedicatedServer\]: Done \(([0-9.]+)s\)!/;
+      const serverOffline =
+        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO\] \[minecraft\/DedicatedServer\]: Done \(([0-9.]+)s\)!/;
       const join =
-        /\[[0-9:]+] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([A-z]+) joined the game/;
+        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([A-z]+) joined the game/;
       const leave =
-        /\[[0-9:]+] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([A-z]+) left the game/;
+        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([A-z]+) left the game/;
 
       const joinMatch = join.exec(event.data);
       const leaveMatch = leave.exec(event.data);
+      const serverOnlineMatch = serverOnline.exec(event.data);
+      const serverOfflineMatch = serverOffline.exec(event.data);
 
-      if (serverStart.test(event.data)) {
-        const metadata = await getMetadata(event);
-        update(event.serverId, {
-          ...metadata,
-          players: [],
-        });
+      if (serverOnlineMatch && serverOnlineMatch[1] && serverOnlineMatch[2]) {
+        const server = await getServer(event);
+        if (
+          server.options.notifyWebhook &&
+          justHappened(serverOnlineMatch[1])
+        ) {
+          sendEmbed(
+            server.options.notifyWebhook,
+            `Server is now online! Started in ${serverOnlineMatch[2]}s`,
+            5151822
+          );
+        }
       }
 
-      if (joinMatch && joinMatch[1]) {
-        const metadata = await getMetadata(event);
+      if (
+        serverOfflineMatch &&
+        serverOfflineMatch[1] &&
+        serverOfflineMatch[2]
+      ) {
+        const server = await getServer(event);
+        if (
+          server.options.notifyWebhook &&
+          justHappened(serverOfflineMatch[1])
+        ) {
+          sendEmbed(
+            server.options.notifyWebhook,
+            `Server is now stopped!`,
+            5151822
+          );
+        }
+      }
+
+      if (joinMatch && joinMatch[1] && joinMatch[2]) {
+        const server = await getServer(event);
+        const metadata = dataSchema.parse(server);
         const players = metadata.players ?? [];
-        players.push(joinMatch[1]);
+        players.push(joinMatch[2]);
         update(event.serverId, {
           ...metadata,
           players,
         });
+        if (server.options.notifyWebhook && justHappened(joinMatch[1])) {
+          sendEmbed(
+            server.options.notifyWebhook,
+            `${joinMatch[2]} joined the game`,
+            7246967
+          );
+        }
       }
 
-      if (leaveMatch && leaveMatch[1]) {
-        const metadata = await getMetadata(event);
+      if (leaveMatch && leaveMatch[1] && leaveMatch[2]) {
+        const server = await getServer(event);
+        const metadata = dataSchema.parse(server);
         const players = metadata.players ?? [];
         update(event.serverId, {
           ...metadata,
-          players: players.filter((p) => p !== leaveMatch[1]),
+          players: players.filter((p) => p !== leaveMatch[2]),
         });
+        if (server.options.notifyWebhook && justHappened(leaveMatch[1])) {
+          sendEmbed(
+            server.options.notifyWebhook,
+            `${leaveMatch[2]} left the game`,
+            11470856
+          );
+        }
       }
       break;
   }

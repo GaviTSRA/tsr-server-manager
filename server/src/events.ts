@@ -1,6 +1,7 @@
 import * as schema from "./schema";
 import { db, serverTypes } from ".";
 import { eq } from "drizzle-orm";
+import axios from "axios";
 
 export type PlatformEvent =
   | {
@@ -67,4 +68,16 @@ export async function getServer(event: PlatformEvent) {
     throw new Error("Server not found");
   }
   return server;
+}
+
+export async function sendEmbed(webhook: string, title: string, color: number) {
+  await axios.post(webhook, {
+    content: null,
+    embeds: [
+      {
+        title,
+        color,
+      },
+    ],
+  });
 }
