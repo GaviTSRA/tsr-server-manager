@@ -33,6 +33,18 @@ module.exports = {
         disabled: "#666666",
         danger: "#FF4D4D",
         success: "#28a745",
+        confirm: {
+          normal: "#1f7a47",
+          hover: "#1a693d",
+          active: "#155c35",
+          disabled: "#0f3d23"
+        },
+        cancel: {
+          normal: "#40444B",
+          hover: "#353A40",
+          active: "#2B2F34",
+          disabled: "#383c42"
+        }
       },
     },
   },

@@ -5,6 +5,7 @@ import { Edit2, Folder, Trash2, File, MoreVertical } from "react-feather";
 import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
+import Modal, { useModal } from "../components/Modal";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -41,24 +42,48 @@ function FileRow({
   refetch: () => void;
 }): JSX.Element {
   const [moreOpen, setMoreOpen] = useState(false);
-  const [deleteConfirmationMenuOpen, setDeleteConfirmationMenuOpen] =
-    useState(false);
   const [renameMenuOpen, setRenameMenuOpen] = useState(false);
   const [newName, setNewName] = useState(undefined as string | undefined);
 
   const renameFile = trpc.server.files.rename.useMutation();
   const deleteFile = trpc.server.files.delete.useMutation();
 
+  const modal = useModal();
+
   const moreOptions = [
     {
       label: "Rename",
       icon: <Edit2 />,
-      onClick: () => setRenameMenuOpen(true),
+      onClick: (fileName: string) => setRenameMenuOpen(true),
     },
     {
       label: "Delete",
       icon: <Trash2 />,
-      onClick: () => setDeleteConfirmationMenuOpen(true),
+      onClick: (fileName: string) => modal.open(
+        "Delete file?",
+        `Confirm deletion of ${fileName}`,
+        (event) => {
+          event.stopPropagation();
+          modal.fetching();
+          deleteFile.mutate(
+            { path: path + file.name, serverId },
+            {
+              onError: () => {
+                modal.error();
+                setTimeout(() => modal.close(), 2000)
+              },
+              onSuccess: () => {
+                modal.success();
+                setTimeout(() => modal.close(), 2000)
+                refetch();
+              },
+            }
+          );
+        },
+        (_) => {
+          modal.close();
+        }
+      )
     },
   ];
 
@@ -69,6 +94,7 @@ function FileRow({
         setPath(path + file.name + (file.type === "folder" ? "/" : ""));
       }}
     >
+      <Modal data={modal.data} />
       {file.type === "folder" && <Folder />}
       {file.type === "file" && <File />}
       <p>{file.name}</p>
@@ -106,7 +132,7 @@ function FileRow({
                   onClick={(e) => {
                     e.stopPropagation();
                     setMoreOpen(false);
-                    value.onClick();
+                    value.onClick(file.name);
                   }}
                   key={index}
                 >
@@ -136,34 +162,6 @@ function FileRow({
                     {
                       onSuccess: () => {
                         setRenameMenuOpen(false);
-                        refetch();
-                      },
-                    }
-                  );
-                }}
-                className="ml-auto"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {deleteConfirmationMenuOpen && (
-        <div className="fixed w-screen h-screen bg-black/40 top-0 left-0">
-          <div className="bg-neutral-200 m-auto w-fit h-fit p-2 rounded-xl">
-            <p>Confirm deletion of '{file.name}'</p>
-            <div className="flex flex-row mt-2">
-              <button onClick={() => setDeleteConfirmationMenuOpen(false)}>
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  deleteFile.mutate(
-                    { path, serverId },
-                    {
-                      onSuccess: () => {
-                        setDeleteConfirmationMenuOpen(false);
                         refetch();
                       },
                     }
@@ -240,12 +238,12 @@ export function FilesTab({ serverId }: { serverId: string }) {
                 onClick={() => {
                   setPath(
                     "/" +
-                      path
-                        .split("/")
-                        .filter((part) => part !== "")
-                        .slice(0, index + 1)
-                        .join("/") +
-                      "/"
+                    path
+                      .split("/")
+                      .filter((part) => part !== "")
+                      .slice(0, index + 1)
+                      .join("/") +
+                    "/"
                   );
                   refetch();
                 }}

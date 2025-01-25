@@ -112,11 +112,13 @@ export const serverFilesRouter = router({
       fs.writeFileSync(target, input.content);
       await log(`Edit file '${input.path}'`, true, ctx);
     }),
-  delete: serverProcedure // TODO
+  delete: serverProcedure
     .meta({
       permission: "files.delete",
+      openapi: { method: "DELETE", path: "/server/{serverId}/files", protect: true }
     })
     .input(z.object({ path: z.string() }))
+    .output(z.void())
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
         await log(`Delete file '${input.path}'`, false, ctx);
@@ -126,7 +128,11 @@ export const serverFilesRouter = router({
       }
       const root = "servers/" + input.serverId;
       const target = path.normalize(path.join(root, input.path));
-      fs.rmSync(target);
+      if (fs.statSync(target).isDirectory()) {
+        fs.rmdirSync(target);
+      } else {
+        fs.rmSync(target);
+      }
       await log(`Delete file '${input.path}'`, true, ctx);
     }),
 });
