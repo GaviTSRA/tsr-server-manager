@@ -51,8 +51,8 @@ export async function handleEvent(event: PlatformEvent) {
           event.data === "start"
             ? "Server is now starting..."
             : event.data === "kill"
-            ? "Server is now offline!"
-            : "Server is now stopping...";
+              ? "Server is now offline!"
+              : "Server is now stopping...";
         const color = event.data === "start" ? 13369291 : 16711680;
         sendEmbed(server.options.notifyWebhook, title, color);
       }
@@ -76,6 +76,11 @@ export async function handleEvent(event: PlatformEvent) {
 
       if (serverOnlineMatch && serverOnlineMatch[1] && serverOnlineMatch[2]) {
         const server = await getServer(event);
+        const metadata = dataSchema.parse(server);
+        update(event.serverId, {
+          ...metadata,
+          players: [],
+        });
         if (
           server.options.notifyWebhook &&
           justHappened(serverOnlineMatch[1])
