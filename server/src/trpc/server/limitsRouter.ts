@@ -8,7 +8,15 @@ export const limitsRouter = router({
   read: serverProcedure
     .meta({
       permission: "limits.read",
+      openapi: { method: "GET", path: "/server/{serverId}/limits", protect: true }
     })
+    .input(z.object({}))
+    .output(z.object({
+      cpu: z.number(),
+      ram: z.number(),
+      restartPolicy: z.enum(["no", "on-failure", "unless-stopped", "always"]),
+      restartRetryCount: z.number()
+    }))
     .query(async ({ ctx }) => {
       return {
         cpu: ctx.server.cpuLimit,
@@ -20,6 +28,7 @@ export const limitsRouter = router({
   write: serverProcedure
     .meta({
       permission: "limits.write",
+      openapi: { method: "POST", path: "/server/{serverId}/limits", protect: true }
     })
     .input(
       z.object({
@@ -31,6 +40,7 @@ export const limitsRouter = router({
         restartRetryCount: z.number().optional(),
       })
     )
+    .output(z.void())
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(schema.Server)

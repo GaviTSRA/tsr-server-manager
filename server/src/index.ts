@@ -1,8 +1,8 @@
-import fs from "fs";
-import cors from "cors";
+import fs, { writeFileSync } from "fs";
 import * as docker from "./docker";
 import "dotenv/config";
-import { createHTTPHandler } from "@trpc/server/adapters/standalone";
+import { createExpressMiddleware } from '@trpc/server/adapters/express';
+import express from 'express';
 import { appRouter } from "./trpc/router";
 import { createContext } from "./trpc/trpc";
 import http from "http";
@@ -11,6 +11,8 @@ import { readFileSync } from "fs";
 import { emitLogEvent, PlatformEvent } from "./events";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
+import cors from "cors";
+import { createOpenApiExpressMiddleware, generateOpenApiDocument } from "trpc-to-openapi";
 
 export type { AppRouter } from "./trpc/router";
 
@@ -130,28 +132,32 @@ db.query.Server.findMany().then((servers) => {
   }
 });
 
+const openApiDocument = generateOpenApiDocument(appRouter, {
+  title: 'tRPC OpenAPI',
+  version: '1.0.0',
+  baseUrl: 'http://localhost:3000/api',
+});
+writeFileSync("./openapi.json", JSON.stringify(openApiDocument))
+
+const app = express();
+app.use(cors())
+app.use('/trpc', createExpressMiddleware({ router: appRouter, createContext }));
+app.use('/api', createOpenApiExpressMiddleware({ router: appRouter, createContext }));
+
 if (process.env.HTTPS === "true") {
   const server = https.createServer(
     {
       key: readFileSync("private-key.pem"),
       cert: readFileSync("certificate.pem"),
     },
-    createHTTPHandler({
-      middleware: cors(),
-      router: appRouter,
-      createContext,
-    })
+    app
   );
   console.info("HTTPS Enabled");
   server.listen(3000);
 } else {
   const server = http.createServer(
     {},
-    createHTTPHandler({
-      middleware: cors(),
-      router: appRouter,
-      createContext,
-    })
+    app
   );
   server.listen(3000);
 }

@@ -12,12 +12,14 @@ if (!SECRET_KEY) {
 
 export const userRouter = router({
   register: publicProcedure
+    .meta({ openapi: { method: "POST", path: "/users/register", protect: false } })
     .input(
       z.object({
         name: z.string(),
         password: z.string(),
       })
     )
+    .output(z.void())
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.query.User.findFirst({
         where: (user, { eq }) => eq(user.name, input.name),
@@ -35,12 +37,14 @@ export const userRouter = router({
       });
     }),
   login: publicProcedure
+    .meta({ openapi: { method: "POST", path: "/users/login", protect: false } })
     .input(
       z.object({
         name: z.string(),
         password: z.string(),
       })
     )
+    .output(z.string())
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.query.User.findFirst({
         where: (user, { eq }) => eq(user.name, input.name),
@@ -63,6 +67,12 @@ export const userRouter = router({
       return token;
     }),
   list: authedProcedure
+    .meta({ openapi: { method: "GET", path: "/users/list", protect: true } })
+    .input(z.void())
+    .output(z.object({
+      id: z.string(),
+      name: z.string()
+    }).array())
     .query(({ ctx }) => {
       return ctx.db.query.User.findMany({
         columns: {

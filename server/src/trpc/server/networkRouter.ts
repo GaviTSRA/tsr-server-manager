@@ -8,15 +8,20 @@ export const networkRouter = router({
   read: serverProcedure
     .meta({
       permission: "network.read",
+      openapi: { method: "GET", path: "/server/{serverId}/network", protect: true }
     })
+    .input(z.object({}))
+    .output(z.string().array())
     .query(async ({ ctx }) => {
       return ctx.server.ports;
     }),
   write: serverProcedure
     .meta({
       permission: "network.write",
+      openapi: { method: "POST", path: "/server/{serverId}/network", protect: true }
     })
     .input(z.object({ ports: z.array(z.string()) }))
+    .output(z.void())
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(schema.Server)

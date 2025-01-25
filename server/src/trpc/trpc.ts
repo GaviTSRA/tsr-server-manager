@@ -10,6 +10,7 @@ import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
 import { z } from "zod";
 import { Permission } from "..";
 import { ServerType } from "../schema";
+import { OpenApiMeta } from 'trpc-to-openapi';
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -36,7 +37,7 @@ export type Context = Awaited<ReturnType<typeof createContext>>;
 export type Meta = {
   permission?: Permission;
   log?: string;
-};
+} & OpenApiMeta;
 
 export const t = initTRPC
   .context<typeof createContext>()

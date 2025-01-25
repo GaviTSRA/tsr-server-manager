@@ -6,12 +6,23 @@ import * as schema from "../../schema";
 import { eq } from "drizzle-orm";
 import fs from "fs";
 import { emitLogEvent, emitPowerEvent } from "../../events";
+import { z } from "zod";
 
 export const powerRouter = router({
   start: serverProcedure
     .meta({
       permission: "power",
+      openapi: { method: "POST", path: "/server/{serverId}/power/start", protect: true }
     })
+    .input(z.object({}))
+    .output(z.enum([
+      "success",
+      "server error",
+      "unknown error",
+      "bad paramater",
+      "no such image",
+      "conflict"
+    ]))
     .mutation(async ({ ctx }) => {
       let containerId = ctx.server.containerId;
       if (!containerId) {
@@ -87,7 +98,10 @@ export const powerRouter = router({
   restart: serverProcedure
     .meta({
       permission: "power",
+      openapi: { method: "POST", path: "/server/{serverId}/power/restart", protect: true }
     })
+    .input(z.object({}))
+    .output(z.enum(["success"]))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
         await log("Restart server", false, ctx);
@@ -111,7 +125,10 @@ export const powerRouter = router({
   stop: serverProcedure
     .meta({
       permission: "power",
+      openapi: { method: "POST", path: "/server/{serverId}/power/stop", protect: true }
     })
+    .input(z.object({}))
+    .output(z.enum(["success"]))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
         await log("Stop server", false, ctx);
@@ -143,7 +160,10 @@ export const powerRouter = router({
   kill: serverProcedure
     .meta({
       permission: "power",
+      openapi: { method: "POST", path: "/server/{serverId}/power/kill", protect: true }
     })
+    .input(z.object({}))
+    .output(z.enum(["success"]))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
         await log("Kill server", false, ctx);

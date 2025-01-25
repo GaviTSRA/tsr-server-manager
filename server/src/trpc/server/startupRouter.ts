@@ -8,19 +8,24 @@ export const startupRouter = router({
   read: serverProcedure
     .meta({
       permission: "startup.read",
+      openapi: { method: "GET", path: "/server/{serverId}/startup", protect: true }
     })
+    .input(z.object({}))
+    .output(z.record(z.string(), z.string()))
     .query(async ({ ctx }) => {
       return ctx.server.options;
     }),
   write: serverProcedure
     .meta({
       permission: "startup.write",
+      openapi: { method: "POST", path: "/server/{serverId}/startup", protect: true }
     })
     .input(
       z.object({
         options: z.record(z.string()),
       })
     )
+    .output(z.void())
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(schema.Server)

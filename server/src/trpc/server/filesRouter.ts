@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { array, z } from "zod";
 import { log, router, serverProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
@@ -8,8 +8,24 @@ export const serverFilesRouter = router({
   list: serverProcedure
     .meta({
       permission: "files.read",
+      openapi: { method: "GET", path: "/server/{serverId}/files", protect: true }
     })
     .input(z.object({ path: z.string() }))
+    .output(z.union([
+      z.object({
+        type: z.enum(["folder"]),
+        files: z.object({
+          name: z.string(),
+          type: z.enum(["file", "folder"]),
+          lastEdited: z.date(),
+          size: z.number()
+        }).array()
+      }),
+      z.object({
+        type: z.enum(["file"]),
+        content: z.string()
+      })
+    ]))
     .query(async ({ input }) => {
       if (input.path.includes("..")) {
         throw new TRPCError({
@@ -56,7 +72,7 @@ export const serverFilesRouter = router({
       });
       return { type: "folder" as "folder", files: result };
     }),
-  rename: serverProcedure
+  rename: serverProcedure // TODO
     .meta({
       permission: "files.rename",
     })
@@ -75,7 +91,7 @@ export const serverFilesRouter = router({
       fs.renameSync(target, updatedPath);
       log(`Rename file '${input.path}' to '${input.name}'`, true, ctx);
     }),
-  edit: serverProcedure
+  edit: serverProcedure // TODO
     .meta({
       permission: "files.edit",
     })
@@ -96,7 +112,7 @@ export const serverFilesRouter = router({
       fs.writeFileSync(target, input.content);
       await log(`Edit file '${input.path}'`, true, ctx);
     }),
-  delete: serverProcedure
+  delete: serverProcedure // TODO
     .meta({
       permission: "files.delete",
     })

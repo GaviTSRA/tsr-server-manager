@@ -4,6 +4,7 @@ import { Permission as PermissionTable } from "../../schema";
 import { hasPermission, log, router, serverProcedure } from "../trpc";
 import { z } from "zod";
 
+// TODO openapi
 export const usersRouter = router({
   read: serverProcedure
     .meta({

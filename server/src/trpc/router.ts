@@ -25,53 +25,83 @@ type ServerStatus = {
 export const appRouter = router({
   user: userRouter,
   server: serverRouter,
-  servers: authedProcedure.query(async ({ ctx }) => {
-    const accessableServers = (
-      await ctx.db.query.Permission.findMany({
-        where: (permission, { eq, and }) =>
-          and(
-            eq(permission.userId, ctx.user.id),
-            eq(permission.permission, "server")
+  servers: authedProcedure
+    .meta({ openapi: { method: "GET", path: "/servers", protect: true } })
+    .input(z.void())
+    .output(
+      z.object({
+        id: z.string(),
+        containerId: z.string().optional(),
+        name: z.string(),
+        status: z.enum(["created", "running", "paused", "restarting", "removing", "exited", "dead"]).optional()
+      }).array()
+    )
+    .query(async ({ ctx }) => {
+      const accessableServers = (
+        await ctx.db.query.Permission.findMany({
+          where: (permission, { eq, and }) =>
+            and(
+              eq(permission.userId, ctx.user.id),
+              eq(permission.permission, "server")
+            ),
+        })
+      ).map((permission) => permission.serverId);
+      const servers = await ctx.db.query.Server.findMany({
+        where: (server, { eq, or, inArray }) =>
+          or(
+            eq(server.ownerId, ctx.user.id),
+            inArray(server.id, accessableServers)
           ),
-      })
-    ).map((permission) => permission.serverId);
-    const servers = await ctx.db.query.Server.findMany({
-      where: (server, { eq, or, inArray }) =>
-        or(
-          eq(server.ownerId, ctx.user.id),
-          inArray(server.id, accessableServers)
-        ),
-    });
-    const result = [] as ServerStatus[];
-    for (const server of servers) {
-      if (!server.containerId) {
+      });
+      const result = [] as ServerStatus[];
+      for (const server of servers) {
+        if (!server.containerId) {
+          result.push({
+            id: server.id,
+            name: server.name,
+          });
+          continue;
+        }
+        const data = await docker.inspectContainer(server.containerId);
+        if (!data || !data.data) continue;
         result.push({
           id: server.id,
+          containerId: server.containerId,
           name: server.name,
+          status: data.data.status,
         });
-        continue;
       }
-      const data = await docker.inspectContainer(server.containerId);
-      if (!data || !data.data) continue;
-      result.push({
-        id: server.id,
-        containerId: server.containerId,
-        name: server.name,
-        status: data.data.status,
-      });
-    }
-    return result;
-  }),
-  serverTypes: publicProcedure.query(async () => {
-    return serverTypes;
-  }),
+      return result;
+    }),
+  serverTypes: publicProcedure
+    .meta({ openapi: { method: "GET", path: "/serverTypes", protect: false } })
+    .input(z.void())
+    .output(z.object({
+      id: z.string(),
+      command: z.string(),
+      name: z.string(),
+      image: z.string().nullable(),
+      options: z.record(z.string(), z.object({
+        name: z.string(),
+        description: z.string(),
+        type: z.enum(["string", "enum"]),
+        default: z.string(),
+        options: z.string().array().optional()
+      })),
+      tabs: z.string().array().optional(),
+    }).array())
+    .query(async () => {
+      return serverTypes;
+    }),
   createServer: authedProcedure
+    .meta({ openapi: { method: "POST", path: "/createServer", protect: true } })
     .input(
       z.object({
         name: z.string(),
         type: z.string(),
       })
     )
+    .output(z.void())
     .mutation(async ({ input, ctx }) => {
       const type = serverTypes.find((type) => type.id === input.type);
       if (!type) {
