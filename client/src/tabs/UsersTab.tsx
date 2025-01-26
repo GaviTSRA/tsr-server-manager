@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { type Permission } from "@tsm/server";
 import { Toggle } from "../components/Toggle";
 import { Dropdown } from "../components/Dropdown";
+import Modal, { useModal } from "../components/Modal";
 
 const PERMISSIONS = [
   // "server", implicit permission that gives base access to the server
@@ -63,8 +64,11 @@ export function UserSettings({
   const writePermission = trpc.server.users.writePermissions.useMutation();
   const deleteUser = trpc.server.users.deleteUser.useMutation();
 
+  const modal = useModal();
+
   return (
     <Container className="flex flex-col p-2 rounded h-fit">
+      <Modal data={modal.data} />
       <div
         className="flex flex-row text-2xl items-center gap-2"
         onClick={() => setExpanded(!expanded)}
@@ -73,11 +77,7 @@ export function UserSettings({
         {!user.owner && <User />}
         {user.name}
         <div className="ml-auto flex flex-row items-center">
-          {deleteUser.isPending && <MoonLoader size={20} color="white" />}
           {writePermission.isPending && <MoonLoader size={20} color="white" />}
-          {deleteUser.isSuccess && (
-            <Check size={20} color={"green"} strokeWidth={4} />
-          )}
           {writePermission.isSuccess && (
             <Check size={20} color={"green"} strokeWidth={4} />
           )}
@@ -86,7 +86,6 @@ export function UserSettings({
         </div>
       </div>
       <div>
-        {deleteUser.error && <Error error={deleteUser.error} size="small" />}
         {writePermission.error && (
           <Error error={writePermission.error} size="small" />
         )}
@@ -128,12 +127,25 @@ export function UserSettings({
                 className="flex flex-row px-2 py-1 bg-danger gap-2 rounded w-fit text-white mx-auto"
                 onClick={(e) => {
                   e.stopPropagation();
-                  deleteUser.mutate(
-                    { userId: user.id, serverId },
-                    {
-                      onSuccess: () => refetch(),
-                    }
-                  );
+                  modal.open(
+                    "Remove user?",
+                    `Confirm removal of user '${user.name}'`,
+                    false,
+                    (_) => {
+                      modal.fetching();
+                      deleteUser.mutate(
+                        { userId: user.id, serverId },
+                        {
+                          onSuccess: () => {
+                            modal.success();
+                            refetch();
+                          },
+                          onError: () => modal.error()
+                        }
+                      );
+                    },
+                    () => modal.close()
+                  )
                 }}
               >
                 <Trash2 />
