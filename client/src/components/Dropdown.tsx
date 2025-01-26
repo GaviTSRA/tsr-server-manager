@@ -7,6 +7,7 @@ type DropdownProps = {
   placeholder?: string;
   color?: string;
   defaultValue?: string;
+  render?: (option: string) => JSX.Element
 };
 
 export function Dropdown({
@@ -14,6 +15,7 @@ export function Dropdown({
   onSelect,
   placeholder,
   defaultValue,
+  render = (option: string) => <p>{option}</p>,
   color = "bg-header hover:bg-border",
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
@@ -28,7 +30,8 @@ export function Dropdown({
           (selected ? "" : "text-secondary-text")
         }
       >
-        <p>{selected ?? placeholder ?? "Select an option..."}</p>
+        {selected && render(selected)}
+        <p>{!selected && (placeholder ?? "Select an option...")}</p>
         <div className="ml-auto mr-2 text-secondary-text">
           {open && <ChevronUp />}
           {!open && <ChevronDown />}
@@ -51,7 +54,7 @@ export function Dropdown({
               }}
               key={index}
             >
-              <p>{value}</p>
+              {render(value)}
             </div>
           ))}
         </div>

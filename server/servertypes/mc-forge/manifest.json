@@ -1,5 +1,6 @@
 {
   "name": "Minecraft Forge",
+  "icon": "https://i.imgur.com/KAgud6s.png",
   "image": null,
   "command": "/server/run.sh",
   "options": {
@@ -19,7 +20,11 @@
       "name": "Image",
       "description": "Java image to use, depending on the minecraft version",
       "type": "enum",
-      "options": ["java21", "java17", "java8"],
+      "options": [
+        "java21",
+        "java17",
+        "java8"
+      ],
       "default": "java21"
     },
     "notifyWebhook": {
@@ -29,5 +34,7 @@
       "default": ""
     }
   },
-  "tabs": ["mc-players"]
+  "tabs": [
+    "mc-players"
+  ]
 }

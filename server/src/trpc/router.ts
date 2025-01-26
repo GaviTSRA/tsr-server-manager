@@ -20,6 +20,7 @@ type ServerStatus = {
   | "removing"
   | "exited"
   | "dead";
+  type: string;
 };
 
 export const appRouter = router({
@@ -33,7 +34,8 @@ export const appRouter = router({
         id: z.string(),
         containerId: z.string().optional(),
         name: z.string(),
-        status: z.enum(["created", "running", "paused", "restarting", "removing", "exited", "dead"]).optional()
+        status: z.enum(["created", "running", "paused", "restarting", "removing", "exited", "dead"]).optional(),
+        type: z.string()
       }).array()
     )
     .query(async ({ ctx }) => {
@@ -59,6 +61,7 @@ export const appRouter = router({
           result.push({
             id: server.id,
             name: server.name,
+            type: server.type
           });
           continue;
         }
@@ -69,6 +72,7 @@ export const appRouter = router({
           containerId: server.containerId,
           name: server.name,
           status: data.data.status,
+          type: server.type
         });
       }
       return result;
@@ -78,8 +82,9 @@ export const appRouter = router({
     .input(z.void())
     .output(z.object({
       id: z.string(),
-      command: z.string(),
       name: z.string(),
+      icon: z.string(),
+      command: z.string(),
       image: z.string().nullable(),
       options: z.record(z.string(), z.object({
         name: z.string(),

@@ -20,6 +20,7 @@ export const db = drizzle(process.env.DATABASE_URL!, { schema });
 
 export type ServerType = {
   id: string;
+  icon: string;
   command: string;
   name: string;
   image: string | null;
@@ -29,11 +30,11 @@ export type ServerType = {
       description: string;
       type: "string" | "enum";
       default: string;
-      options: string[] | undefined;
+      options?: string[];
     };
   };
   tabs?: string[];
-  eventHandler: (event: PlatformEvent) => Promise<void>;
+  eventHandler?: (event: PlatformEvent) => Promise<void>;
 };
 
 export const serverTypes: ServerType[] = [];
@@ -46,6 +47,7 @@ fs.readdirSync("servertypes").forEach(async (folder) => {
   serverTypes.push({
     id: folder,
     name: data.name,
+    icon: data.icon,
     image: data.image,
     command: data.command,
     options: data.options,

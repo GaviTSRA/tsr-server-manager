@@ -12,6 +12,21 @@ import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
 import { PulseLoader } from "react-spinners";
 import { trpc } from "./main";
+import { ServerType } from "@tsm/server";
+
+function ServerTypeDisplay({ type, serverTypes }: { type: string, serverTypes: ServerType[] }) {
+  const data = serverTypes.find(el => el.id === type);
+  if (!data) return (
+    <p>Unknown server type {type}</p>
+  )
+
+  return (
+    <div className="flex flex-row items-center gap-1">
+      <img src={data.icon} className="w-8 rounded" />
+      <p>{data.name}</p>
+    </div>
+  )
+}
 
 function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
@@ -114,16 +129,10 @@ function ServerList() {
                 onClick={() => navigate(`/server/${server.id}/console`)}
               >
                 <div className="flex flex-col">
-                  <p className="text-xl">{server.name}</p>
-                  <p className="text-secondary-text text-sm">
-                    {server.id.slice(0, 18)}
-                  </p>
-                  {server.containerId && (
-                    <p className="text-secondary-text text-sm">
-                      {server.containerId.slice(0, 18)}
-                    </p>
-                  )}
+                  <p className="text-xl mb-2">{server.name}</p>
+                  {serverTypes && <ServerTypeDisplay type={server.type} serverTypes={serverTypes} />}
                 </div>
+
                 <div className="ml-auto flex items-center mr-2">
                   <div className="p-2 rounded">{status}</div>
                 </div>
@@ -181,11 +190,12 @@ function ServerList() {
               <p className="text-secondary-text mt-2">Type</p>
               <Dropdown
                 color="bg-neutral-300 hover:bg-neutral-400"
-                values={serverTypes.map((type) => type.name)}
+                values={serverTypes.map((type) => type.id)}
+                render={(option) => <ServerTypeDisplay type={option} serverTypes={serverTypes} />}
                 onSelect={(value: string) => {
                   if (!serverTypes) return;
                   setServerType(
-                    serverTypes.find((type) => type.name === value)?.id ?? ""
+                    serverTypes.find((type) => type.id === value)?.id ?? ""
                   );
                 }}
                 placeholder="Select server type..."
