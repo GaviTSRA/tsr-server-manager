@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "../main";
 import { Container } from "../components/Container";
-import { Edit2, Folder, Trash2, File, MoreVertical } from "react-feather";
+import { Edit2, Folder, Trash2, File, MoreVertical, Save, Check } from "react-feather";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import Modal, { useModal } from "../components/Modal";
@@ -217,7 +217,7 @@ export function FilesTab({ serverId }: { serverId: string }) {
             container/
           </p>
         </div>
-        <div className="flex flex-row">
+        <div className="flex flex-row w-full">
           {path
             .split("/")
             .filter((part) => part !== "")
@@ -247,6 +247,24 @@ export function FilesTab({ serverId }: { serverId: string }) {
                 }
               </div>
             ))}
+          {files.type === "file" && (
+            <button
+              className="flex items-center bg-confirm-normal hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded ml-auto"
+              onClick={() => {
+                if (content) {
+                  editFile.mutate({ content, path, serverId });
+                }
+              }}
+              disabled={editFile.isPending}
+            >
+              {!editFile.isError && !editFile.isSuccess && !editFile.isPending && (
+                <Save size={16} color="white" />
+              )}
+              {editFile.isPending && <MoonLoader size={18} color={"white"} />}
+              {editFile.isSuccess && <Check size={22} className="text-success" />}
+              {editFile.error && <Error error={editFile.error} size="small" />}
+            </button>
+          )}
         </div>
       </Container>
       {files.type === "folder" && files.files && (
@@ -268,22 +286,12 @@ export function FilesTab({ serverId }: { serverId: string }) {
         </Container>
       )}
       {files.type === "file" && files.content !== undefined && (
-        <Container className="h-full">
+        <Container className="h-full" expanded={true}>
           <textarea
             value={content}
-            className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-300"
+            className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-100 resize-none outline-none"
             onChange={(event) => setContent(event.target.value)}
           />
-          <button
-            className="bg-success text-black px-2 py-1 text-2xl rounded"
-            onClick={() => {
-              if (content) {
-                editFile.mutate({ content, path, serverId });
-              }
-            }}
-          >
-            Save
-          </button>
         </Container>
       )}
     </div>

@@ -72,11 +72,13 @@ export const serverFilesRouter = router({
       });
       return { type: "folder" as "folder", files: result };
     }),
-  rename: serverProcedure // TODO
+  rename: serverProcedure
     .meta({
       permission: "files.rename",
+      openapi: { method: "POST", path: "/server/{serverId}/rename", protect: true }
     })
     .input(z.object({ path: z.string(), name: z.string() }))
+    .output(z.void())
     .mutation(async ({ input, ctx }) => {
       if (input.path.includes("..")) {
         log(`Rename file '${input.path}' to '${input.name}'`, false, ctx);
@@ -96,11 +98,13 @@ export const serverFilesRouter = router({
         log(`Rename file '${input.path}' to '${input.name}'`, false, ctx);
       }
     }),
-  edit: serverProcedure // TODO
+  edit: serverProcedure
     .meta({
       permission: "files.edit",
+      openapi: { method: "POST", path: "/server/{serverId}/edit", protect: true }
     })
     .input(z.object({ path: z.string(), content: z.string() }))
+    .output(z.void())
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
         await log(

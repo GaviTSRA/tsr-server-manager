@@ -99,9 +99,9 @@ export type Permission =
   | "console.read"
   | "console.write"
   | "files.read"
-  | "files.rename" // TODO frontend
-  | "files.edit" // TODO frontend
-  | "files.delete" // TODO frontend
+  | "files.rename"
+  | "files.edit"
+  | "files.delete"
   | "network.read"
   | "network.write" // TODO frontend
   | "startup.read"
