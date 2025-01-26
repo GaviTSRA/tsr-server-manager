@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Check, X } from "react-feather";
 import { MoonLoader } from "react-spinners";
+import { Input } from "./Input";
 
 type ModalData = {
   isOpen: boolean;
@@ -9,8 +10,9 @@ type ModalData = {
   success: boolean;
   title: string;
   description: string;
-  onConfirm: ((event: React.MouseEvent) => void);
-  onCancel: ((event: React.MouseEvent) => void)
+  requireInput: boolean;
+  onConfirm: (input: string | undefined) => void;
+  onCancel: () => void
 }
 
 export const useModal = () => {
@@ -18,15 +20,20 @@ export const useModal = () => {
     isOpen: false,
     title: "",
     description: "",
+    isFetching: false,
+    error: false,
+    success: false,
+    requireInput: false,
     onConfirm: (_) => { },
-    onCancel: (_) => { },
+    onCancel: () => { },
   } as ModalData);
 
   const openModal = useCallback((
     title: string,
     description: string,
-    onConfirm: (event: React.MouseEvent) => void,
-    onCancel: (event: React.MouseEvent) => void
+    requireInput: boolean,
+    onConfirm: (input: string | undefined) => void,
+    onCancel: () => void
   ) => {
     setModalData({
       isOpen: true,
@@ -35,6 +42,7 @@ export const useModal = () => {
       success: false,
       title,
       description,
+      requireInput,
       onConfirm,
       onCancel,
     });
@@ -67,13 +75,17 @@ function Modal({ data }: {
   data: ModalData
 }) {
   if (!data.isOpen) return null;
+  const [input, setInput] = useState(undefined as string | undefined)
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
       onClick={(e) => {
         e.stopPropagation();
-        data.onCancel(e);
+        if (!(data.isFetching || data.success)) {
+          e.stopPropagation();
+          data.onCancel();
+        }
       }}
     >
       <div
@@ -82,18 +94,37 @@ function Modal({ data }: {
       >
         <h2 className="text-xl font-bold">{data.title}</h2>
         <p className="mt-2 text-secondary-text">{data.description}</p>
+        {
+          data.requireInput && (
+            <Input
+              onValueChange={(value) => setInput(value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  data.onConfirm(input);
+                }
+              }}
+              className="bg-neutral-400 rounded border-neutral-500 mt-2"
+            />
+          )
+        }
         <div className="mt-4 flex justify-end space-x-2">
           <button
-            onClick={data.onCancel}
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onCancel();
+            }}
             className="px-4 py-2 text-white bg-cancel-normal rounded hover:bg-cancel-hover active:bg-cancel-active disabled:bg-cancel-disabled"
             disabled={data.isFetching || data.success}
           >
             Cancel
           </button>
           <button
-            onClick={data.onConfirm}
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onConfirm(input)
+            }}
             className="flex items-center px-4 py-2 text-white bg-confirm-normal rounded hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled transition-colors"
-            disabled={data.isFetching || data.success || data.error}
+            disabled={data.isFetching || data.success || data.error || (data.requireInput && !input)}
           >
             {data.isFetching && <MoonLoader size={18} color={"white"} />}
             {data.success && <Check size={22} className="text-success" />}

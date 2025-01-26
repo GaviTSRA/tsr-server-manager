@@ -88,8 +88,13 @@ export const serverFilesRouter = router({
       const target = path.normalize(path.join(root, input.path));
       const dir = path.dirname(target);
       const updatedPath = path.join(dir, input.name);
-      fs.renameSync(target, updatedPath);
-      log(`Rename file '${input.path}' to '${input.name}'`, true, ctx);
+      try {
+        fs.renameSync(target, updatedPath);
+        log(`Rename file '${input.path}' to '${input.name}'`, true, ctx);
+      } catch (err) {
+        console.error(err);
+        log(`Rename file '${input.path}' to '${input.name}'`, false, ctx);
+      }
     }),
   edit: serverProcedure // TODO
     .meta({

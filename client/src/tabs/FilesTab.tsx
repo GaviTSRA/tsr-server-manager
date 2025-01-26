@@ -2,7 +2,6 @@ import { useState } from "react";
 import { trpc } from "../main";
 import { Container } from "../components/Container";
 import { Edit2, Folder, Trash2, File, MoreVertical } from "react-feather";
-import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import Modal, { useModal } from "../components/Modal";
@@ -42,8 +41,6 @@ function FileRow({
   refetch: () => void;
 }): JSX.Element {
   const [moreOpen, setMoreOpen] = useState(false);
-  const [renameMenuOpen, setRenameMenuOpen] = useState(false);
-  const [newName, setNewName] = useState(undefined as string | undefined);
 
   const renameFile = trpc.server.files.rename.useMutation();
   const deleteFile = trpc.server.files.delete.useMutation();
@@ -54,16 +51,41 @@ function FileRow({
     {
       label: "Rename",
       icon: <Edit2 />,
-      onClick: (fileName: string) => setRenameMenuOpen(true),
+      onClick: (fileName: string) => modal.open(
+        "Rename file",
+        `Rename file '${fileName}'`,
+        true,
+        (input) => {
+          if (!input) return;
+          modal.fetching();
+          renameFile.mutate(
+            { path: path + file.name, name: input, serverId },
+            {
+              onError: () => {
+                modal.error();
+                setTimeout(() => modal.close(), 2000)
+              },
+              onSuccess: () => {
+                modal.success();
+                setTimeout(() => modal.close(), 2000)
+                refetch();
+              },
+            }
+          );
+        },
+        () => {
+          modal.close();
+        }
+      ),
     },
     {
       label: "Delete",
       icon: <Trash2 />,
       onClick: (fileName: string) => modal.open(
         "Delete file?",
-        `Confirm deletion of ${fileName}`,
-        (event) => {
-          event.stopPropagation();
+        `Confirm deletion of '${fileName}'`,
+        false,
+        (_) => {
           modal.fetching();
           deleteFile.mutate(
             { path: path + file.name, serverId },
@@ -80,7 +102,7 @@ function FileRow({
             }
           );
         },
-        (_) => {
+        () => {
           modal.close();
         }
       )
@@ -89,7 +111,7 @@ function FileRow({
 
   return (
     <div
-      className="flex flex-row gap-2 hover:bg-neutral-300 p-2 rounded cursor-pointer"
+      className="flex flex-row gap-2 hover:bg-neutral-100 p-2 rounded cursor-pointer"
       onClick={() => {
         setPath(path + file.name + (file.type === "folder" ? "/" : ""));
       }}
@@ -144,37 +166,6 @@ function FileRow({
           </div>
         )}
       </div>
-      {renameMenuOpen && (
-        <div
-          className="fixed w-screen h-screen bg-black/40 top-0 left-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bg-neutral-200 m-auto w-fit h-fit p-2 rounded-xl">
-            <p>Rename '{file.name}'</p>
-            <Input onValueChange={(value) => setNewName(value)} />
-            <div className="flex flex-row mt-2">
-              <button onClick={() => setRenameMenuOpen(false)}>Cancel</button>
-              <button
-                onClick={() => {
-                  if (!newName) return;
-                  renameFile.mutate(
-                    { name: newName, path, serverId },
-                    {
-                      onSuccess: () => {
-                        setRenameMenuOpen(false);
-                        refetch();
-                      },
-                    }
-                  );
-                }}
-                className="ml-auto"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -209,7 +200,7 @@ export function FilesTab({ serverId }: { serverId: string }) {
     );
   }
 
-  if (files.type === "file" && !content) setContent(files.content);
+  if (files.type === "file" && content === undefined) setContent(files.content);
   if (files.type === "folder" && content) setContent(undefined);
 
   return (
@@ -217,15 +208,14 @@ export function FilesTab({ serverId }: { serverId: string }) {
       <Container className="flex flex-row p-2 mb-2">
         <div className="flex flex-row items-center">
           <p
-            className="p-1 rounded cursor-pointer hover:bg-neutral-300"
+            className="py-1 rounded cursor-pointer text-secondary-text hover:bg-neutral-100"
             onClick={() => {
               setPath("/");
               refetch();
             }}
           >
-            container
+            container/
           </p>
-          <p>/</p>
         </div>
         <div className="flex flex-row">
           {path
@@ -248,10 +238,13 @@ export function FilesTab({ serverId }: { serverId: string }) {
                   refetch();
                 }}
               >
-                <p className="p-1 rounded cursor-pointer hover:bg-neutral-300">
+                <p className="py-1 rounded cursor-pointer hover:bg-neutral-100">
                   {part}
                 </p>
-                <p>/</p>
+                {
+                  (files.type === "folder" || path.split("/").filter((part) => part !== "").length !== (index + 1))
+                  && <p>/</p>
+                }
               </div>
             ))}
         </div>
@@ -274,7 +267,7 @@ export function FilesTab({ serverId }: { serverId: string }) {
             ))}
         </Container>
       )}
-      {files.type === "file" && files.content && (
+      {files.type === "file" && files.content !== undefined && (
         <Container className="h-full">
           <textarea
             value={content}
