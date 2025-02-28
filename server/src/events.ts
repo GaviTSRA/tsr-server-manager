@@ -45,6 +45,7 @@ async function emitEvent(type: string, event: PlatformEvent) {
     console.error("Server type not found:", type);
     return;
   }
+  if (!serverType.eventHandler) return;
   await serverType.eventHandler(event);
 }
 

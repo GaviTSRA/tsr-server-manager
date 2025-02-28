@@ -1,0 +1,16 @@
+{
+  "name": "Java",
+  "icon": "https://cdn.worldvectorlogo.com/logos/java.svg",
+  "image": null,
+  "command": "java -Xms128M -Xmx${SERVER_RAM}M -Dterminal.jline=false -Dterminal.ansi=true -jar server.jar",
+  "options": {
+    "image": {
+      "name": "Image",
+      "description": "Java image to use, depending on the minecraft version",
+      "type": "enum",
+      "options": ["java21", "java17", "java8"],
+      "default": "java21"
+    }
+  },
+  "tabs": []
+}
