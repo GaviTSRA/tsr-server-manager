@@ -1,8 +1,10 @@
-import { array, z } from "zod";
-import { log, router, serverProcedure } from "../trpc";
+import { z } from "zod";
+import { authedProcedure, log, router, serverProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
+import { Readable } from "stream";
+import { zfd } from "zod-form-data";
 
 export const serverFilesRouter = router({
   list: serverProcedure
@@ -155,6 +157,76 @@ export const serverFilesRouter = router({
       const target = path.normalize(path.join(root, input.path));
       fs.mkdirSync(target);
       await log(`Create dir '${input.path}'`, true, ctx);
+    }),
+  upload: authedProcedure
+    .input(
+      zfd.formData({
+        path: zfd.text(),
+        serverId: zfd.text(),
+        file: zfd.file(),
+      })
+    )
+    .output(z.void())
+    .mutation(async ({ ctx, input }) => {
+      // Begin manual server procedure impl
+      const server = await ctx.db.query.Server.findFirst({
+        where: (server, { eq }) => eq(server.id, input.serverId),
+        with: {
+          permissions: {
+            where: (permission, { eq }) => eq(permission.userId, ctx.user.id),
+          },
+        },
+      });
+      if (!server) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Server not found",
+        });
+      }
+      if (
+        server.ownerId !== ctx.user.id &&
+        !server.permissions
+          .map((permission) => permission.permission)
+          .includes("server")
+      ) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing permission 'server'",
+        });
+      }
+      if (server.ownerId !== ctx.user.id) {
+        if (
+          !server.permissions
+            .map((permission) => permission.permission)
+            .includes("files.edit")
+        ) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: `Missing permission 'files.edit'`,
+          });
+        }
+      }
+      // End manual server procedure impl
+
+      const root = "servers/" + input.serverId;
+      const target = path.normalize(path.join(root, input.path));
+      const filePath = path.join(target, input.file.name);
+      try {
+        const fd = fs.createWriteStream(filePath);
+        const fileStream = Readable.fromWeb(
+          // @ts-expect-error types should be compatible
+          input.file.stream()
+        );
+        for await (const chunk of fileStream) {
+          fd.write(chunk);
+        }
+        fd.end();
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to upload file: " + error,
+        });
+      }
     }),
   edit: serverProcedure
     .meta({

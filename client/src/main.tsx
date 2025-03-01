@@ -6,7 +6,13 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Server } from "./Server";
 import type { AppRouter } from "@tsm/server";
-import { createTRPCReact, httpBatchLink, splitLink } from "@trpc/react-query";
+import {
+  createTRPCReact,
+  httpBatchLink,
+  httpLink,
+  isNonJsonSerializable,
+  splitLink,
+} from "@trpc/react-query";
 import { inferRouterOutputs } from "@trpc/server";
 import { unstable_httpSubscriptionLink } from "@trpc/react-query";
 import { Login } from "./Login";
@@ -44,14 +50,26 @@ const trpcClient = trpc.createClient({
           return { token: token ?? undefined };
         },
       }),
-      false: httpBatchLink({
-        url: API_BASE_URL,
-        headers: () => {
-          const token = localStorage.getItem("authToken");
-          return {
-            Authorization: token ? `Bearer ${token}` : undefined,
-          };
-        },
+      false: splitLink({
+        condition: (op) => isNonJsonSerializable(op.input),
+        true: httpLink({
+          url: API_BASE_URL,
+          headers: () => {
+            const token = localStorage.getItem("authToken");
+            return {
+              Authorization: token ? `Bearer ${token}` : undefined,
+            };
+          },
+        }),
+        false: httpBatchLink({
+          url: API_BASE_URL,
+          headers: () => {
+            const token = localStorage.getItem("authToken");
+            return {
+              Authorization: token ? `Bearer ${token}` : undefined,
+            };
+          },
+        }),
       }),
     }),
   ],
