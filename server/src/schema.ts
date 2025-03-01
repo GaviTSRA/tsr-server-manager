@@ -45,6 +45,7 @@ export const User = pgTable("User", {
   id: uuid().defaultRandom().primaryKey(),
   name: varchar().notNull().unique(),
   password: varchar().notNull(),
+  canCreateServers: boolean().notNull().default(false),
 });
 
 export const Permission = pgTable(

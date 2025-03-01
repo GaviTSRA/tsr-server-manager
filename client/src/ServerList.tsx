@@ -14,18 +14,22 @@ import { PulseLoader } from "react-spinners";
 import { trpc } from "./main";
 import { ServerType } from "@tsm/server";
 
-function ServerTypeDisplay({ type, serverTypes }: { type: string, serverTypes: ServerType[] }) {
-  const data = serverTypes.find(el => el.id === type);
-  if (!data) return (
-    <p>Unknown server type {type}</p>
-  )
+function ServerTypeDisplay({
+  type,
+  serverTypes,
+}: {
+  type: string;
+  serverTypes: ServerType[];
+}) {
+  const data = serverTypes.find((el) => el.id === type);
+  if (!data) return <p>Unknown server type {type}</p>;
 
   return (
     <div className="flex flex-row items-center gap-1">
       <img src={data.icon} className="w-8 rounded" />
       <p>{data.name}</p>
     </div>
-  )
+  );
 }
 
 function ServerList() {
@@ -130,7 +134,12 @@ function ServerList() {
               >
                 <div className="flex flex-col">
                   <p className="text-xl mb-2">{server.name}</p>
-                  {serverTypes && <ServerTypeDisplay type={server.type} serverTypes={serverTypes} />}
+                  {serverTypes && (
+                    <ServerTypeDisplay
+                      type={server.type}
+                      serverTypes={serverTypes}
+                    />
+                  )}
                 </div>
 
                 <div className="ml-auto flex items-center mr-2">
@@ -191,7 +200,9 @@ function ServerList() {
               <Dropdown
                 color="bg-neutral-300 hover:bg-neutral-400"
                 values={serverTypes.map((type) => type.id)}
-                render={(option) => <ServerTypeDisplay type={option} serverTypes={serverTypes} />}
+                render={(option) => (
+                  <ServerTypeDisplay type={option} serverTypes={serverTypes} />
+                )}
                 onSelect={(value: string) => {
                   if (!serverTypes) return;
                   setServerType(
@@ -212,6 +223,10 @@ function ServerList() {
                       setCreatingServer(false);
                       setCreateServerRunning(false);
                       refetch();
+                    },
+                    onError: (err) => {
+                      setCreateServerRunning(false);
+                      alert(err);
                     },
                   }
                 );

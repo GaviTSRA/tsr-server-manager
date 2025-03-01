@@ -13,13 +13,13 @@ type ServerStatus = {
   containerId?: string;
   name: string;
   status?:
-  | "created"
-  | "running"
-  | "paused"
-  | "restarting"
-  | "removing"
-  | "exited"
-  | "dead";
+    | "created"
+    | "running"
+    | "paused"
+    | "restarting"
+    | "removing"
+    | "exited"
+    | "dead";
   type: string;
 };
 
@@ -30,13 +30,25 @@ export const appRouter = router({
     .meta({ openapi: { method: "GET", path: "/servers", protect: true } })
     .input(z.void())
     .output(
-      z.object({
-        id: z.string(),
-        containerId: z.string().optional(),
-        name: z.string(),
-        status: z.enum(["created", "running", "paused", "restarting", "removing", "exited", "dead"]).optional(),
-        type: z.string()
-      }).array()
+      z
+        .object({
+          id: z.string(),
+          containerId: z.string().optional(),
+          name: z.string(),
+          status: z
+            .enum([
+              "created",
+              "running",
+              "paused",
+              "restarting",
+              "removing",
+              "exited",
+              "dead",
+            ])
+            .optional(),
+          type: z.string(),
+        })
+        .array()
     )
     .query(async ({ ctx }) => {
       const accessableServers = (
@@ -61,7 +73,7 @@ export const appRouter = router({
           result.push({
             id: server.id,
             name: server.name,
-            type: server.type
+            type: server.type,
           });
           continue;
         }
@@ -72,7 +84,7 @@ export const appRouter = router({
           containerId: server.containerId,
           name: server.name,
           status: data.data.status,
-          type: server.type
+          type: server.type,
         });
       }
       return result;
@@ -80,21 +92,28 @@ export const appRouter = router({
   serverTypes: publicProcedure
     .meta({ openapi: { method: "GET", path: "/serverTypes", protect: false } })
     .input(z.void())
-    .output(z.object({
-      id: z.string(),
-      name: z.string(),
-      icon: z.string(),
-      command: z.string(),
-      image: z.string().nullable(),
-      options: z.record(z.string(), z.object({
-        name: z.string(),
-        description: z.string(),
-        type: z.enum(["string", "enum"]),
-        default: z.string(),
-        options: z.string().array().optional()
-      })),
-      tabs: z.string().array().optional(),
-    }).array())
+    .output(
+      z
+        .object({
+          id: z.string(),
+          name: z.string(),
+          icon: z.string(),
+          command: z.string(),
+          image: z.string().nullable(),
+          options: z.record(
+            z.string(),
+            z.object({
+              name: z.string(),
+              description: z.string(),
+              type: z.enum(["string", "enum"]),
+              default: z.string(),
+              options: z.string().array().optional(),
+            })
+          ),
+          tabs: z.string().array().optional(),
+        })
+        .array()
+    )
     .query(async () => {
       return serverTypes;
     }),
@@ -108,6 +127,13 @@ export const appRouter = router({
     )
     .output(z.void())
     .mutation(async ({ input, ctx }) => {
+      if (!ctx.user.canCreateServers) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "User can't create servers",
+        });
+      }
+
       const type = serverTypes.find((type) => type.id === input.type);
       if (!type) {
         throw new TRPCError({
