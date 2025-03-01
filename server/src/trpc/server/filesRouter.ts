@@ -8,24 +8,32 @@ export const serverFilesRouter = router({
   list: serverProcedure
     .meta({
       permission: "files.read",
-      openapi: { method: "GET", path: "/server/{serverId}/files", protect: true }
+      openapi: {
+        method: "GET",
+        path: "/server/{serverId}/files",
+        protect: true,
+      },
     })
     .input(z.object({ path: z.string() }))
-    .output(z.union([
-      z.object({
-        type: z.enum(["folder"]),
-        files: z.object({
-          name: z.string(),
-          type: z.enum(["file", "folder"]),
-          lastEdited: z.date(),
-          size: z.number()
-        }).array()
-      }),
-      z.object({
-        type: z.enum(["file"]),
-        content: z.string()
-      })
-    ]))
+    .output(
+      z.union([
+        z.object({
+          type: z.enum(["folder"]),
+          files: z
+            .object({
+              name: z.string(),
+              type: z.enum(["file", "folder"]),
+              lastEdited: z.date(),
+              size: z.number(),
+            })
+            .array(),
+        }),
+        z.object({
+          type: z.enum(["file"]),
+          content: z.string(),
+        }),
+      ])
+    )
     .query(async ({ input }) => {
       if (input.path.includes("..")) {
         throw new TRPCError({
@@ -75,7 +83,11 @@ export const serverFilesRouter = router({
   rename: serverProcedure
     .meta({
       permission: "files.rename",
-      openapi: { method: "POST", path: "/server/{serverId}/rename", protect: true }
+      openapi: {
+        method: "POST",
+        path: "/server/{serverId}/rename",
+        protect: true,
+      },
     })
     .input(z.object({ path: z.string(), name: z.string() }))
     .output(z.void())
@@ -98,20 +110,66 @@ export const serverFilesRouter = router({
         log(`Rename file '${input.path}' to '${input.name}'`, false, ctx);
       }
     }),
+  create: serverProcedure
+    .meta({
+      permission: "files.edit",
+      openapi: {
+        method: "POST",
+        path: "/server/{serverId}/create",
+        protect: true,
+      },
+    })
+    .input(z.object({ path: z.string() }))
+    .output(z.void())
+    .mutation(async ({ ctx, input }) => {
+      if (input.path.includes("..")) {
+        await log(`Create file '${input.path}'`, false, ctx);
+        throw new TRPCError({
+          code: "FORBIDDEN",
+        });
+      }
+      const root = "servers/" + input.serverId;
+      const target = path.normalize(path.join(root, input.path));
+      fs.writeFileSync(target, "");
+      await log(`Create file '${input.path}'`, true, ctx);
+    }),
+  createFolder: serverProcedure
+    .meta({
+      permission: "files.edit",
+      openapi: {
+        method: "POST",
+        path: "/server/{serverId}/createFolder",
+        protect: true,
+      },
+    })
+    .input(z.object({ path: z.string() }))
+    .output(z.void())
+    .mutation(async ({ ctx, input }) => {
+      if (input.path.includes("..")) {
+        await log(`Create dir '${input.path}'`, false, ctx);
+        throw new TRPCError({
+          code: "FORBIDDEN",
+        });
+      }
+      const root = "servers/" + input.serverId;
+      const target = path.normalize(path.join(root, input.path));
+      fs.mkdirSync(target);
+      await log(`Create dir '${input.path}'`, true, ctx);
+    }),
   edit: serverProcedure
     .meta({
       permission: "files.edit",
-      openapi: { method: "POST", path: "/server/{serverId}/edit", protect: true }
+      openapi: {
+        method: "POST",
+        path: "/server/{serverId}/edit",
+        protect: true,
+      },
     })
     .input(z.object({ path: z.string(), content: z.string() }))
     .output(z.void())
     .mutation(async ({ ctx, input }) => {
       if (input.path.includes("..")) {
-        await log(
-          `Edit file '${input.path}' with '${input.content}'`,
-          false,
-          ctx
-        );
+        await log(`Edit file '${input.path}'`, false, ctx);
         throw new TRPCError({
           code: "FORBIDDEN",
         });
@@ -124,7 +182,11 @@ export const serverFilesRouter = router({
   delete: serverProcedure
     .meta({
       permission: "files.delete",
-      openapi: { method: "DELETE", path: "/server/{serverId}/files", protect: true }
+      openapi: {
+        method: "DELETE",
+        path: "/server/{serverId}/files",
+        protect: true,
+      },
     })
     .input(z.object({ path: z.string() }))
     .output(z.void())

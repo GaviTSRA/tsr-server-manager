@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { trpc } from "../main";
 import { Container } from "../components/Container";
-import { Edit2, Folder, Trash2, File, MoreVertical, Save, Check } from "react-feather";
+import {
+  Edit2,
+  Folder,
+  Trash2,
+  File,
+  MoreVertical,
+  Save,
+  Check,
+} from "react-feather";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import Modal, { useModal } from "../components/Modal";
@@ -51,61 +59,63 @@ function FileRow({
     {
       label: "Rename",
       icon: <Edit2 />,
-      onClick: (fileName: string) => modal.open(
-        "Rename file",
-        `Rename file '${fileName}'`,
-        true,
-        (input) => {
-          if (!input) return;
-          modal.fetching();
-          renameFile.mutate(
-            { path: path + file.name, name: input, serverId },
-            {
-              onError: () => {
-                modal.error();
-                setTimeout(() => modal.close(), 2000)
-              },
-              onSuccess: () => {
-                modal.success();
-                setTimeout(() => modal.close(), 2000)
-                refetch();
-              },
-            }
-          );
-        },
-        () => {
-          modal.close();
-        }
-      ),
+      onClick: (fileName: string) =>
+        modal.open(
+          "Rename file",
+          `Rename file '${fileName}'`,
+          true,
+          (input) => {
+            if (!input) return;
+            modal.fetching();
+            renameFile.mutate(
+              { path: path + file.name, name: input, serverId },
+              {
+                onError: () => {
+                  modal.error();
+                  setTimeout(() => modal.close(), 2000);
+                },
+                onSuccess: () => {
+                  modal.success();
+                  setTimeout(() => modal.close(), 2000);
+                  refetch();
+                },
+              }
+            );
+          },
+          () => {
+            modal.close();
+          }
+        ),
     },
     {
       label: "Delete",
       icon: <Trash2 />,
-      onClick: (fileName: string) => modal.open(
-        "Delete file?",
-        `Confirm deletion of '${fileName}'`,
-        false,
-        (_) => {
-          modal.fetching();
-          deleteFile.mutate(
-            { path: path + file.name, serverId },
-            {
-              onError: () => {
-                modal.error();
-                setTimeout(() => modal.close(), 2000)
-              },
-              onSuccess: () => {
-                modal.success();
-                setTimeout(() => modal.close(), 2000)
-                refetch();
-              },
-            }
-          );
-        },
-        () => {
-          modal.close();
-        }
-      )
+      onClick: (fileName: string) =>
+        modal.open(
+          "Delete file?",
+          `Confirm deletion of '${fileName}'`,
+          false,
+          (_) => {
+            modal.fetching();
+            deleteFile.mutate(
+              { path: path + file.name, serverId },
+              {
+                onError: () => {
+                  modal.error();
+                  setTimeout(() => modal.close(), 2000);
+                },
+                onSuccess: () => {
+                  modal.success();
+                  setTimeout(() => modal.close(), 2000);
+                  refetch();
+                },
+              }
+            );
+          },
+          () => {
+            modal.close();
+          }
+        ),
     },
   ];
 
@@ -186,7 +196,12 @@ export function FilesTab({ serverId }: { serverId: string }) {
       retry: 1,
     }
   );
+
+  const modal = useModal();
+
   const editFile = trpc.server.files.edit.useMutation();
+  const createFile = trpc.server.files.create.useMutation();
+  const createDir = trpc.server.files.createFolder.useMutation();
 
   if (error) {
     return <Error error={error} />;
@@ -206,6 +221,7 @@ export function FilesTab({ serverId }: { serverId: string }) {
   return (
     <div className="h-full flex flex-col">
       <Container className="flex flex-row p-2 mb-2">
+        <Modal data={modal.data} />
         <div className="flex flex-row items-center">
           <p
             className="py-1 rounded cursor-pointer text-secondary-text hover:bg-neutral-100"
@@ -228,12 +244,12 @@ export function FilesTab({ serverId }: { serverId: string }) {
                 onClick={() => {
                   setPath(
                     "/" +
-                    path
-                      .split("/")
-                      .filter((part) => part !== "")
-                      .slice(0, index + 1)
-                      .join("/") +
-                    "/"
+                      path
+                        .split("/")
+                        .filter((part) => part !== "")
+                        .slice(0, index + 1)
+                        .join("/") +
+                      "/"
                   );
                   refetch();
                 }}
@@ -241,10 +257,9 @@ export function FilesTab({ serverId }: { serverId: string }) {
                 <p className="py-1 rounded cursor-pointer hover:bg-neutral-100">
                   {part}
                 </p>
-                {
-                  (files.type === "folder" || path.split("/").filter((part) => part !== "").length !== (index + 1))
-                  && <p>/</p>
-                }
+                {(files.type === "folder" ||
+                  path.split("/").filter((part) => part !== "").length !==
+                    index + 1) && <p>/</p>}
               </div>
             ))}
           {files.type === "file" && (
@@ -257,13 +272,95 @@ export function FilesTab({ serverId }: { serverId: string }) {
               }}
               disabled={editFile.isPending}
             >
-              {!editFile.isError && !editFile.isSuccess && !editFile.isPending && (
-                <Save size={16} color="white" />
-              )}
+              {!editFile.isError &&
+                !editFile.isSuccess &&
+                !editFile.isPending && <Save size={16} color="white" />}
               {editFile.isPending && <MoonLoader size={18} color={"white"} />}
-              {editFile.isSuccess && <Check size={22} className="text-success" />}
+              {editFile.isSuccess && (
+                <Check size={22} className="text-success" />
+              )}
               {editFile.error && <Error error={editFile.error} size="small" />}
             </button>
+          )}
+          {files.type === "folder" && (
+            <div className="flex flex-row ml-auto mr-4 gap-4">
+              <button
+                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded"
+                onClick={() => {
+                  modal.open(
+                    "Create file",
+                    "Enter the name of the new file",
+                    true,
+                    (input) => {
+                      if (!input) return;
+                      modal.fetching();
+                      createFile.mutate(
+                        {
+                          path: path.endsWith("/")
+                            ? path + input
+                            : path + "/" + input,
+                          serverId,
+                        },
+                        {
+                          onError: () => {
+                            modal.error();
+                            setTimeout(() => modal.close(), 2000);
+                          },
+                          onSuccess: () => {
+                            modal.success();
+                            setTimeout(() => modal.close(), 2000);
+                            refetch();
+                          },
+                        }
+                      );
+                    },
+                    () => {
+                      modal.close();
+                    }
+                  );
+                }}
+              >
+                Create File
+              </button>
+              <button
+                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded"
+                onClick={() => {
+                  modal.open(
+                    "Create folder",
+                    "Enter the name of the new folder",
+                    true,
+                    (input) => {
+                      if (!input) return;
+                      modal.fetching();
+                      createDir.mutate(
+                        {
+                          path: path.endsWith("/")
+                            ? path + input
+                            : path + "/" + input,
+                          serverId,
+                        },
+                        {
+                          onError: () => {
+                            modal.error();
+                            setTimeout(() => modal.close(), 2000);
+                          },
+                          onSuccess: () => {
+                            modal.success();
+                            setTimeout(() => modal.close(), 2000);
+                            refetch();
+                          },
+                        }
+                      );
+                    },
+                    () => {
+                      modal.close();
+                    }
+                  );
+                }}
+              >
+                Create Folder
+              </button>
+            </div>
           )}
         </div>
       </Container>
