@@ -1,13 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 node_modules
+
 /client/node_modules
 client/.env
+
 /server/node_modules
 server/.env
-/server/servers/**/
-/server/dist
-/postgres-data/
+
+/node/servers/**/
+
+/panel-postgres-data/
+/node-postgres-data/
+
 /.pnp
 .pnp.js
 .turbo

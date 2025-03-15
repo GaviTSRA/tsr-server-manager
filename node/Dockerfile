@@ -1,7 +1,7 @@
 FROM node:20
 WORKDIR /workspace
 COPY . .
-WORKDIR /workspace/server
-EXPOSE 3000
+WORKDIR /workspace/node
+EXPOSE 8771
 RUN npm install
 CMD ["npm", "run", "dev"]
