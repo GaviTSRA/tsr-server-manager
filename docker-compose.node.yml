@@ -3,7 +3,7 @@ services:
     image: postgres:16.4
     restart: always
     ports:
-      - 5433:5433/tcp
+      - 5433:5432/tcp
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: tsm-node
@@ -26,3 +26,4 @@ services:
       - /workspace/client
       - /workspace/server
       - /workspace/node_modules
+      - /workspace/node/node_modules

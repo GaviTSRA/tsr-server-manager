@@ -1,6 +1,6 @@
 {
-  "id": "80a4eb2e-4b53-4e1d-9cef-57a2b828f734",
-  "prevId": "e9904af6-c8ae-44b8-bbe0-ec8913c5b96a",
+  "id": "a13f771c-9525-4e23-bc5f-339a5ad4c2ef",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -224,6 +224,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": 1
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::json"
         }
       },
       "indexes": {},
@@ -261,12 +268,6 @@
         },
         "name": {
           "name": "name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "password": {
-          "name": "password",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true

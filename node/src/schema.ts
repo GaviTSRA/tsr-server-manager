@@ -82,7 +82,6 @@ export const Permission = pgTable(
 export const User = pgTable("User", {
   id: uuid().defaultRandom().primaryKey(),
   name: varchar().notNull().unique(),
-  canCreateServers: boolean().notNull().default(false),
 });
 
 // Relations

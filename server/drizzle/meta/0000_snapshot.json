@@ -1,11 +1,43 @@
 {
-  "id": "c2114282-b612-4258-a532-3b269fb7cdb9",
+  "id": "207241c3-ee79-4c68-9171-1accae13613c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.Server": {
-      "name": "Server",
+    "public.Node": {
+      "name": "Node",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.User": {
+      "name": "User",
       "schema": "",
       "columns": {
         "id": {
@@ -21,17 +53,32 @@
           "primaryKey": false,
           "notNull": true
         },
-        "containerId": {
-          "name": "containerId",
+        "password": {
+          "name": "password",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "canCreateServers": {
+          "name": "canCreateServers",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "User_name_unique": {
+          "name": "User_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

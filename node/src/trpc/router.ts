@@ -22,7 +22,7 @@ type ServerStatus = {
   type: string;
 };
 
-export const appRouter = router({
+export const nodeRouter = router({
   server: serverRouter,
   servers: authedProcedure
     .input(z.object({ userId: z.string() }))
@@ -150,4 +150,4 @@ export const appRouter = router({
     }),
 });
 
-export type AppRouter = typeof appRouter;
+export type NodeRouter = typeof nodeRouter;

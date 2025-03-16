@@ -14,7 +14,7 @@ import {
   createOpenApiExpressMiddleware,
   generateOpenApiDocument,
 } from "trpc-to-openapi";
-import type { AppRouter as NodeRouter } from "@tsm/node";
+import type { NodeRouter } from "@tsm/node";
 import {
   createTRPCClient,
   httpBatchLink,
@@ -26,11 +26,17 @@ import {
 } from "@trpc/client";
 
 export type { AppRouter } from "./trpc/router";
-export type { Permission } from "@tsm/node";
+export type { Permission, ServerType } from "@tsm/node";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 
-export const nodes: { [id: string]: TRPCClient<NodeRouter> } = {};
+type ConnectedNode = {
+  id: string;
+  name: string;
+  trpc: TRPCClient<NodeRouter>;
+};
+
+export const nodes: { [id: string]: ConnectedNode } = {};
 const registeredNodes = await db.query.Node.findMany();
 for (const registeredNode of registeredNodes) {
   // TODO node auth
@@ -70,7 +76,11 @@ for (const registeredNode of registeredNodes) {
       }),
     ],
   });
-  nodes[registeredNode.id] = client;
+  nodes[registeredNode.id] = {
+    id: registeredNode.id,
+    name: registeredNode.name,
+    trpc: client,
+  };
 }
 
 const openApiDocument = generateOpenApiDocument(appRouter, {

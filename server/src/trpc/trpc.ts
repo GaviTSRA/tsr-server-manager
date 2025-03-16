@@ -4,6 +4,8 @@ import * as schema from "../schema";
 import jwt from "jsonwebtoken";
 import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
 import { OpenApiMeta } from "trpc-to-openapi";
+import { nodes } from "..";
+import { z } from "zod";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -59,6 +61,9 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     };
     const user = await ctx.db.query.User.findFirst({
       where: (user, { eq }) => eq(user.id, res.id),
+      columns: {
+        password: false,
+      },
     });
     if (!user) {
       throw new TRPCError({
@@ -78,3 +83,20 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     });
   }
 });
+export const nodeProcedure = authedProcedure
+  .input(z.object({ nodeId: z.string() }))
+  .use(({ input, next }) => {
+    if (!nodes[input.nodeId]) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Node not found",
+      });
+    }
+
+    const node = nodes[input.nodeId];
+    return next({
+      ctx: {
+        node,
+      },
+    });
+  });

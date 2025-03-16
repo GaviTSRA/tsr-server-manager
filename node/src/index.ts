@@ -5,7 +5,7 @@ import * as docker from "./docker";
 import fs from "fs";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
-export { AppRouter } from "./trpc/router";
+export type { NodeRouter } from "./trpc/router";
 
 export type ServerType = {
   id: string;
