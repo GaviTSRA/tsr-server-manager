@@ -14,7 +14,7 @@ import {
   createOpenApiExpressMiddleware,
   generateOpenApiDocument,
 } from "trpc-to-openapi";
-// import type { AppRouter as NodeRouter } from "@tsm/node";
+import type { AppRouter as NodeRouter } from "@tsm/node";
 import {
   createTRPCClient,
   httpBatchLink,
@@ -26,52 +26,52 @@ import {
 } from "@trpc/client";
 
 export type { AppRouter } from "./trpc/router";
-// export type { Permission } from "@tsm/node";
+export type { Permission } from "@tsm/node";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 
-// export const nodes: { [id: string]: TRPCClient<NodeRouter> } = {};
-// const registeredNodes = await db.query.Node.findMany();
-// for (const registeredNode of registeredNodes) {
-//   // TODO node auth
-//   const client = createTRPCClient<NodeRouter>({
-//     links: [
-//       splitLink({
-//         // uses the httpSubscriptionLink for subscriptions
-//         condition: (op) => op.type === "subscription",
-//         true: unstable_httpSubscriptionLink({
-//           url: registeredNode.url,
-//           connectionParams: () => {
-//             const token = localStorage.getItem("authToken");
-//             return { token: token ?? undefined };
-//           },
-//         }),
-//         false: splitLink({
-//           condition: (op) => isNonJsonSerializable(op.input),
-//           true: httpLink({
-//             url: registeredNode.url,
-//             headers: () => {
-//               const token = localStorage.getItem("authToken");
-//               return {
-//                 Authorization: token ? `Bearer ${token}` : undefined,
-//               };
-//             },
-//           }),
-//           false: httpBatchLink({
-//             url: registeredNode.url,
-//             headers: () => {
-//               const token = localStorage.getItem("authToken");
-//               return {
-//                 Authorization: token ? `Bearer ${token}` : undefined,
-//               };
-//             },
-//           }),
-//         }),
-//       }),
-//     ],
-//   });
-//   nodes[registeredNode.id] = client;
-// }
+export const nodes: { [id: string]: TRPCClient<NodeRouter> } = {};
+const registeredNodes = await db.query.Node.findMany();
+for (const registeredNode of registeredNodes) {
+  // TODO node auth
+  const client = createTRPCClient<NodeRouter>({
+    links: [
+      splitLink({
+        // uses the httpSubscriptionLink for subscriptions
+        condition: (op) => op.type === "subscription",
+        true: unstable_httpSubscriptionLink({
+          url: registeredNode.url,
+          connectionParams: () => {
+            const token = localStorage.getItem("authToken");
+            return { token: token ?? undefined };
+          },
+        }),
+        false: splitLink({
+          condition: (op) => isNonJsonSerializable(op.input),
+          true: httpLink({
+            url: registeredNode.url,
+            headers: () => {
+              const token = localStorage.getItem("authToken");
+              return {
+                Authorization: token ? `Bearer ${token}` : undefined,
+              };
+            },
+          }),
+          false: httpBatchLink({
+            url: registeredNode.url,
+            headers: () => {
+              const token = localStorage.getItem("authToken");
+              return {
+                Authorization: token ? `Bearer ${token}` : undefined,
+              };
+            },
+          }),
+        }),
+      }),
+    ],
+  });
+  nodes[registeredNode.id] = client;
+}
 
 const openApiDocument = generateOpenApiDocument(appRouter, {
   title: "tRPC OpenAPI",

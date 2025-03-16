@@ -23,8 +23,8 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@trpc/client": "next",
-    "@trpc/server": "next",
+    "@trpc/client": "11.0.0-rc.833",
+    "@trpc/server": "11.0.0-rc.833",
     "@tsm/node": "*",
     "@types/uuid": "^10.0.0",
     "axios": "^1.7.7",

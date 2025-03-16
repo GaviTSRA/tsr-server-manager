@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import * as docker from "../docker";
 import { hasPermission, log, router, serverProcedure, t } from "./trpc";
 import { z } from "zod";
 import { serverFilesRouter } from "./server/filesRouter";
@@ -21,17 +20,29 @@ export const serverRouter = router({
   server: serverProcedure
     .meta({
       permission: "server",
-      openapi: { method: "GET", path: "/server/{serverId}", protect: true }
+      openapi: { method: "GET", path: "/server/{serverId}", protect: true },
     })
     .input(z.object({}))
-    .output(z.object({
-      id: z.string(),
-      containerId: z.string().nullable(),
-      name: z.string(),
-      type: z.string(),
-      status: z.enum(["created", "running", "paused", "restarting", "removing", "exited", "dead"]).optional(),
-      metadata: z.record(z.string(), z.any())
-    }))
+    .output(
+      z.object({
+        id: z.string(),
+        containerId: z.string().nullable(),
+        name: z.string(),
+        type: z.string(),
+        status: z
+          .enum([
+            "created",
+            "running",
+            "paused",
+            "restarting",
+            "removing",
+            "exited",
+            "dead",
+          ])
+          .optional(),
+        metadata: z.record(z.string(), z.any()),
+      })
+    )
     .query(async ({ ctx }) => {
       let inspect = undefined;
       if (ctx.server.containerId) {
@@ -105,7 +116,11 @@ export const serverRouter = router({
     .meta({
       permission: "console.write",
       log: "Run command",
-      openapi: { method: "POST", path: "/server/{serverId}/run", protect: true }
+      openapi: {
+        method: "POST",
+        path: "/server/{serverId}/run",
+        protect: true,
+      },
     })
     .input(z.object({ command: z.string() }))
     .output(z.void())
