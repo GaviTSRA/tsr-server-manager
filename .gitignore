@@ -9,6 +9,8 @@ client/.env
 server/.env
 
 /node/servers/**/
+/node/node_modules
+node/.env
 
 /panel-postgres-data/
 /node-postgres-data/

@@ -1,16 +1,9 @@
-import {
-  inferProcedureBuilderResolverOptions,
-  initTRPC,
-  TRPCError,
-} from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import jwt from "jsonwebtoken";
 import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
-import { z } from "zod";
-import { Permission } from "..";
-import { ServerType } from "../schema";
-import { OpenApiMeta } from 'trpc-to-openapi';
+import { OpenApiMeta } from "trpc-to-openapi";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -34,10 +27,7 @@ export const createContext = async ({
   };
 };
 export type Context = Awaited<ReturnType<typeof createContext>>;
-export type Meta = {
-  permission?: Permission;
-  log?: string;
-} & OpenApiMeta;
+export type Meta = {} & OpenApiMeta;
 
 export const t = initTRPC
   .context<typeof createContext>()
@@ -88,81 +78,3 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     });
   }
 });
-export const serverProcedure = authedProcedure
-  .input(z.object({ serverId: z.string() }))
-  .use(async ({ ctx, input, next, meta }) => {
-    const server = await ctx.db.query.Server.findFirst({
-      where: (server, { eq }) => eq(server.id, input.serverId),
-      with: {
-        permissions: {
-          where: (permission, { eq }) => eq(permission.userId, ctx.user.id),
-        },
-      },
-    });
-    if (!server) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Server not found",
-      });
-    }
-    if (
-      server.ownerId !== ctx.user.id &&
-      !server.permissions
-        .map((permission) => permission.permission)
-        .includes("server")
-    ) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Missing permission 'server'",
-      });
-    }
-    if (meta && meta.permission && server.ownerId !== ctx.user.id) {
-      if (
-        !server.permissions
-          .map((permission) => permission.permission)
-          .includes(meta.permission)
-      ) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: `Missing permission '${meta.permission}'`,
-        });
-      }
-    }
-    return next({
-      ctx: {
-        server,
-      },
-    });
-  });
-
-type ServerContext = inferProcedureBuilderResolverOptions<
-  typeof serverProcedure
->["ctx"];
-
-export async function log(log: string, success: boolean, ctx: ServerContext) {
-  await ctx.db.insert(schema.Log).values({
-    serverId: ctx.server.id,
-    userId: ctx.user.id,
-    log: log,
-    success: success,
-    date: new Date(),
-  });
-}
-
-export async function hasPermission(
-  ctx: Context,
-  userId: string,
-  server: ServerType,
-  permission: string
-) {
-  if (server.ownerId === userId) return true;
-  const result = await ctx.db.query.Permission.findFirst({
-    where: (permissionTable, { and, eq }) =>
-      and(
-        eq(permissionTable.permission, permission),
-        eq(permissionTable.userId, userId),
-        eq(permissionTable.serverId, server.id)
-      ),
-  });
-  return result !== undefined;
-}

@@ -4,7 +4,8 @@ import { v4 } from "uuid";
 import { TRPCError } from "@trpc/server";
 import { serverRouter } from "./serverRouter";
 import * as schema from "../schema";
-import { userRouter } from "./userRouter";
+import * as docker from "../docker";
+import { serverTypes } from "..";
 
 type ServerStatus = {
   id: string;
@@ -22,11 +23,9 @@ type ServerStatus = {
 };
 
 export const appRouter = router({
-  user: userRouter,
   server: serverRouter,
   servers: authedProcedure
-    .meta({ openapi: { method: "GET", path: "/servers", protect: true } })
-    .input(z.void())
+    .input(z.object({ userId: z.string() }))
     .output(
       z
         .object({
@@ -48,12 +47,12 @@ export const appRouter = router({
         })
         .array()
     )
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx, input }) => {
       const accessableServers = (
         await ctx.db.query.Permission.findMany({
           where: (permission, { eq, and }) =>
             and(
-              eq(permission.userId, ctx.user.id),
+              eq(permission.userId, input.userId),
               eq(permission.permission, "server")
             ),
         })
@@ -61,7 +60,7 @@ export const appRouter = router({
       const servers = await ctx.db.query.Server.findMany({
         where: (server, { eq, or, inArray }) =>
           or(
-            eq(server.ownerId, ctx.user.id),
+            eq(server.ownerId, input.userId),
             inArray(server.id, accessableServers)
           ),
       });
@@ -88,7 +87,6 @@ export const appRouter = router({
       return result;
     }),
   serverTypes: publicProcedure
-    .meta({ openapi: { method: "GET", path: "/serverTypes", protect: false } })
     .input(z.void())
     .output(
       z
@@ -116,22 +114,15 @@ export const appRouter = router({
       return serverTypes;
     }),
   createServer: authedProcedure
-    .meta({ openapi: { method: "POST", path: "/createServer", protect: true } })
     .input(
       z.object({
+        userId: z.string(),
         name: z.string(),
         type: z.string(),
       })
     )
     .output(z.void())
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.user.canCreateServers) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "User can't create servers",
-        });
-      }
-
       const type = serverTypes.find((type) => type.id === input.type);
       if (!type) {
         throw new TRPCError({
@@ -148,7 +139,7 @@ export const appRouter = router({
       });
       await ctx.db.insert(schema.Server).values({
         id,
-        ownerId: ctx.user.id,
+        ownerId: input.userId,
         name: input.name,
         type: type.id,
         options: defaults,
