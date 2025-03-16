@@ -25,8 +25,6 @@ services:
       - ./:/workspace
       - /workspace/client
       - /workspace/node_modules
-      - /workspace/node/node_modules
-      - /workspace/server/node_modules
     depends_on:
       - db
   client:
@@ -40,7 +38,5 @@ services:
       - ./:/workspace
       - /workspace/node
       - /workspace/node_modules
-      - /workspace/client/node_modules
-      - /workspace/server/node_modules
     depends_on:
       - server

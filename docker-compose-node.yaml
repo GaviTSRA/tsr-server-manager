@@ -26,4 +26,3 @@ services:
       - /workspace/client
       - /workspace/server
       - /workspace/node_modules
-      - /workspace/node/node_modules
