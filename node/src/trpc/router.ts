@@ -24,6 +24,21 @@ type ServerStatus = {
 
 export const nodeRouter = router({
   server: serverRouter,
+  syncUsers: authedProcedure
+    .input(schema.UserSchema.array())
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.transaction(async (trx) => {
+        for (const user of input) {
+          await trx
+            .insert(schema.User)
+            .values(user)
+            .onConflictDoUpdate({
+              target: [schema.User.id],
+              set: user,
+            });
+        }
+      });
+    }),
   servers: authedProcedure
     .input(z.object({ userId: z.string() }))
     .output(

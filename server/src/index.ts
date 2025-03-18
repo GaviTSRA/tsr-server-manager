@@ -36,6 +36,8 @@ type ConnectedNode = {
   trpc: TRPCClient<NodeRouter>;
 };
 
+const users = await db.query.User.findMany();
+
 export const nodes: { [id: string]: ConnectedNode } = {};
 const registeredNodes = await db.query.Node.findMany();
 for (const registeredNode of registeredNodes) {
@@ -82,6 +84,9 @@ for (const registeredNode of registeredNodes) {
       }),
     ],
   });
+
+  await client.syncUsers.mutate(users);
+
   nodes[registeredNode.id] = {
     id: registeredNode.id,
     name: registeredNode.name,

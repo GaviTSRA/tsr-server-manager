@@ -12,7 +12,8 @@ import { Dropdown } from "./components/Dropdown";
 import { Input } from "./components/Input";
 import { MoonLoader } from "react-spinners";
 import { trpc } from "./main";
-import { ServerType } from "@tsm/server";
+import { AppRouter, ServerType } from "@tsm/server";
+import { inferProcedureOutput } from "@trpc/server";
 
 function ServerTypeDisplay({
   type,
@@ -32,10 +33,19 @@ function ServerTypeDisplay({
   );
 }
 
-function CreateServerModal({ close }: { close: () => void }) {
+function CreateServerModal({
+  close,
+  serverTypes,
+  nodes,
+}: {
+  close: () => void;
+  serverTypes: inferProcedureOutput<AppRouter["serverTypes"]>;
+  nodes: inferProcedureOutput<AppRouter["node"]["list"]>;
+}) {
   const [createServerRunning, setCreateServerRunning] = useState(false);
-  const [serverName, setServerName] = useState("");
-  const [serverType, setServerType] = useState("");
+  const [serverName, setServerName] = useState(undefined as string | undefined);
+  const [serverType, setServerType] = useState(undefined as string | undefined);
+  const [serverNode, setServerNode] = useState(undefined as string | undefined);
 
   const createServer = trpc.createServer.useMutation();
 
@@ -50,38 +60,67 @@ function CreateServerModal({ close }: { close: () => void }) {
       >
         <p className="text-2xl mb-4 text-center">Create New Server</p>
         <div className="mb-4">
-          <p className="text-secondary-text">Name</p>
+          <p className="text-secondary-text mt-2">Node</p>
+          <Dropdown
+            color="bg-neutral-300 hover:bg-neutral-400"
+            values={nodes.map((node) => node.id)}
+            render={(option) => (
+              <p>
+                {nodes.find((node) => node.id === option)?.name ??
+                  "Unknown node"}
+              </p>
+            )}
+            onSelect={(value: string) => {
+              setServerType(undefined);
+              setServerNode(value);
+            }}
+            placeholder="Select a node..."
+          />
+          <p className="text-secondary-text mt-2">Name</p>
           <Input
             className="rounded"
             onValueChange={(value) => setServerName(value)}
           />
           <p className="text-secondary-text mt-2">Type</p>
-          {/* <Dropdown
+          <Dropdown
             color="bg-neutral-300 hover:bg-neutral-400"
-            values={serverTypes.map((type) => type.id)}
+            values={
+              serverTypes
+                .find((entry) => entry.nodeId === serverNode)
+                ?.serverTypes.map((type) => type.id) ?? []
+            }
             render={(option) => (
-              <ServerTypeDisplay type={option} serverTypes={serverTypes} />
+              <ServerTypeDisplay
+                type={option}
+                serverTypes={
+                  serverTypes.find((entry) => entry.nodeId === serverNode)
+                    ?.serverTypes ?? []
+                }
+              />
             )}
             onSelect={(value: string) => {
-              if (!serverTypes) return;
-              setServerType(
-                serverTypes.find((type) => type.id === value)?.id ?? ""
-              );
+              setServerType(value);
             }}
-            placeholder="Select server type..."
-          /> */}
+            placeholder={
+              serverNode ? "Select server type..." : "Select a node first"
+            }
+          />
         </div>
-        {/* <button
-          className="px-4 py-2 mt-auto bg-primary-100 text-dark-text rounded outline-none disabled:bg-disabled"
+        <button
+          className="px-4 py-2 mt-auto flex justify-center bg-primary-100 text-dark-text rounded outline-none disabled:bg-disabled"
           onClick={() => {
             setCreateServerRunning(true);
+            if (!serverName || !serverType || !serverNode) return;
             createServer.mutate(
-              { name: serverName, type: serverType },
+              {
+                name: serverName,
+                type: serverType,
+                nodeId: serverNode,
+              },
               {
                 onSuccess: async () => {
-                  setCreatingServer(false);
                   setCreateServerRunning(false);
-                  refetch();
+                  close();
                 },
                 onError: (err) => {
                   setCreateServerRunning(false);
@@ -90,14 +129,19 @@ function CreateServerModal({ close }: { close: () => void }) {
               }
             );
           }}
-          disabled={createServerRunning}
+          disabled={
+            createServerRunning ||
+            serverNode === undefined ||
+            serverType === undefined ||
+            serverName === undefined
+          }
         >
           {createServerRunning ? (
-            <PulseLoader size={10} color={"#333333"} />
+            <MoonLoader size={18} color={"#FFFFFF"} />
           ) : (
             <p>Create</p>
           )}
-        </button> */}
+        </button>
       </div>
     </div>
   );
@@ -116,6 +160,7 @@ function ServerList() {
   });
 
   const { data: serverTypes } = trpc.serverTypes.useQuery();
+  const { data: nodes } = trpc.node.list.useQuery();
 
   if (error && error.data?.code === "UNAUTHORIZED") {
     return <Navigate to="/login" />;
@@ -186,8 +231,15 @@ function ServerList() {
         <Plus className="text-primary-200" size={40} />
       </div>
 
-      {creatingServer && serverTypes && (
-        <CreateServerModal close={() => setCreatingServer(false)} />
+      {creatingServer && serverTypes && nodes && (
+        <CreateServerModal
+          close={() => {
+            setCreatingServer(false);
+            refetch();
+          }}
+          serverTypes={serverTypes}
+          nodes={nodes}
+        />
       )}
     </div>
   );

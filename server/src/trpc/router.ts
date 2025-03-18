@@ -14,10 +14,12 @@ import { serverRouter } from "./serverRouter";
 import { userRouter } from "./userRouter";
 import { NodeRouter } from "@tsm/node";
 import { nodes } from "..";
+import { nodeRouter } from "./nodeRouter";
 
 export const appRouter = router({
   user: userRouter,
   server: serverRouter,
+  node: nodeRouter,
   servers: authedProcedure
     .meta({ openapi: { method: "GET", path: "/servers", protect: true } })
     .input(z.void())
