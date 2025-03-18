@@ -3,6 +3,13 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 import * as docker from "./docker";
 import fs from "fs";
+import "dotenv/config";
+import { nodeRouter } from "./trpc/router";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import express from "express";
+import { createContext } from "./trpc/trpc";
+import http from "http";
+import cors from "cors";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 export type { NodeRouter } from "./trpc/router";
@@ -70,7 +77,7 @@ fs.readdirSync("images").forEach((folder) => {
   console.info("Building image " + folder);
   const data = fs.readFileSync(`images/${folder}/Dockerfile`).toString();
   customImages.push(folder);
-  docker.buildImage(folder, data);
+  // docker.buildImage(folder, data); TODO
 });
 
 const requiredImages = [] as string[];
@@ -107,10 +114,8 @@ db.query.Server.findMany().then((servers) => {
       docker.inspectContainer(server.containerId).then(async (result) => {
         if (result.status === "success" && result.data?.status === "running") {
           console.info("Restarting watcher for", server.name);
-
           const res = await docker.attachToContainer(server.containerId ?? "");
           const asyncIterable = docker.createAsyncIterable(res.data);
-
           for await (const chunk of asyncIterable) {
             const data = chunk.toString() as string;
             data.split("\n").map(async (log) => {
@@ -122,3 +127,9 @@ db.query.Server.findMany().then((servers) => {
     }
   }
 });
+
+const app = express();
+app.use(cors());
+app.use("/", createExpressMiddleware({ router: nodeRouter, createContext }));
+const server = http.createServer({}, app);
+server.listen(8771);

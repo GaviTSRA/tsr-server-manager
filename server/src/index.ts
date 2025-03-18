@@ -48,8 +48,10 @@ for (const registeredNode of registeredNodes) {
         true: unstable_httpSubscriptionLink({
           url: registeredNode.url,
           connectionParams: () => {
-            const token = localStorage.getItem("authToken");
-            return { token: token ?? undefined };
+            // TODO auth
+            // const token = localStorage.getItem("authToken");
+            // return { token: token ?? undefined };
+            return {};
           },
         }),
         false: splitLink({
@@ -57,19 +59,23 @@ for (const registeredNode of registeredNodes) {
           true: httpLink({
             url: registeredNode.url,
             headers: () => {
-              const token = localStorage.getItem("authToken");
-              return {
-                Authorization: token ? `Bearer ${token}` : undefined,
-              };
+              return {};
+              // TODO auth
+              // const token = localStorage.getItem("authToken");
+              // return {
+              //   Authorization: token ? `Bearer ${token}` : undefined,
+              // };
             },
           }),
           false: httpBatchLink({
             url: registeredNode.url,
             headers: () => {
-              const token = localStorage.getItem("authToken");
-              return {
-                Authorization: token ? `Bearer ${token}` : undefined,
-              };
+              // TODO auth
+              return {};
+              // const token = localStorage.getItem("authToken");
+              // return {
+              //   Authorization: token ? `Bearer ${token}` : undefined,
+              // };
             },
           }),
         }),
@@ -83,20 +89,21 @@ for (const registeredNode of registeredNodes) {
   };
 }
 
-const openApiDocument = generateOpenApiDocument(appRouter, {
-  title: "tRPC OpenAPI",
-  version: "1.0.0",
-  baseUrl: "http://localhost:3000/api",
-});
-writeFileSync("./openapi.json", JSON.stringify(openApiDocument));
+// TODO
+// const openApiDocument = generateOpenApiDocument(appRouter, {
+//   title: "tRPC OpenAPI",
+//   version: "1.0.0",
+//   baseUrl: "http://localhost:3000/api",
+// });
+// writeFileSync("./openapi.json", JSON.stringify(openApiDocument));
 
 const app = express();
 app.use(cors());
 app.use("/trpc", createExpressMiddleware({ router: appRouter, createContext }));
-app.use(
-  "/api",
-  createOpenApiExpressMiddleware({ router: appRouter, createContext })
-);
+// app.use(
+//   "/api",
+//   createOpenApiExpressMiddleware({ router: appRouter, createContext })
+// );
 
 if (process.env.HTTPS === "true") {
   const server = https.createServer(

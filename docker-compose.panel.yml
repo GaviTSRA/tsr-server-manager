@@ -18,10 +18,8 @@ services:
       context: ./
       dockerfile: ./server/Dockerfile
     environment:
-      - DOCKER_HOST=tcp://host.docker.internal:2375
       - DB_HOST=db
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workspace
       - /workspace/client
       - /workspace/node_modules

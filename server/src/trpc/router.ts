@@ -31,16 +31,23 @@ export const appRouter = router({
         .array()
     )
     .query(async ({ ctx }) => {
-      const result = [];
-      for (const node of Object.values(nodes)) {
-        const servers = await node.trpc.servers.query({ userId: ctx.user.id });
-        result.push({
-          nodeId: node.id,
-          nodeName: node.name,
-          servers,
-        });
+      try {
+        const result = [];
+        for (const node of Object.values(nodes)) {
+          const servers = await node.trpc.servers.query({
+            userId: ctx.user.id,
+          });
+          result.push({
+            nodeId: node.id,
+            nodeName: node.name,
+            servers,
+          });
+        }
+        return result;
+      } catch (err) {
+        console.error("router.servers ERROR:", err);
+        throw err;
       }
-      return result;
     }),
   serverTypes: publicProcedure
     .meta({ openapi: { method: "GET", path: "/serverTypes", protect: false } })
@@ -56,16 +63,21 @@ export const appRouter = router({
         .array()
     )
     .query(async ({ input }) => {
-      const result = [];
-      for (const node of Object.values(nodes)) {
-        const serverTypes = await node.trpc.serverTypes.query(input);
-        result.push({
-          nodeId: node.id,
-          nodeName: node.name,
-          serverTypes,
-        });
+      try {
+        const result = [];
+        for (const node of Object.values(nodes)) {
+          const serverTypes = await node.trpc.serverTypes.query(input);
+          result.push({
+            nodeId: node.id,
+            nodeName: node.name,
+            serverTypes,
+          });
+        }
+        return result;
+      } catch (err) {
+        console.error("router.serverTypes ERROR:", err);
+        throw err;
       }
-      return result;
     }),
   createServer: nodeProcedure
     .meta({ openapi: { method: "POST", path: "/createServer", protect: true } })
@@ -77,18 +89,23 @@ export const appRouter = router({
     )
     .output(z.custom<inferProcedureOutput<NodeRouter["createServer"]>>())
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.user.canCreateServers) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "User can't create servers",
-        });
-      }
+      try {
+        if (!ctx.user.canCreateServers) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "User can't create servers",
+          });
+        }
 
-      return await ctx.node.trpc.createServer.mutate({
-        name: input.name,
-        type: input.type,
-        userId: ctx.user.id,
-      });
+        return await ctx.node.trpc.createServer.mutate({
+          name: input.name,
+          type: input.type,
+          userId: ctx.user.id,
+        });
+      } catch (err) {
+        console.error("router.createServer ERROR:", err);
+        throw err;
+      }
     }),
 });
 
