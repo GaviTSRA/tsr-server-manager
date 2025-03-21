@@ -180,7 +180,13 @@ function FileRow({
   );
 }
 
-export function FilesTab({ serverId }: { serverId: string }) {
+export function FilesTab({
+  serverId,
+  nodeId,
+}: {
+  serverId: string;
+  nodeId: string;
+}) {
   const [path, setPath] = useState("/");
   const [content, setContent] = useState(undefined as string | undefined);
   const [file, setFile] = useState<File | null>(null);

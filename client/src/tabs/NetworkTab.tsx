@@ -6,13 +6,19 @@ import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 
-export function NetworkTab({ serverId }: { serverId: string }) {
+export function NetworkTab({
+  serverId,
+  nodeId,
+}: {
+  serverId: string;
+  nodeId: string;
+}) {
   const {
     data: ports,
     error,
     refetch,
   } = trpc.server.network.read.useQuery(
-    { serverId },
+    { serverId, nodeId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -50,6 +56,7 @@ export function NetworkTab({ serverId }: { serverId: string }) {
                   {
                     ports: [...ports.filter((el) => el !== port)],
                     serverId,
+                    nodeId,
                   },
                   {
                     onSuccess: () => refetch(),
@@ -78,6 +85,7 @@ export function NetworkTab({ serverId }: { serverId: string }) {
               {
                 ports: [...ports, newPort],
                 serverId,
+                nodeId,
               },
               {
                 onSuccess: () => refetch(),

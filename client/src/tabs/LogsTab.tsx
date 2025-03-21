@@ -22,9 +22,15 @@ type Log = {
   log: string;
 };
 
-export function LogsTab({ serverId }: { serverId: string }) {
+export function LogsTab({
+  serverId,
+  nodeId,
+}: {
+  serverId: string;
+  nodeId: string;
+}) {
   const { data: logs, error } = trpc.server.logs.read.useQuery(
-    { serverId },
+    { serverId, nodeId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,

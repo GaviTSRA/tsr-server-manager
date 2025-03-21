@@ -1,64 +1,50 @@
-import * as docker from "../../docker";
-import { log, router, serverProcedure } from "../trpc";
+import { router, nodeProcedure } from "../trpc";
 import { z } from "zod";
-import * as schema from "../../schema";
-import { eq } from "drizzle-orm";
+import { inferProcedureInput, inferProcedureOutput } from "@trpc/server";
+import { NodeRouter } from "@tsm/node";
 
 export const limitsRouter = router({
-  read: serverProcedure
+  read: nodeProcedure
     .meta({
-      permission: "limits.read",
-      openapi: { method: "GET", path: "/server/{serverId}/limits", protect: true }
+      openapi: {
+        method: "GET",
+        path: "/server/{nodeId}/{serverId}/limits",
+        protect: true,
+      },
     })
-    .input(z.object({}))
-    .output(z.object({
-      cpu: z.number(),
-      ram: z.number(),
-      restartPolicy: z.enum(["no", "on-failure", "unless-stopped", "always"]),
-      restartRetryCount: z.number()
-    }))
-    .query(async ({ ctx }) => {
-      return {
-        cpu: ctx.server.cpuLimit,
-        ram: ctx.server.ramLimit,
-        restartPolicy: ctx.server.restartPolicy,
-        restartRetryCount: ctx.server.restartRetryCount,
-      };
+    .input(z.object({ serverId: z.string() }))
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["limits"]["read"]>>()
+    )
+    .query(async ({ ctx, input }) => {
+      return await ctx.node.trpc.server.limits.read.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
+      });
     }),
-  write: serverProcedure
+  write: nodeProcedure
     .meta({
-      permission: "limits.write",
-      openapi: { method: "POST", path: "/server/{serverId}/limits", protect: true }
+      openapi: {
+        method: "POST",
+        path: "/server/{nodeId}/{serverId}/limits",
+        protect: true,
+      },
     })
     .input(
-      z.object({
-        cpuLimit: z.number().optional(),
-        ramLimit: z.number().optional(),
-        restartPolicy: z
-          .enum(["no", "on-failure", "unless-stopped", "always"])
-          .optional(),
-        restartRetryCount: z.number().optional(),
-      })
+      z.custom<
+        Omit<
+          inferProcedureInput<NodeRouter["server"]["limits"]["write"]>,
+          "userId"
+        >
+      >()
     )
-    .output(z.void())
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["limits"]["write"]>>()
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db
-        .update(schema.Server)
-        .set({
-          cpuLimit: input.cpuLimit,
-          ramLimit: input.ramLimit,
-          restartPolicy: input.restartPolicy,
-          restartRetryCount: input.restartRetryCount,
-          containerId: null,
-        })
-        .where(eq(schema.Server.id, ctx.server.id));
-      if (ctx.server.containerId) {
-        await docker.removeContainer(ctx.server.containerId);
-      }
-      await log(
-        `Update limits configuration: ${JSON.stringify(input)}`,
-        true,
-        ctx
-      );
+      return await ctx.node.trpc.server.limits.write.mutate({
+        ...input,
+        userId: ctx.user.id,
+      });
     }),
 });

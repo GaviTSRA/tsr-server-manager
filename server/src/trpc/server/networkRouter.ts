@@ -1,39 +1,50 @@
-import * as docker from "../../docker";
-import { log, router, serverProcedure } from "../trpc";
+import { nodeProcedure, router } from "../trpc";
 import { z } from "zod";
-import * as schema from "../../schema";
-import { eq } from "drizzle-orm";
+import { inferProcedureInput, inferProcedureOutput } from "@trpc/server";
+import { NodeRouter } from "@tsm/node";
 
 export const networkRouter = router({
-  read: serverProcedure
+  read: nodeProcedure
     .meta({
-      permission: "network.read",
-      openapi: { method: "GET", path: "/server/{serverId}/network", protect: true }
+      openapi: {
+        method: "GET",
+        path: "/server/{nodeId}/{serverId}/network",
+        protect: true,
+      },
     })
-    .input(z.object({}))
-    .output(z.string().array())
-    .query(async ({ ctx }) => {
-      return ctx.server.ports;
+    .input(z.object({ serverId: z.string() }))
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["network"]["read"]>>()
+    )
+    .query(async ({ ctx, input }) => {
+      return await ctx.node.trpc.server.network.read.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
+      });
     }),
-  write: serverProcedure
+  write: nodeProcedure
     .meta({
-      permission: "network.write",
-      openapi: { method: "POST", path: "/server/{serverId}/network", protect: true }
+      openapi: {
+        method: "POST",
+        path: "/server/{nodeId}/{serverId}/network",
+        protect: true,
+      },
     })
-    .input(z.object({ ports: z.array(z.string()) }))
-    .output(z.void())
+    .input(
+      z.custom<
+        Omit<
+          inferProcedureInput<NodeRouter["server"]["network"]["write"]>,
+          "userId"
+        >
+      >()
+    )
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["network"]["write"]>>()
+    )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db
-        .update(schema.Server)
-        .set({ ports: input.ports, containerId: null })
-        .where(eq(schema.Server.id, ctx.server.id));
-      if (ctx.server.containerId) {
-        await docker.removeContainer(ctx.server.containerId);
-      }
-      await log(
-        `Update network configuration: ${JSON.stringify(input.ports)}`,
-        true,
-        ctx
-      );
+      return await ctx.node.trpc.server.network.write.mutate({
+        ...input,
+        userId: ctx.user.id,
+      });
     }),
 });

@@ -45,6 +45,7 @@ export function UserSettings({
   serverId,
   refetch,
   isOwner,
+  nodeId,
 }: {
   user: {
     id: string;
@@ -56,6 +57,7 @@ export function UserSettings({
   isOwner: boolean;
   serverId: string;
   refetch: () => void;
+  nodeId: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [addPermissions, setAddPermissions] = useState([] as string[]);
@@ -131,21 +133,21 @@ export function UserSettings({
                     "Remove user?",
                     `Confirm removal of user '${user.name}'`,
                     false,
-                    (_) => {
+                    () => {
                       modal.fetching();
                       deleteUser.mutate(
-                        { userId: user.id, serverId },
+                        { deleteUserId: user.id, serverId, nodeId },
                         {
                           onSuccess: () => {
                             modal.success();
                             refetch();
                           },
-                          onError: () => modal.error()
+                          onError: () => modal.error(),
                         }
                       );
                     },
                     () => modal.close()
-                  )
+                  );
                 }}
               >
                 <Trash2 />
@@ -156,7 +158,8 @@ export function UserSettings({
                 onClick={(e) => {
                   e.stopPropagation();
                   writePermission.mutate({
-                    userId: user.id,
+                    editUserId: user.id,
+                    nodeId,
                     serverId,
                     addPermissions,
                     removePermissions,
@@ -176,12 +179,18 @@ export function UserSettings({
   );
 }
 
-export function UsersTab({ serverId }: { serverId: string }) {
+export function UsersTab({
+  serverId,
+  nodeId,
+}: {
+  serverId: string;
+  nodeId: string;
+}) {
   const {
     data: users,
     error,
     refetch: refetchUsers,
-  } = trpc.server.users.read.useQuery({ serverId });
+  } = trpc.server.users.read.useQuery({ serverId, nodeId });
   const {
     data: allUsers,
     error: usersError,
@@ -228,6 +237,7 @@ export function UsersTab({ serverId }: { serverId: string }) {
           isOwner={isOwner}
           key={user.id}
           refetch={refetch}
+          nodeId={nodeId}
         />
       ))}
       <Container className="h-fit">
@@ -260,7 +270,7 @@ export function UsersTab({ serverId }: { serverId: string }) {
                   onClick={() => {
                     if (!newUser) return;
                     addUser.mutate(
-                      { serverId, userId: newUser },
+                      { serverId, newUserId: newUser, nodeId },
                       {
                         onSuccess: () => refetch(),
                       }

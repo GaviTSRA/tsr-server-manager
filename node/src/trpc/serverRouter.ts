@@ -82,6 +82,11 @@ export const serverRouter = router({
             cpuAvailable: hasLimitPermission ? ctx.server.cpuLimit : undefined,
             ramUsage: part.ramUsage,
             ramAvailable: hasLimitPermission ? part.ramAvailable : undefined,
+          } as {
+            cpuUsage: number;
+            ramUsage: number;
+            cpuAvailable?: number;
+            ramAvailable?: number;
           };
         }
       } catch (error) {

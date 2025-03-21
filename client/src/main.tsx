@@ -24,7 +24,7 @@ const router = createBrowserRouter([
     element: <ServerList />,
   },
   {
-    path: "/server/:serverId/:tab",
+    path: "/server/:nodeId/:serverId/:tab",
     element: <Server />,
   },
   {

@@ -7,8 +7,10 @@ import { UpsertDropdown } from "../components/UpsertDropdown";
 export function StartupTab({
   serverId,
   serverType,
+  nodeId,
 }: {
   serverId: string;
+  nodeId: string;
   serverType: string | undefined;
 }) {
   const { data: serverTypes, error: serverTypesError } =
@@ -20,6 +22,7 @@ export function StartupTab({
   } = trpc.server.startup.read.useQuery(
     {
       serverId,
+      nodeId,
     },
     {
       refetchOnWindowFocus: false,
@@ -43,7 +46,9 @@ export function StartupTab({
       </div>
     );
   }
-  const type = serverTypes.find((type) => type.id === serverType);
+  const type = serverTypes
+    .find((entry) => entry.nodeId === nodeId)
+    ?.serverTypes.find((type) => type.id === serverType);
   if (!type || !type.options) return;
 
   function setOption(id: string, value: string) {
@@ -51,7 +56,7 @@ export function StartupTab({
     const newOptions = options;
     newOptions[id] = value;
     writeStartup.mutate(
-      { serverId: serverId, options: newOptions },
+      { serverId: serverId, options: newOptions, nodeId },
       {
         onSuccess: () => refetchOptions(),
       }

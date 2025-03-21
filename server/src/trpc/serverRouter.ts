@@ -11,88 +11,113 @@ import { logsRouter } from "./server/logsRouter";
 import { NodeRouter } from "@tsm/node";
 
 export const serverRouter = router({
-  // power: powerRouter,
+  power: powerRouter,
   // files: serverFilesRouter,
-  // network: networkRouter,
-  // startup: startupRouter,
-  // limits: limitsRouter,
-  // users: usersRouter,
-  // logs: logsRouter,
+  network: networkRouter,
+  startup: startupRouter,
+  limits: limitsRouter,
+  users: usersRouter,
+  logs: logsRouter,
   server: nodeProcedure
     .meta({
-      openapi: { method: "GET", path: "/server/{serverId}", protect: true },
+      openapi: {
+        method: "GET",
+        path: "/server/{nodeId}/{serverId}",
+        protect: true,
+      },
     })
-    .input(z.custom<inferProcedureInput<NodeRouter["server"]["server"]>>())
+    .input(z.object({ serverId: z.string() }))
     .output(z.custom<inferProcedureOutput<NodeRouter["server"]["server"]>>())
     .query(async ({ input, ctx }) => {
-      return await ctx.node.trpc.server.server.query(input);
+      return await ctx.node.trpc.server.server.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
+      });
     }),
-  // status: serverProcedure
-  //   .meta({
-  //     permission: "status",
-  //   })
-  //   .subscription(async function* ({ ctx, input }) {
-  //     if (!ctx.server.containerId) {
-  //       throw new TRPCError({
-  //         code: "BAD_REQUEST",
-  //         message: "Server not installed",
-  //       });
-  //     }
-  //     const result = docker.containerStats(ctx.server.containerId);
-  //     const hasLimitPermission = await hasPermission(
-  //       ctx,
-  //       ctx.user.id,
-  //       ctx.server,
-  //       "limits.read"
-  //     );
-  //     try {
-  //       for await (const part of result) {
-  //         yield {
-  //           cpuUsage: part.cpuUsage,
-  //           cpuAvailable: hasLimitPermission ? ctx.server.cpuLimit : undefined,
-  //           ramUsage: part.ramUsage,
-  //           ramAvailable: hasLimitPermission ? part.ramAvailable : undefined,
-  //         };
-  //       }
-  //     } catch (error) {
-  //       console.error("Error during iteration:", error);
-  //     }
-  //   }),
-  // consoleLogs: serverProcedure
-  //   .meta({
-  //     permission: "console.read",
-  //   })
-  //   .subscription(async function* ({ ctx, input }) {
-  //     if (!ctx.server.containerId) {
-  //       return;
-  //     }
+  status: nodeProcedure
+    .input(z.object({ serverId: z.string() }))
+    .output(z.custom<inferProcedureOutput<NodeRouter["server"]["status"]>>())
+    .subscription(async function* ({ ctx, input }) {
+      const eventQueue: {
+        cpuUsage: number;
+        ramUsage: number;
+        cpuAvailable?: number;
+        ramAvailable?: number;
+      }[] = [];
 
-  //     try {
-  //       const res = await docker.attachToContainer(ctx.server.containerId);
-  //       const asyncIterable = docker.createAsyncIterable(res.data);
+      const subscription = ctx.node.trpc.server.status.subscribe(
+        {
+          serverId: input.serverId,
+          userId: ctx.user.id,
+        },
+        {
+          onData(data) {
+            eventQueue.push(data);
+          },
+        }
+      );
 
-  //       for await (const chunk of asyncIterable) {
-  //         yield chunk.toString() as string;
-  //       }
-  //     } catch (error) {
-  //       console.error("Error connecting to Docker API:", error);
-  //       throw new TRPCError({
-  //         code: "INTERNAL_SERVER_ERROR",
-  //         message: "Failed to connect to Docker API",
-  //       });
-  //     }
-  //   }),
+      try {
+        while (true) {
+          if (eventQueue.length > 0) {
+            const value = eventQueue.shift();
+            if (value !== undefined) yield value;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      } finally {
+        subscription.unsubscribe();
+      }
+    }),
+  consoleLogs: nodeProcedure
+    .input(z.object({ serverId: z.string() }))
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["consoleLogs"]>>()
+    )
+    .subscription(async function* ({ ctx, input }) {
+      const eventQueue: string[] = [];
+
+      const subscription = ctx.node.trpc.server.consoleLogs.subscribe(
+        {
+          serverId: input.serverId,
+          userId: ctx.user.id,
+        },
+        {
+          onData(data) {
+            eventQueue.push(data);
+          },
+        }
+      );
+
+      try {
+        while (true) {
+          if (eventQueue.length > 0) {
+            yield eventQueue.shift() as string;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+      } finally {
+        subscription.unsubscribe();
+      }
+    }),
   run: nodeProcedure
     .meta({
       openapi: {
         method: "POST",
-        path: "/server/{serverId}/run",
+        path: "/server/{nodeId}/{serverId}/run",
         protect: true,
       },
     })
-    .input(z.custom<inferProcedureInput<NodeRouter["server"]["run"]>>())
+    .input(
+      z.custom<
+        Omit<inferProcedureInput<NodeRouter["server"]["run"]>, "userId">
+      >()
+    )
     .output(z.custom<inferProcedureOutput<NodeRouter["server"]["run"]>>())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.node.trpc.server.run.mutate(input);
+      return await ctx.node.trpc.server.run.mutate({
+        ...input,
+        userId: ctx.user.id,
+      });
     }),
 });

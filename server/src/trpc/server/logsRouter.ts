@@ -1,35 +1,29 @@
 import { z } from "zod";
-import { router, serverProcedure } from "../trpc";
+import { nodeProcedure, router } from "../trpc";
+import { inferProcedureOutput } from "@trpc/server";
+import { NodeRouter } from "@tsm/node";
 
 export const logsRouter = router({
-  read: serverProcedure
+  read: nodeProcedure
     .meta({
-      permission: "logs.read",
-      openapi: { method: "GET", path: "/server/{serverId}/logs", protect: true }
+      openapi: {
+        method: "GET",
+        path: "/server/{nodeId}/{serverId}/logs",
+        protect: true,
+      },
     })
-    .input(z.object({}))
-    .output(z.object({
-      date: z.date(),
-      userId: z.string(),
-      serverId: z.string(),
-      log: z.string(),
-      success: z.boolean(),
-      user: z.object({
-        name: z.string()
-      })
-    }).array())
-    .query(async ({ ctx }) => {
-      const logs = await ctx.db.query.Log.findMany({
-        where: (log, { eq }) => eq(log.serverId, ctx.server.id),
-        orderBy: (log, { desc }) => desc(log.date),
-        with: {
-          user: {
-            columns: {
-              name: true
-            }
-          }
-        }
-      })
-      return logs;
+    .input(z.object({ serverId: z.string() }))
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["logs"]["read"]>>()
+    )
+    .query(async ({ ctx, input }) => {
+      const data = await ctx.node.trpc.server.logs.read.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
+      });
+      return data.map((entry) => ({
+        ...entry,
+        date: new Date(entry.date),
+      }));
     }),
 });

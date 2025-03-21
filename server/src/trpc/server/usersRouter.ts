@@ -1,194 +1,83 @@
-import { and, eq, inArray } from "drizzle-orm";
-import { Permission } from "../..";
-import { Permission as PermissionTable } from "../../schema";
-import { hasPermission, log, router, serverProcedure } from "../trpc";
+import { nodeProcedure, router } from "../trpc";
 import { z } from "zod";
+import { inferProcedureInput, inferProcedureOutput } from "@trpc/server";
+import { NodeRouter } from "@tsm/node";
 
 // TODO openapi
 export const usersRouter = router({
-  read: serverProcedure
-    .meta({
-      permission: "users.read",
-    })
+  read: nodeProcedure
+    .meta({})
+    .input(z.object({ serverId: z.string() }))
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["users"]["read"]>>()
+    )
     .query(async ({ ctx, input }) => {
-      const users = await ctx.db.query.User.findMany({
-        with: {
-          permissions: {
-            where: (permission, { eq, or }) =>
-              or(
-                eq(permission.serverId, ctx.server.id),
-                eq(permission.userId, ctx.server.ownerId)
-              ),
-            columns: {
-              permission: true,
-            },
-          },
-        },
+      return await ctx.node.trpc.server.users.read.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
       });
-      const finalUsers = [] as {
-        id: string;
-        name: string;
-        permissions: Permission[];
-        owner: boolean;
-        self: boolean;
-      }[];
-      for (const user of users) {
-        const permissions = user.permissions.map(
-          (permission) => permission.permission
-        ) as Permission[];
-        const owner = user.id === ctx.server.ownerId;
-        if (!permissions.includes("server") && !owner) continue;
-        finalUsers.push({
-          id: user.id,
-          name: user.name,
-          permissions,
-          owner,
-          self: user.id === ctx.user.id,
-        });
-      }
-      return finalUsers;
     }),
-  writePermissions: serverProcedure
-    .meta({
-      permission: "users.write",
-    })
+  writePermissions: nodeProcedure
+    .meta({})
     .input(
-      z.object({
-        userId: z.string(),
-        addPermissions: z.string().array(),
-        removePermissions: z.string().array(),
-      })
+      z.custom<
+        Omit<
+          inferProcedureInput<
+            NodeRouter["server"]["users"]["writePermissions"]
+          >,
+          "userId"
+        >
+      >()
+    )
+    .output(
+      z.custom<
+        inferProcedureOutput<NodeRouter["server"]["users"]["writePermissions"]>
+      >()
     )
     .mutation(async ({ ctx, input }) => {
-      const addPermissions = [] as string[];
-      const removePermissions = [] as string[];
-
-      for (const permission of input.addPermissions) {
-        let canAdd = ctx.user.id === ctx.server.ownerId;
-        if (!canAdd) {
-          canAdd = await hasPermission(
-            ctx,
-            ctx.user.id,
-            ctx.server,
-            permission
-          );
-        }
-        if (canAdd) {
-          addPermissions.push(permission);
-        }
-      }
-
-      for (const permission of input.removePermissions) {
-        let canRemove = ctx.user.id === ctx.server.ownerId;
-        if (!canRemove) {
-          canRemove = await hasPermission(
-            ctx,
-            ctx.user.id,
-            ctx.server,
-            permission
-          );
-        }
-        if (canRemove) {
-          removePermissions.push(permission);
-        }
-      }
-
-      if (addPermissions.length > 0) {
-        await ctx.db
-          .insert(PermissionTable)
-          .values(
-            addPermissions.map((permission) => ({
-              userId: input.userId,
-              serverId: ctx.server.id,
-              permission,
-            }))
-          )
-          .onConflictDoNothing();
-      }
-
-      await ctx.db
-        .delete(PermissionTable)
-        .where(
-          and(
-            eq(PermissionTable.serverId, ctx.server.id),
-            eq(PermissionTable.userId, input.userId),
-            inArray(PermissionTable.permission, removePermissions)
-          )
-        );
-      const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId),
+      return await ctx.node.trpc.server.users.writePermissions.mutate({
+        ...input,
+        userId: ctx.user.id,
       });
-
-      const addedPermissions =
-        addPermissions.length > 0 ? `Add ${addPermissions.join(", ")} ` : "";
-      const removedPermissions =
-        removePermissions.length > 0
-          ? `Remove ${removePermissions.join(", ")}`
-          : "";
-
-      if (user) {
-        await log(
-          `Update permissions of user ${user.name}: ${addedPermissions}${removedPermissions}`,
-          true,
-          ctx
-        );
-      } else {
-        await log(
-          `Update permissions of user ${input.userId}: ${addedPermissions}${removedPermissions}`,
-          true,
-          ctx
-        );
-      }
     }),
-  addUser: serverProcedure
-    .meta({
-      permission: "users.write",
-    })
+  addUser: nodeProcedure
+    .meta({})
     .input(
-      z.object({
-        userId: z.string(),
-      })
+      z.custom<
+        Omit<
+          inferProcedureInput<NodeRouter["server"]["users"]["addUser"]>,
+          "userId"
+        >
+      >()
+    )
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["users"]["addUser"]>>()
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(PermissionTable).values({
-        userId: input.userId,
-        serverId: ctx.server.id,
-        permission: "server",
+      return await ctx.node.trpc.server.users.addUser.mutate({
+        ...input,
+        userId: ctx.user.id,
       });
-      const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId),
-      });
-      if (user) {
-        await log(`Added user ${user.name} to server`, true, ctx);
-      } else {
-        await log(`Added user ${input.userId} to server`, true, ctx);
-      }
     }),
-  deleteUser: serverProcedure
-    .meta({
-      permission: "users.write",
-    })
+  deleteUser: nodeProcedure
+    .meta({})
     .input(
-      z.object({
-        userId: z.string(),
-      })
+      z.custom<
+        Omit<
+          inferProcedureInput<NodeRouter["server"]["users"]["deleteUser"]>,
+          "userId"
+        >
+      >()
+    )
+    .output(
+      z.custom<
+        inferProcedureOutput<NodeRouter["server"]["users"]["deleteUser"]>
+      >()
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db
-        .delete(PermissionTable)
-        .where(
-          and(
-            eq(PermissionTable.userId, input.userId),
-            eq(PermissionTable.serverId, ctx.server.id)
-          )
-        );
-      const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId),
+      return await ctx.node.trpc.server.users.deleteUser.mutate({
+        ...input,
+        userId: ctx.user.id,
       });
-      if (user) {
-        await log(`Removed user ${user.name} from server`, true, ctx);
-      } else {
-        await log(`Removed user ${input.userId} from server`, true, ctx);
-      }
     }),
 });

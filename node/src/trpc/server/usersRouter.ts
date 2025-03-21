@@ -54,7 +54,7 @@ export const usersRouter = router({
     })
     .input(
       z.object({
-        userId: z.string(),
+        editUserId: z.string(),
         addPermissions: z.string().array(),
         removePermissions: z.string().array(),
       })
@@ -98,7 +98,7 @@ export const usersRouter = router({
           .insert(PermissionTable)
           .values(
             addPermissions.map((permission) => ({
-              userId: input.userId,
+              userId: input.editUserId,
               serverId: ctx.server.id,
               permission,
             }))
@@ -111,12 +111,12 @@ export const usersRouter = router({
         .where(
           and(
             eq(PermissionTable.serverId, ctx.server.id),
-            eq(PermissionTable.userId, input.userId),
+            eq(PermissionTable.userId, input.editUserId),
             inArray(PermissionTable.permission, removePermissions)
           )
         );
       const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId),
+        where: (user, { eq }) => eq(user.id, input.editUserId),
       });
 
       const addedPermissions =
@@ -135,7 +135,7 @@ export const usersRouter = router({
         );
       } else {
         await log(
-          `Update permissions of user ${input.userId}: ${addedPermissions}${removedPermissions}`,
+          `Update permissions of user ${input.editUserId}: ${addedPermissions}${removedPermissions}`,
           true,
           input.userId,
           ctx
@@ -148,23 +148,23 @@ export const usersRouter = router({
     })
     .input(
       z.object({
-        userId: z.string(),
+        newUserId: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.db.insert(PermissionTable).values({
-        userId: input.userId,
+        userId: input.newUserId,
         serverId: ctx.server.id,
         permission: "server",
       });
       const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId),
+        where: (user, { eq }) => eq(user.id, input.newUserId),
       });
       if (user) {
         await log(`Added user ${user.name} to server`, true, input.userId, ctx);
       } else {
         await log(
-          `Added user ${input.userId} to server`,
+          `Added user ${input.newUserId} to server`,
           true,
           input.userId,
           ctx
@@ -177,7 +177,7 @@ export const usersRouter = router({
     })
     .input(
       z.object({
-        userId: z.string(),
+        deleteUserId: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -185,12 +185,12 @@ export const usersRouter = router({
         .delete(PermissionTable)
         .where(
           and(
-            eq(PermissionTable.userId, input.userId),
+            eq(PermissionTable.userId, input.deleteUserId),
             eq(PermissionTable.serverId, ctx.server.id)
           )
         );
       const user = await ctx.db.query.User.findFirst({
-        where: (user, { eq }) => eq(user.id, input.userId),
+        where: (user, { eq }) => eq(user.id, input.deleteUserId),
       });
       if (user) {
         await log(
@@ -201,7 +201,7 @@ export const usersRouter = router({
         );
       } else {
         await log(
-          `Removed user ${input.userId} from server`,
+          `Removed user ${input.deleteUserId} from server`,
           true,
           input.userId,
           ctx

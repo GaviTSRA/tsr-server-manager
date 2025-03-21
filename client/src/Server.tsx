@@ -32,13 +32,14 @@ import { LogsTab } from "./tabs/LogsTab";
 import { MinecraftPlayersTab } from "./tabs/custom/MinecraftPlayersTab";
 
 export function Server() {
-  const { serverId, tab } = useParams() as {
+  const { nodeId, serverId, tab } = useParams() as {
     serverId: string;
+    nodeId: string;
     tab: "Console" | "Files" | "Network" | "Startup" | "Limits";
   };
   const [queryEnabled, setQueryEnabled] = useState(true);
   const { data: server, error } = trpc.server.server.useQuery(
-    { serverId },
+    { nodeId, serverId },
     {
       enabled: serverId !== undefined && queryEnabled,
       retry: 1,
@@ -52,14 +53,16 @@ export function Server() {
 
   useEffect(() => {
     if (server && server.type && serverTypes) {
-      const type = serverTypes.find((type) => type.id === server.type);
+      const type = serverTypes
+        .find((type) => type.nodeId === nodeId)
+        ?.serverTypes.find((type) => type.id === server.type);
       if (type && type.tabs) {
         setCustomTabs(type.tabs);
       } else {
         setCustomTabs([]);
       }
     }
-  }, [server, serverTypes]);
+  }, [server, serverTypes, nodeId]);
 
   useEffect(() => {
     if (error) {
@@ -163,7 +166,7 @@ export function Server() {
     reset: resetStats,
     error: statsError,
   } = trpc.server.status.useSubscription(
-    { serverId },
+    { serverId, nodeId },
     {
       onError: (err) => {
         console.error(err);
@@ -172,7 +175,7 @@ export function Server() {
   );
   const { reset: resetLogs, error: logsError } =
     trpc.server.consoleLogs.useSubscription(
-      { serverId },
+      { serverId, nodeId },
       {
         onData: (data) => {
           setLogs((prev) => {
@@ -216,6 +219,7 @@ export function Server() {
             statsError={statsError}
             logs={logs}
             logsError={logsError}
+            nodeId={nodeId}
           />
         ),
       },
@@ -223,37 +227,43 @@ export function Server() {
         id: "files",
         title: "Files",
         icon: <File />,
-        tab: <FilesTab serverId={serverId} />,
+        tab: <FilesTab serverId={serverId} nodeId={nodeId} />,
       },
       {
         id: "network",
         title: "Network",
         icon: <ServerIcon />,
-        tab: <NetworkTab serverId={serverId} />,
+        tab: <NetworkTab serverId={serverId} nodeId={nodeId} />,
       },
       {
         id: "startup",
         title: "Startup",
         icon: <PlayCircle />,
-        tab: <StartupTab serverId={serverId} serverType={server?.type} />,
+        tab: (
+          <StartupTab
+            serverId={serverId}
+            serverType={server?.type}
+            nodeId={nodeId}
+          />
+        ),
       },
       {
         id: "limits",
         title: "Limits",
         icon: <Cpu />,
-        tab: <LimitsTab serverId={serverId} />,
+        tab: <LimitsTab serverId={serverId} nodeId={nodeId} />,
       },
       {
         id: "users",
         title: "Users",
         icon: <Users />,
-        tab: <UsersTab serverId={serverId} />,
+        tab: <UsersTab serverId={serverId} nodeId={nodeId} />,
       },
       {
         id: "logs",
         title: "Logs",
         icon: <Book />,
-        tab: <LogsTab serverId={serverId} />,
+        tab: <LogsTab serverId={serverId} nodeId={nodeId} />,
       },
       {
         id: "mc-players",
@@ -327,7 +337,7 @@ export function Server() {
                 }
                 onClick={() => {
                   if (startButtonEnabled) {
-                    startServer.mutate({ serverId });
+                    startServer.mutate({ serverId, nodeId });
                   }
                 }}
               />
@@ -341,7 +351,7 @@ export function Server() {
                 }
                 onClick={() => {
                   if (restartButtonEnabled) {
-                    restartServer.mutate({ serverId });
+                    restartServer.mutate({ serverId, nodeId });
                   }
                 }}
               />
@@ -355,7 +365,7 @@ export function Server() {
                 }
                 onClick={() => {
                   if (stopButtonEnabled) {
-                    stopServer.mutate({ serverId });
+                    stopServer.mutate({ serverId, nodeId });
                   }
                 }}
               />
@@ -369,7 +379,7 @@ export function Server() {
                 }
                 onClick={() => {
                   if (killButtonEnabled) {
-                    killServer.mutate({ serverId });
+                    killServer.mutate({ serverId, nodeId });
                   }
                 }}
               />
@@ -386,7 +396,7 @@ export function Server() {
                       ? "bg-neutral-100 border-l-primary-100"
                       : "bg-neutral-200 hover:bg-neutral-300")
                   }
-                  to={`/server/${serverId}/${data.id}`}
+                  to={`/server/${nodeId}/${serverId}/${data.id}`}
                   key={data.id}
                 >
                   <div className="mx-auto flex flex-row gap-2">

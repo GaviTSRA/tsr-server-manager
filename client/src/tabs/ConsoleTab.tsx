@@ -14,6 +14,7 @@ export function ConsoleTab({
   statsError,
   logs,
   logsError,
+  nodeId,
 }: {
   serverId: string;
   stats: {
@@ -25,6 +26,7 @@ export function ConsoleTab({
   statsError: ErrorType | null;
   logs: string[];
   logsError: ErrorType | null;
+  nodeId: string;
 }) {
   const ansiConverter = new AnsiToHtml();
   const consoleRef = useRef(null as HTMLDivElement | null);
@@ -82,7 +84,7 @@ export function ConsoleTab({
     if (event.key === "Enter") {
       event.preventDefault();
       runCommand.mutate(
-        { command, serverId },
+        { command, serverId, nodeId },
         {
           onSuccess: () => setCommand(""),
         }

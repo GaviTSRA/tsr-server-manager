@@ -24,6 +24,7 @@ import {
   TRPCClient,
   unstable_httpSubscriptionLink,
 } from "@trpc/client";
+import { EventSourcePolyfill } from "event-source-polyfill";
 
 export type { AppRouter } from "./trpc/router";
 export type { Permission, ServerType } from "@tsm/node";
@@ -49,11 +50,12 @@ for (const registeredNode of registeredNodes) {
         condition: (op) => op.type === "subscription",
         true: unstable_httpSubscriptionLink({
           url: registeredNode.url,
-          connectionParams: () => {
+          EventSource: EventSourcePolyfill,
+          eventSourceOptions: async ({ op }) => {
             // TODO auth
-            // const token = localStorage.getItem("authToken");
-            // return { token: token ?? undefined };
-            return {};
+            return {
+              headers: {},
+            };
           },
         }),
         false: splitLink({
