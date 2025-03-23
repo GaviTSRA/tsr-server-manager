@@ -15,6 +15,7 @@ import { userRouter } from "./userRouter";
 import { NodeRouter } from "@tsm/node";
 import { nodes } from "..";
 import { nodeRouter } from "./nodeRouter";
+import { handleNodeError } from "../nodes";
 
 export const appRouter = router({
   user: userRouter,
@@ -33,23 +34,24 @@ export const appRouter = router({
         .array()
     )
     .query(async ({ ctx }) => {
-      try {
-        const result = [];
-        for (const node of Object.values(nodes)) {
-          const servers = await node.trpc.servers.query({
+      const result = [];
+      for (const node of Object.values(nodes)) {
+        let servers;
+        try {
+          servers = await node.trpc.servers.query({
             userId: ctx.user.id,
           });
-          result.push({
-            nodeId: node.id,
-            nodeName: node.name,
-            servers,
-          });
+        } catch (err) {
+          await handleNodeError(node, err);
+          continue;
         }
-        return result;
-      } catch (err) {
-        console.error("router.servers ERROR:", err);
-        throw err;
+        result.push({
+          nodeId: node.id,
+          nodeName: node.name,
+          servers,
+        });
       }
+      return result;
     }),
   serverTypes: publicProcedure
     .meta({ openapi: { method: "GET", path: "/serverTypes", protect: false } })
@@ -65,21 +67,22 @@ export const appRouter = router({
         .array()
     )
     .query(async ({ input }) => {
-      try {
-        const result = [];
-        for (const node of Object.values(nodes)) {
-          const serverTypes = await node.trpc.serverTypes.query(input);
-          result.push({
-            nodeId: node.id,
-            nodeName: node.name,
-            serverTypes,
-          });
+      const result = [];
+      for (const node of Object.values(nodes)) {
+        let serverTypes;
+        try {
+          serverTypes = await node.trpc.serverTypes.query(input);
+        } catch (err) {
+          await handleNodeError(node, err);
+          continue;
         }
-        return result;
-      } catch (err) {
-        console.error("router.serverTypes ERROR:", err);
-        throw err;
+        result.push({
+          nodeId: node.id,
+          nodeName: node.name,
+          serverTypes,
+        });
       }
+      return result;
     }),
   createServer: nodeProcedure
     .meta({ openapi: { method: "POST", path: "/createServer", protect: true } })
@@ -91,22 +94,21 @@ export const appRouter = router({
     )
     .output(z.custom<inferProcedureOutput<NodeRouter["createServer"]>>())
     .mutation(async ({ input, ctx }) => {
-      try {
-        if (!ctx.user.canCreateServers) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "User can't create servers",
-          });
-        }
+      if (!ctx.user.canCreateServers) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "User can't create servers",
+        });
+      }
 
+      try {
         return await ctx.node.trpc.createServer.mutate({
           name: input.name,
           type: input.type,
           userId: ctx.user.id,
         });
       } catch (err) {
-        console.error("router.createServer ERROR:", err);
-        throw err;
+        throw await handleNodeError(ctx.node, err);
       }
     }),
 });

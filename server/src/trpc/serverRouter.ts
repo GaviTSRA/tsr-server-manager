@@ -9,6 +9,7 @@ import { powerRouter } from "./server/powerRouter";
 import { usersRouter } from "./server/usersRouter";
 import { logsRouter } from "./server/logsRouter";
 import { NodeRouter } from "@tsm/node";
+import { handleNodeError } from "../nodes";
 
 export const serverRouter = router({
   power: powerRouter,
@@ -29,10 +30,14 @@ export const serverRouter = router({
     .input(z.object({ serverId: z.string() }))
     .output(z.custom<inferProcedureOutput<NodeRouter["server"]["server"]>>())
     .query(async ({ input, ctx }) => {
-      return await ctx.node.trpc.server.server.query({
-        serverId: input.serverId,
-        userId: ctx.user.id,
-      });
+      try {
+        return await ctx.node.trpc.server.server.query({
+          serverId: input.serverId,
+          userId: ctx.user.id,
+        });
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
+      }
     }),
   status: nodeProcedure
     .input(z.object({ serverId: z.string() }))
@@ -45,17 +50,23 @@ export const serverRouter = router({
         ramAvailable?: number;
       }[] = [];
 
-      const subscription = ctx.node.trpc.server.status.subscribe(
-        {
-          serverId: input.serverId,
-          userId: ctx.user.id,
-        },
-        {
-          onData(data) {
-            eventQueue.push(data);
+      let subscription;
+
+      try {
+        subscription = ctx.node.trpc.server.status.subscribe(
+          {
+            serverId: input.serverId,
+            userId: ctx.user.id,
           },
-        }
-      );
+          {
+            onData(data) {
+              eventQueue.push(data);
+            },
+          }
+        );
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
+      }
 
       try {
         while (true) {
@@ -65,8 +76,12 @@ export const serverRouter = router({
           }
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
       } finally {
-        subscription.unsubscribe();
+        try {
+          subscription.unsubscribe();
+        } catch (err) {}
       }
     }),
   consoleLogs: nodeProcedure
@@ -77,17 +92,22 @@ export const serverRouter = router({
     .subscription(async function* ({ ctx, input }) {
       const eventQueue: string[] = [];
 
-      const subscription = ctx.node.trpc.server.consoleLogs.subscribe(
-        {
-          serverId: input.serverId,
-          userId: ctx.user.id,
-        },
-        {
-          onData(data) {
-            eventQueue.push(data);
+      let subscription;
+      try {
+        subscription = ctx.node.trpc.server.consoleLogs.subscribe(
+          {
+            serverId: input.serverId,
+            userId: ctx.user.id,
           },
-        }
-      );
+          {
+            onData(data) {
+              eventQueue.push(data);
+            },
+          }
+        );
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
+      }
 
       try {
         while (true) {
@@ -96,8 +116,12 @@ export const serverRouter = router({
           }
           await new Promise((resolve) => setTimeout(resolve, 10));
         }
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
       } finally {
-        subscription.unsubscribe();
+        try {
+          subscription.unsubscribe();
+        } catch (err) {}
       }
     }),
   run: nodeProcedure
@@ -115,9 +139,13 @@ export const serverRouter = router({
     )
     .output(z.custom<inferProcedureOutput<NodeRouter["server"]["run"]>>())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.node.trpc.server.run.mutate({
-        ...input,
-        userId: ctx.user.id,
-      });
+      try {
+        return await ctx.node.trpc.server.run.mutate({
+          ...input,
+          userId: ctx.user.id,
+        });
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
+      }
     }),
 });

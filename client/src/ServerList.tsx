@@ -160,7 +160,7 @@ function ServerList() {
   });
 
   const { data: serverTypes } = trpc.serverTypes.useQuery();
-  const { data: nodes } = trpc.node.list.useQuery();
+  const { data: nodes } = trpc.node.list.useQuery({ connected: true });
 
   if (error && error.data?.code === "UNAUTHORIZED") {
     return <Navigate to="/login" />;
@@ -205,7 +205,7 @@ function ServerList() {
                   }
                 >
                   <div className="flex flex-col">
-                    <p className="text-xl mb-2">{server.name}</p>
+                    <p className="text-xl mb-2 gap-2">{server.name}</p>
                     {serverTypes && (
                       <ServerTypeDisplay
                         type={server.type}
@@ -216,6 +216,7 @@ function ServerList() {
                         }
                       />
                     )}
+                    <p>{node.nodeName}</p>
                   </div>
 
                   <div className="ml-auto flex items-center mr-2">

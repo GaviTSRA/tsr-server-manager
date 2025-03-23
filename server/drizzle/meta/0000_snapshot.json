@@ -1,5 +1,5 @@
 {
-  "id": "207241c3-ee79-4c68-9171-1accae13613c",
+  "id": "098c2e5f-3519-4596-ac4c-9e31f0a93739",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -15,15 +15,28 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "url": {
           "name": "url",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "name": {
-          "name": "name",
+        "password": {
+          "name": "password",
           "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "NodeState",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         }
@@ -84,7 +97,18 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.NodeState": {
+      "name": "NodeState",
+      "schema": "public",
+      "values": [
+        "CONNECTION_ERROR",
+        "AUTHENTICATION_ERROR",
+        "SYNC_ERROR",
+        "CONNECTED"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

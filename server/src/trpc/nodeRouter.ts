@@ -1,30 +1,39 @@
 import { authedProcedure, router } from "./trpc";
 import { z } from "zod";
 
-const SECRET_KEY = process.env.SECRET_KEY;
-if (!SECRET_KEY) {
-  throw new Error("SECRET_KEY is not set");
-}
-
 export const nodeRouter = router({
   list: authedProcedure
     .meta({ openapi: { method: "GET", path: "/nodes/list", protect: true } })
-    .input(z.void())
+    .input(
+      z.object({
+        connected: z.boolean(),
+      })
+    )
     .output(
       z
         .object({
           id: z.string(),
           name: z.string(),
           url: z.string(),
+          state: z.enum([
+            "CONNECTION_ERROR",
+            "AUTHENTICATION_ERROR",
+            "SYNC_ERROR",
+            "CONNECTED",
+          ]),
         })
         .array()
     )
-    .query(({ ctx }) => {
+    .query(({ ctx, input }) => {
       return ctx.db.query.Node.findMany({
+        where: input.connected
+          ? (Node, { eq }) => eq(Node.state, "CONNECTED")
+          : undefined,
         columns: {
           id: true,
           name: true,
           url: true,
+          state: true,
         },
       });
     }),

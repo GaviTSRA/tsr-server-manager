@@ -6,6 +6,12 @@ import { serverRouter } from "./serverRouter";
 import * as schema from "../schema";
 import * as docker from "../docker";
 import { serverTypes } from "..";
+import jwt from "jsonwebtoken";
+
+const PASSWORD = process.env.PASSWORD;
+if (!PASSWORD) {
+  throw new Error("PASSWORD is not set");
+}
 
 type ServerStatus = {
   id: string;
@@ -24,6 +30,22 @@ type ServerStatus = {
 
 export const nodeRouter = router({
   server: serverRouter,
+  ping: publicProcedure.query(async ({ ctx }) => {
+    return { pong: true };
+  }),
+  authenticate: publicProcedure
+    .input(z.object({ password: z.string() }))
+    .output(z.string())
+    .mutation(async ({ input }) => {
+      if (input.password !== PASSWORD) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "NODE_UNAUTHORIZED",
+        });
+      }
+      const token = jwt.sign({ authenticated: true }, PASSWORD);
+      return token;
+    }),
   syncUsers: authedProcedure
     .input(schema.UserSchema.array())
     .mutation(async ({ ctx, input }) => {

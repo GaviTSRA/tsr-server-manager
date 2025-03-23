@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import jwt from "jsonwebtoken";
-import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
+import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { OpenApiMeta } from "trpc-to-openapi";
 import { nodes } from "..";
 import { z } from "zod";
@@ -15,7 +15,7 @@ if (!SECRET_KEY) {
 export const createContext = async ({
   req,
   info,
-}: CreateHTTPContextOptions) => {
+}: CreateExpressContextOptions) => {
   let token = null;
   if (req.headers.authorization) {
     token = req.headers.authorization.split(" ")[1];

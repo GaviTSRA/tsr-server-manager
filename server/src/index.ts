@@ -14,86 +14,23 @@ import {
   createOpenApiExpressMiddleware,
   generateOpenApiDocument,
 } from "trpc-to-openapi";
-import type { NodeRouter } from "@tsm/node";
-import {
-  createTRPCClient,
-  httpBatchLink,
-  httpLink,
-  isNonJsonSerializable,
-  splitLink,
-  TRPCClient,
-  unstable_httpSubscriptionLink,
-} from "@trpc/client";
-import { EventSourcePolyfill } from "event-source-polyfill";
+import { ConnectedNode, registerNode } from "./nodes";
+import { EventSource } from "eventsource";
+
+if (typeof global !== "undefined") {
+  // @ts-expect-error EventSource polyfill
+  global.EventSource = EventSource;
+}
 
 export type { AppRouter } from "./trpc/router";
 export type { Permission, ServerType } from "@tsm/node";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
-
-type ConnectedNode = {
-  id: string;
-  name: string;
-  trpc: TRPCClient<NodeRouter>;
-};
-
-const users = await db.query.User.findMany();
-
 export const nodes: { [id: string]: ConnectedNode } = {};
-const registeredNodes = await db.query.Node.findMany();
-for (const registeredNode of registeredNodes) {
-  // TODO node auth
-  const client = createTRPCClient<NodeRouter>({
-    links: [
-      splitLink({
-        // uses the httpSubscriptionLink for subscriptions
-        condition: (op) => op.type === "subscription",
-        true: unstable_httpSubscriptionLink({
-          url: registeredNode.url,
-          EventSource: EventSourcePolyfill,
-          eventSourceOptions: async ({ op }) => {
-            // TODO auth
-            return {
-              headers: {},
-            };
-          },
-        }),
-        false: splitLink({
-          condition: (op) => isNonJsonSerializable(op.input),
-          true: httpLink({
-            url: registeredNode.url,
-            headers: () => {
-              return {};
-              // TODO auth
-              // const token = localStorage.getItem("authToken");
-              // return {
-              //   Authorization: token ? `Bearer ${token}` : undefined,
-              // };
-            },
-          }),
-          false: httpBatchLink({
-            url: registeredNode.url,
-            headers: () => {
-              // TODO auth
-              return {};
-              // const token = localStorage.getItem("authToken");
-              // return {
-              //   Authorization: token ? `Bearer ${token}` : undefined,
-              // };
-            },
-          }),
-        }),
-      }),
-    ],
-  });
 
-  await client.syncUsers.mutate(users);
-
-  nodes[registeredNode.id] = {
-    id: registeredNode.id,
-    name: registeredNode.name,
-    trpc: client,
-  };
+const dbNodes = await db.query.Node.findMany();
+for (const node of dbNodes) {
+  await registerNode(node);
 }
 
 // TODO

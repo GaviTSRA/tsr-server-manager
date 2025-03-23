@@ -273,7 +273,7 @@ export function Server() {
         custom: true,
       },
     ],
-    [server, serverId, stats, statsError, logs, logsError]
+    [server, serverId, stats, statsError, logs, logsError, nodeId]
   );
 
   const selectedTab = useMemo(

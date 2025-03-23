@@ -6,17 +6,29 @@ import {
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import { z } from "zod";
+import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { Permission } from "..";
+import jwt from "jsonwebtoken";
 
-const SECRET_KEY = process.env.SECRET_KEY;
-if (!SECRET_KEY) {
-  throw new Error("SECRET_KEY is not set");
+const PASSWORD = process.env.PASSWORD;
+if (!PASSWORD) {
+  throw new Error("PASSWORD is not set");
 }
 
-export const createContext = async () => {
+export const createContext = async ({
+  req,
+  info,
+}: CreateExpressContextOptions) => {
+  let token = null;
+  if (req.headers.authorization) {
+    token = req.headers.authorization.split(" ")[1];
+  } else if (info.connectionParams && info.connectionParams.token) {
+    token = info.connectionParams.token;
+  }
   const db = drizzle(process.env.DATABASE_URL!, { schema });
   return {
     db,
+    token,
   };
 };
 export type Context = Awaited<ReturnType<typeof createContext>>;
@@ -43,8 +55,23 @@ export const t = initTRPC
 export const router = t.router;
 export const publicProcedure = t.procedure;
 export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
-  // TODO panel auth
-  return next();
+  if (!ctx.token) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "No token provided",
+    });
+  }
+  try {
+    const res = jwt.verify(ctx.token, PASSWORD) as {
+      id: string;
+    };
+    return next();
+  } catch (e) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Failed to authenticate token",
+    });
+  }
 });
 export const serverProcedure = authedProcedure
   .input(z.object({ userId: z.string(), serverId: z.string() }))
