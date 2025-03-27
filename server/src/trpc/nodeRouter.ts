@@ -1,7 +1,22 @@
+import { eq } from "drizzle-orm";
 import { authedProcedure, router } from "./trpc";
 import { z } from "zod";
+import { Node } from "../schema";
 
 export const nodeRouter = router({
+  edit: authedProcedure
+    .meta({ openapi: { method: "POST", path: "/nodes/edit", protect: true } })
+    .input(
+      z.object({
+        nodeId: z.string(),
+        name: z.string().optional(),
+        url: z.string().optional(),
+        password: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.update(Node).set(input).where(eq(Node.id, input.nodeId));
+    }),
   list: authedProcedure
     .meta({ openapi: { method: "GET", path: "/nodes/list", protect: true } })
     .input(
@@ -35,6 +50,7 @@ export const nodeRouter = router({
           url: true,
           state: true,
         },
+        orderBy: (Node, { asc }) => asc(Node.name),
       });
     }),
 });

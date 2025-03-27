@@ -8,10 +8,10 @@ import {
 } from "react-feather";
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { Dropdown } from "./components/Dropdown";
-import { Input } from "./components/Input";
+import { Dropdown } from "../components/Dropdown";
+import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
-import { trpc } from "./main";
+import { trpc } from "../main";
 import { AppRouter, ServerType } from "@tsm/server";
 import { inferProcedureOutput } from "@trpc/server";
 
@@ -147,7 +147,7 @@ function CreateServerModal({
   );
 }
 
-function ServerList() {
+export default function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
   const navigate = useNavigate();
 
@@ -167,10 +167,7 @@ function ServerList() {
   }
 
   return (
-    <div className="w-full h-full bg-neutral-100 text-primary-text">
-      <div className="w-full bg-neutral-200 flex items-center">
-        <p className="p-4 my-auto text-2xl">TSR Server Manager</p>
-      </div>
+    <div>
       <div className="flex flex-col m-4 gap-4">
         {servers &&
           servers.map((node) => {
@@ -247,5 +244,3 @@ function ServerList() {
     </div>
   );
 }
-
-export default ServerList;

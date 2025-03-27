@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import ServerList from "./ServerList";
+import MainPage from "./MainPage";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Server } from "./Server";
@@ -16,12 +16,26 @@ import {
 import { inferRouterOutputs } from "@trpc/server";
 import { unstable_httpSubscriptionLink } from "@trpc/react-query";
 import { Login } from "./Login";
+import ServerList from "./components/ServerList";
+import NodeList from "./components/NodeList";
+import ErrorPage from "./components/ErrorPage";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <ServerList />,
+    element: <MainPage />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/",
+        element: <ServerList />,
+      },
+      {
+        path: "/nodes",
+        element: <NodeList />,
+      },
+    ],
   },
   {
     path: "/server/:nodeId/:serverId/:tab",

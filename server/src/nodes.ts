@@ -23,35 +23,33 @@ export type ConnectedNode = {
   trpc: TRPCClient<NodeRouter>;
 };
 
-export async function registerNode(node: NodeType) {
-  const users = await db.query.User.findMany();
-
-  const client = createTRPCClient<NodeRouter>({
+function getNodeClient(id: string, url: string) {
+  return createTRPCClient<NodeRouter>({
     links: [
       splitLink({
         condition: (op) => op.type === "subscription",
         true: unstable_httpSubscriptionLink({
-          url: node.url,
+          url,
           connectionParams: async () => {
-            const token = nodes[node.id] ? nodes[node.id].token : undefined;
+            const token = nodes[id] ? nodes[id].token : undefined;
             return { token };
           },
         }),
         false: splitLink({
           condition: (op) => isNonJsonSerializable(op.input),
           true: httpLink({
-            url: node.url,
+            url,
             headers: () => {
-              const token = nodes[node.id] ? nodes[node.id].token : undefined;
+              const token = nodes[id] ? nodes[id].token : undefined;
               return {
                 Authorization: `Bearer ${token}`,
               };
             },
           }),
           false: httpBatchLink({
-            url: node.url,
+            url,
             headers: () => {
-              const token = nodes[node.id] ? nodes[node.id].token : undefined;
+              const token = nodes[id] ? nodes[id].token : undefined;
               return {
                 Authorization: `Bearer ${token}`,
               };
@@ -61,13 +59,17 @@ export async function registerNode(node: NodeType) {
       }),
     ],
   });
+}
+
+export async function registerNode(node: NodeType) {
+  const users = await db.query.User.findMany();
 
   nodes[node.id] = {
     id: node.id,
     name: node.name,
     token: undefined,
     usersSynced: false,
-    trpc: client,
+    trpc: getNodeClient(node.id, node.url),
   };
 
   setInterval(async () => {
@@ -77,7 +79,7 @@ export async function registerNode(node: NodeType) {
           where: (Node, { eq }) => eq(Node.id, node.id),
           columns: { password: true },
         });
-        const token = await client.authenticate.mutate({
+        const token = await nodes[node.id].trpc.authenticate.mutate({
           password: dbNode?.password ?? node.password,
         });
         nodes[node.id].token = token;
@@ -89,7 +91,7 @@ export async function registerNode(node: NodeType) {
 
     if (!nodes[node.id].usersSynced) {
       try {
-        await client.syncUsers.mutate(users);
+        await nodes[node.id].trpc.syncUsers.mutate(users);
         nodes[node.id].usersSynced = true;
       } catch (err) {
         await db
@@ -102,7 +104,7 @@ export async function registerNode(node: NodeType) {
     }
 
     try {
-      await client.ping.query();
+      await nodes[node.id].trpc.ping.query();
       await db
         .update(schema.Node)
         .set({ state: "CONNECTED" })
@@ -123,7 +125,19 @@ export async function handleNodeError(node: ConnectedNode, error: any) {
         await db
           .update(schema.Node)
           .set({ state: "CONNECTION_ERROR" })
-          .where(eq(schema.Node.id, node.id));
+          .where(eq(schema.Node.id, node.id))
+          .returning();
+        const data = await db.query.Node.findFirst({
+          where: (Node, { eq }) => eq(Node.id, node.id),
+          columns: { url: true },
+        });
+        nodes[node.id] = {
+          id: node.id,
+          name: node.name,
+          token: undefined,
+          usersSynced: false,
+          trpc: getNodeClient(node.id, data?.url ?? ""),
+        };
         break;
       case "NODE_UNAUTHORIZED":
         errorHandled = true;
@@ -131,13 +145,8 @@ export async function handleNodeError(node: ConnectedNode, error: any) {
           .update(schema.Node)
           .set({ state: "AUTHENTICATION_ERROR" })
           .where(eq(schema.Node.id, node.id));
-        nodes[node.id] = {
-          id: node.id,
-          name: node.name,
-          token: undefined,
-          usersSynced: false,
-          trpc: node.trpc,
-        };
+        nodes[node.id].token = undefined;
+        nodes[node.id].usersSynced = false;
         break;
     }
   }
