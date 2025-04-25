@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import fs from "fs";
 import { emitLogEvent, emitPowerEvent } from "../../events";
 import { z } from "zod";
+import { watchStats } from "../../stats";
 
 export const powerRouter = router({
   start: serverProcedure
@@ -93,6 +94,8 @@ export const powerRouter = router({
           await emitLogEvent(ctx.server.id, log, ctx.server.type);
         });
       }
+
+      watchStats(ctx.server.id, containerId, ctx.server.cpuLimit);
 
       return result;
     }),

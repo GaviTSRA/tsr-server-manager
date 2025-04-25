@@ -42,47 +42,11 @@ export const serverRouter = router({
   status: nodeProcedure
     .input(z.object({ serverId: z.string() }))
     .output(z.custom<inferProcedureOutput<NodeRouter["server"]["status"]>>())
-    .subscription(async function* ({ ctx, input }) {
-      const eventQueue: {
-        cpuUsage: number;
-        ramUsage: number;
-        cpuAvailable?: number;
-        ramAvailable?: number;
-      }[] = [];
-
-      let subscription;
-
-      try {
-        subscription = ctx.node.trpc.server.status.subscribe(
-          {
-            serverId: input.serverId,
-            userId: ctx.user.id,
-          },
-          {
-            onData(data) {
-              eventQueue.push(data);
-            },
-          }
-        );
-      } catch (err) {
-        throw await handleNodeError(ctx.node, err);
-      }
-
-      try {
-        while (true) {
-          if (eventQueue.length > 0) {
-            const value = eventQueue.shift();
-            if (value !== undefined) yield value;
-          }
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-      } catch (err) {
-        throw await handleNodeError(ctx.node, err);
-      } finally {
-        try {
-          subscription.unsubscribe();
-        } catch (err) {}
-      }
+    .query(async ({ ctx, input }) => {
+      return ctx.node.trpc.server.status.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
+      });
     }),
   consoleLogs: nodeProcedure
     .input(z.object({ serverId: z.string() }))

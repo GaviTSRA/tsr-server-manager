@@ -61,37 +61,49 @@ export const serverRouter = router({
     .meta({
       permission: "status",
     })
-    .subscription(async function* ({ ctx, input }) {
+    .output(
+      z
+        .object({
+          date: z.date(),
+          cpuUsage: z.number(),
+          cpuCount: z.number().optional(),
+          ramUsage: z.number(),
+          ramAvailable: z.number().optional(),
+          diskUsage: z.number(),
+          networkIn: z.number(),
+          networkOut: z.number(),
+        })
+        .array()
+    )
+    .query(async ({ ctx, input }) => {
       if (!ctx.server.containerId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Server not installed",
         });
       }
-      const result = docker.containerStats(ctx.server.containerId);
       const hasLimitPermission = await hasPermission(
         ctx,
         input.userId,
         ctx.server,
         "limits.read"
       );
-      try {
-        for await (const part of result) {
-          yield {
-            cpuUsage: part.cpuUsage,
-            cpuAvailable: hasLimitPermission ? ctx.server.cpuLimit : undefined,
-            ramUsage: part.ramUsage,
-            ramAvailable: hasLimitPermission ? part.ramAvailable : undefined,
-          } as {
-            cpuUsage: number;
-            ramUsage: number;
-            cpuAvailable?: number;
-            ramAvailable?: number;
-          };
-        }
-      } catch (error) {
-        console.error("Error during iteration:", error);
-      }
+      const data = await ctx.db.query.ServerStat.findMany({
+        where: (serverStat, { eq }) => eq(serverStat.serverId, ctx.server.id),
+        orderBy: (serverStat, { desc }) => desc(serverStat.date),
+        limit: 100,
+        columns: {
+          date: true,
+          cpuUsage: true,
+          cpuCount: hasLimitPermission,
+          ramUsage: true,
+          ramAvailable: hasLimitPermission,
+          diskUsage: true,
+          networkIn: true,
+          networkOut: true,
+        },
+      });
+      return data.reverse();
     }),
   consoleLogs: serverProcedure
     .meta({

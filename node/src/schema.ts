@@ -41,6 +41,20 @@ export const Server = pgTable("Server", {
   metadata: json().$type<{ [key: string]: any }>().notNull().default({}),
 });
 
+export const ServerStat = pgTable("ServerStat", {
+  serverId: uuid()
+    .notNull()
+    .references(() => Server.id),
+  date: timestamp({ mode: "date" }).notNull(),
+  cpuUsage: real().notNull(),
+  cpuCount: integer().notNull(),
+  ramUsage: real().notNull(),
+  ramAvailable: real().notNull(),
+  diskUsage: real().notNull(),
+  networkIn: real().notNull(),
+  networkOut: real().notNull(),
+});
+
 export const Log = pgTable(
   "Log",
   {
@@ -91,6 +105,14 @@ export const ServerRelations = relations(Server, ({ one, many }) => ({
   owner: one(User, {
     fields: [Server.ownerId],
     references: [User.id],
+  }),
+  stats: many(ServerStat),
+}));
+
+export const ServerStatRelations = relations(ServerStat, ({ one }) => ({
+  server: one(Server, {
+    fields: [ServerStat.serverId],
+    references: [Server.id],
   }),
 }));
 

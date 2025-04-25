@@ -265,32 +265,36 @@ export async function* containerStats(id: string) {
   for await (const rawStats of createAsyncIterable(res.data)) {
     let ramUsage = 0;
     let ramAvailable = 0;
-    let cpu_delta = 0;
+    let cpuDelta = 0;
     let system_cpu_delta = 0;
     let cpuUsage = 0;
+    let networkIn = 0;
+    let networkOut = 0;
     try {
       const stats = JSON.parse(rawStats);
       ramAvailable = stats["memory_stats"]["limit"];
       ramUsage =
         stats["memory_stats"]["usage"] -
         (stats["memory_stats"]["stats"]["cache"] ?? 0);
-      cpu_delta =
+      cpuDelta =
         stats["cpu_stats"]["cpu_usage"]["total_usage"] -
         stats["precpu_stats"]["cpu_usage"]["total_usage"];
       system_cpu_delta =
         stats["cpu_stats"]["system_cpu_usage"] -
         stats["precpu_stats"]["system_cpu_usage"];
       cpuUsage =
-        (cpu_delta / system_cpu_delta) *
-        stats["cpu_stats"]["online_cpus"] *
-        100;
+        (cpuDelta / system_cpu_delta) * stats["cpu_stats"]["online_cpus"] * 100;
+      networkIn = stats["networks"]["eth0"]["rx_bytes"];
+      networkOut = stats["networks"]["eth0"]["tx_bytes"];
     } catch {
       continue;
     }
     yield {
-      cpuUsage,
+      cpuUsage: Number.isNaN(cpuUsage) ? 0 : cpuUsage,
       ramUsage,
       ramAvailable,
+      networkIn,
+      networkOut,
     };
   }
 }

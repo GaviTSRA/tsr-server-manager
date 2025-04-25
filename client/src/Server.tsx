@@ -76,14 +76,6 @@ export function Server() {
   const [killButtonEnabled, setKillButtonEnabled] = useState(false);
   const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
-  const [stats, setStats] = useState(
-    [] as {
-      cpuUsage: number;
-      cpuAvailable?: number;
-      ramUsage: number;
-      ramAvailable?: number;
-    }[]
-  );
   const [logs, setLogs] = useState([] as string[]);
   const [wasOffline, setWasOffline] = useState(
     server ? server.status !== "running" : false
@@ -109,7 +101,6 @@ export function Server() {
     if (!server) return;
     if (server.status === "running") {
       if (wasOffline) {
-        resetStats();
         resetLogs();
       }
       setWasOffline(false);
@@ -161,16 +152,15 @@ export function Server() {
     }
   }, [server]);
 
-  const {
-    data: statsSub,
-    reset: resetStats,
-    error: statsError,
-  } = trpc.server.status.useSubscription(
-    { serverId, nodeId },
+  const { data: stats, error: statsError } = trpc.server.status.useQuery(
     {
-      onError: (err) => {
-        console.error(err);
-      },
+      serverId,
+      nodeId,
+    },
+    {
+      enabled: serverId !== undefined && queryEnabled,
+      retry: 1,
+      refetchInterval: 1000,
     }
   );
   const { reset: resetLogs, error: logsError } =
@@ -195,17 +185,6 @@ export function Server() {
       }
     );
 
-  useEffect(() => {
-    if (!statsSub) return;
-    setStats((prev) => {
-      let prevEntries = prev;
-      if (prev.length > 40) {
-        prevEntries = prev.slice(prev.length - 40, prev.length);
-      }
-      return [...prevEntries, statsSub];
-    });
-  }, [statsSub]);
-
   const tabs = useMemo(
     () => [
       {
@@ -215,7 +194,7 @@ export function Server() {
         tab: (
           <ConsoleTab
             serverId={serverId}
-            stats={stats}
+            stats={stats ?? []}
             statsError={statsError}
             logs={logs}
             logsError={logsError}

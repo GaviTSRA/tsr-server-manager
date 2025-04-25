@@ -7,6 +7,8 @@ import { Check, Cpu, Server } from "react-feather";
 import { VictoryArea, VictoryAxis, VictoryChart, VictoryTheme } from "victory";
 import { Error, ErrorType } from "../components/Error";
 import { MoonLoader } from "react-spinners";
+import { inferProcedureOutput } from "@trpc/server";
+import { AppRouter } from "@tsm/server";
 
 export function ConsoleTab({
   serverId,
@@ -17,12 +19,7 @@ export function ConsoleTab({
   nodeId,
 }: {
   serverId: string;
-  stats: {
-    cpuUsage: number;
-    cpuAvailable?: number;
-    ramUsage: number;
-    ramAvailable?: number;
-  }[];
+  stats: inferProcedureOutput<AppRouter["server"]["status"]>;
   statsError: ErrorType | null;
   logs: string[];
   logsError: ErrorType | null;
@@ -59,8 +56,7 @@ export function ConsoleTab({
     const latestStats = stats[stats.length - 1];
     if (latestStats.cpuUsage)
       setCPUUsage(Math.round(latestStats.cpuUsage * 100) / 100);
-    if (latestStats.cpuAvailable)
-      setAvailableCpu(latestStats.cpuAvailable * 100);
+    if (latestStats.cpuCount) setAvailableCpu(latestStats.cpuCount * 100);
     if (latestStats.ramUsage)
       setUsedRam(
         Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100

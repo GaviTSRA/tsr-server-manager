@@ -10,6 +10,7 @@ import express from "express";
 import { createContext } from "./trpc/trpc";
 import http from "http";
 import cors from "cors";
+import { watchStats } from "./stats";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 export type { NodeRouter } from "./trpc/router";
@@ -114,6 +115,7 @@ db.query.Server.findMany().then((servers) => {
       docker.inspectContainer(server.containerId).then(async (result) => {
         if (result.status === "success" && result.data?.status === "running") {
           console.info("Restarting watcher for", server.name);
+          watchStats(server.id, server.containerId as string, server.cpuLimit);
           const res = await docker.attachToContainer(server.containerId ?? "");
           const asyncIterable = docker.createAsyncIterable(res.data);
           for await (const chunk of asyncIterable) {
