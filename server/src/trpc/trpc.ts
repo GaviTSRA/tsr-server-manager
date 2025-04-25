@@ -6,6 +6,7 @@ import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { OpenApiMeta } from "trpc-to-openapi";
 import { nodes } from "..";
 import { z } from "zod";
+import SuperJSON from "superjson";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -44,6 +45,7 @@ export const t = initTRPC
         reconnectAfterInactivityMs: 5_000,
       },
     },
+    transformer: SuperJSON,
   });
 
 export const router = t.router;

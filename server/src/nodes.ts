@@ -14,6 +14,7 @@ import { NodeType } from "./schema";
 import { db, nodes } from ".";
 import * as schema from "./schema";
 import { TRPCError } from "@trpc/server";
+import SuperJSON from "superjson";
 
 export type ConnectedNode = {
   id: string;
@@ -29,6 +30,8 @@ function getNodeClient(id: string, url: string) {
       splitLink({
         condition: (op) => op.type === "subscription",
         true: unstable_httpSubscriptionLink({
+          transformer: SuperJSON,
+
           url,
           connectionParams: async () => {
             const token = nodes[id] ? nodes[id].token : undefined;
@@ -38,6 +41,8 @@ function getNodeClient(id: string, url: string) {
         false: splitLink({
           condition: (op) => isNonJsonSerializable(op.input),
           true: httpLink({
+            transformer: SuperJSON,
+
             url,
             headers: () => {
               const token = nodes[id] ? nodes[id].token : undefined;
@@ -47,6 +52,7 @@ function getNodeClient(id: string, url: string) {
             },
           }),
           false: httpBatchLink({
+            transformer: SuperJSON,
             url,
             headers: () => {
               const token = nodes[id] ? nodes[id].token : undefined;

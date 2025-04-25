@@ -19,6 +19,7 @@ import { Login } from "./Login";
 import ServerList from "./components/ServerList";
 import NodeList from "./components/NodeList";
 import ErrorPage from "./components/ErrorPage";
+import SuperJSON from "superjson";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const router = createBrowserRouter([
@@ -58,6 +59,7 @@ const trpcClient = trpc.createClient({
       // uses the httpSubscriptionLink for subscriptions
       condition: (op) => op.type === "subscription",
       true: unstable_httpSubscriptionLink({
+        transformer: SuperJSON,
         url: API_BASE_URL,
         connectionParams: () => {
           const token = localStorage.getItem("authToken");
@@ -67,6 +69,7 @@ const trpcClient = trpc.createClient({
       false: splitLink({
         condition: (op) => isNonJsonSerializable(op.input),
         true: httpLink({
+          transformer: SuperJSON,
           url: API_BASE_URL,
           headers: () => {
             const token = localStorage.getItem("authToken");
@@ -77,6 +80,7 @@ const trpcClient = trpc.createClient({
         }),
         false: httpBatchLink({
           url: API_BASE_URL,
+          transformer: SuperJSON,
           headers: () => {
             const token = localStorage.getItem("authToken");
             return {

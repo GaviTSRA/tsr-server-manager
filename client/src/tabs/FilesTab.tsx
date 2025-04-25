@@ -36,6 +36,7 @@ function FileRow({
   path,
   setPath,
   refetch,
+  nodeId,
 }: {
   serverId: string;
   path: string;
@@ -47,6 +48,7 @@ function FileRow({
     lastEdited: string;
   };
   refetch: () => void;
+  nodeId: string;
 }): JSX.Element {
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -68,7 +70,7 @@ function FileRow({
             if (!input) return;
             modal.fetching();
             renameFile.mutate(
-              { path: path + file.name, name: input, serverId },
+              { path: path + file.name, name: input, serverId, nodeId },
               {
                 onError: () => {
                   modal.error();
@@ -95,10 +97,10 @@ function FileRow({
           "Delete file?",
           `Confirm deletion of '${fileName}'`,
           false,
-          (_) => {
+          () => {
             modal.fetching();
             deleteFile.mutate(
-              { path: path + file.name, serverId },
+              { path: path + file.name, serverId, nodeId },
               {
                 onError: () => {
                   modal.error();
@@ -196,7 +198,7 @@ export function FilesTab({
     refetch,
     error,
   } = trpc.server.files.list.useQuery(
-    { path, serverId: serverId },
+    { path, serverId, nodeId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -230,12 +232,15 @@ export function FilesTab({
     formData.append("serverId", serverId);
     formData.append("file", file);
 
-    await uploadFile.mutateAsync(formData, {
-      onSuccess: () => {
-        refetch();
-        alert("done");
-      },
-    });
+    await uploadFile.mutateAsync(
+      { ...formData, nodeId },
+      {
+        onSuccess: () => {
+          refetch();
+          alert("done");
+        },
+      }
+    );
   };
 
   if (error) {
@@ -302,7 +307,7 @@ export function FilesTab({
               className="flex items-center bg-confirm-normal hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded ml-auto"
               onClick={() => {
                 if (content) {
-                  editFile.mutate({ content, path, serverId });
+                  editFile.mutate({ content, path, serverId, nodeId });
                 }
               }}
               disabled={editFile.isPending}
@@ -335,6 +340,7 @@ export function FilesTab({
                             ? path + input
                             : path + "/" + input,
                           serverId,
+                          nodeId,
                         },
                         {
                           onError: () => {
@@ -373,6 +379,7 @@ export function FilesTab({
                             ? path + input
                             : path + "/" + input,
                           serverId,
+                          nodeId,
                         },
                         {
                           onError: () => {
@@ -395,10 +402,10 @@ export function FilesTab({
               >
                 Create Folder
               </button>
-              <form onSubmit={handleSubmit}>
+              {/* <form onSubmit={handleSubmit}>
                 <input type="file" onChange={handleFileChange} />
                 <button type="submit">Upload File</button>
-              </form>
+              </form> */}
             </div>
           )}
         </div>
@@ -411,6 +418,7 @@ export function FilesTab({
             )
             .map((file) => (
               <FileRow
+                nodeId={nodeId}
                 file={file}
                 path={path}
                 setPath={setPath}

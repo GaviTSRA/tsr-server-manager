@@ -13,7 +13,7 @@ import { handleNodeError } from "../nodes";
 
 export const serverRouter = router({
   power: powerRouter,
-  // files: serverFilesRouter,
+  files: serverFilesRouter,
   network: networkRouter,
   startup: startupRouter,
   limits: limitsRouter,

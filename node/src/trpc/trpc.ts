@@ -9,6 +9,7 @@ import { z } from "zod";
 import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { Permission } from "..";
 import jwt from "jsonwebtoken";
+import SuperJSON from "superjson";
 
 const PASSWORD = process.env.PASSWORD;
 if (!PASSWORD) {
@@ -50,6 +51,7 @@ export const t = initTRPC
         reconnectAfterInactivityMs: 5_000,
       },
     },
+    transformer: SuperJSON,
   });
 
 export const router = t.router;
