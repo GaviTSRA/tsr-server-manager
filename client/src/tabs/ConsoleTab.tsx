@@ -3,7 +3,7 @@ import AnsiToHtml from "ansi-to-html";
 import { trpc } from "../main";
 import { Input } from "../components/Input";
 import { Container } from "../components/Container";
-import { Check, Cpu, Server } from "react-feather";
+import { ArrowDown, ArrowUp, Check, Cpu, Rss, Server } from "react-feather";
 import { VictoryArea, VictoryAxis, VictoryChart, VictoryTheme } from "victory";
 import { Error, ErrorType } from "../components/Error";
 import { MoonLoader } from "react-spinners";
@@ -51,6 +51,8 @@ export function ConsoleTab({
   const [availableRam, setAvailableRam] = useState(
     undefined as number | undefined
   );
+  const [networkIn, setNetworkIn] = useState(0);
+  const [networkOut, setNetworkOut] = useState(0);
   useEffect(() => {
     if (!stats || stats.length === 0) return;
     const latestStats = stats[stats.length - 1];
@@ -61,6 +63,12 @@ export function ConsoleTab({
       setUsedRam(
         Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100
       );
+    if (latestStats.networkIn) {
+      setNetworkIn(Math.round(latestStats.networkIn / 1024));
+    }
+    if (latestStats.networkOut) {
+      setNetworkOut(Math.round(latestStats.networkOut / 1024));
+    }
     if (latestStats.ramAvailable) {
       setAvailableRam(
         Math.round((latestStats.ramAvailable / 1024 / 1024 / 1024) * 100) / 100
@@ -96,6 +104,19 @@ export function ConsoleTab({
     }
     return a;
   }
+
+  const axisStyle = {
+    axis: {
+      stroke: "#292929",
+    },
+    tickLabels: {
+      fill: "#555",
+    },
+    grid: {
+      stroke: "#292929",
+    },
+  };
+  const height = 222;
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row">
@@ -163,26 +184,52 @@ export function ConsoleTab({
                 </>
               }
             >
+              <svg style={{ height: 0 }}>
+                <defs>
+                  <linearGradient
+                    id="cpuGradient"
+                    gradientTransform="rotate(90)"
+                  >
+                    <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient
+                    id="ramGradient"
+                    gradientTransform="rotate(90)"
+                  >
+                    <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient
+                    id="networkInGradient"
+                    gradientTransform="rotate(90)"
+                  >
+                    <stop offset="0%" stopColor="#0CC" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#0CC" stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient
+                    id="networkOutGradient"
+                    gradientTransform="rotate(90)"
+                  >
+                    <stop offset="0%" stopColor="#F90" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#F90" stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
+              </svg>
               <VictoryChart
                 theme={VictoryTheme.clean}
                 padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
+                height={height}
               >
                 <VictoryAxis
                   dependentAxis
                   tickValues={
                     availableCpu
-                      ? range(0, availableCpu, availableCpu >= 500 ? 100 : 50)
+                      ? range(0, availableCpu, availableCpu >= 400 ? 100 : 50)
                       : undefined
                   }
                   tickFormat={(value) => `${value}%`}
-                  style={{
-                    tickLabels: {
-                      fill: "#909090",
-                    },
-                    grid: {
-                      stroke: "#444",
-                    },
-                  }}
+                  style={axisStyle}
                 />
                 <VictoryArea
                   data={stats
@@ -190,8 +237,7 @@ export function ConsoleTab({
                     .map((stat, i) => ({ x: i, y: stat.cpuUsage }))}
                   style={{
                     data: {
-                      fill: "#66F",
-                      fillOpacity: 0.3,
+                      fill: "url(#cpuGradient)",
                       stroke: "#66F",
                       strokeWidth: 2,
                     },
@@ -219,6 +265,7 @@ export function ConsoleTab({
                   theme={VictoryTheme.clean}
                   padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
                   domainPadding={{ y: 0 }}
+                  height={height}
                 >
                   <VictoryAxis
                     dependentAxis
@@ -238,22 +285,74 @@ export function ConsoleTab({
                         : undefined
                     }
                     tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
-                    style={{
-                      tickLabels: {
-                        fill: "#909090",
-                      },
-                      grid: {
-                        stroke: "#444",
-                      },
-                    }}
+                    style={axisStyle}
                   />
                   <VictoryArea
                     data={stats.map((stat, i) => ({ x: i, y: stat.ramUsage }))}
                     style={{
                       data: {
-                        fill: "#6F6",
-                        fillOpacity: 0.3,
+                        fill: "url(#ramGradient)",
                         stroke: "#6F6",
+                        strokeWidth: 2,
+                      },
+                    }}
+                  />
+                </VictoryChart>
+              </div>
+            </Container>
+            <Container
+              className="overflow-hidden flex flex-col !p-0"
+              title={
+                <>
+                  <Rss size={20} />
+                  <p className="font-bold">Network Usage</p>
+                  <div className="ml-auto flex flex-row gap-2">
+                    <div className="flex flex-row items-center">
+                      <p>{networkIn} KB</p>
+                      <ArrowDown />
+                    </div>
+                    <div className="ml-2 flex flex-row items-center">
+                      <p>{networkOut} KB</p>
+                      <ArrowUp />
+                    </div>
+                  </div>
+                </>
+              }
+            >
+              <div className="px-2">
+                <VictoryChart
+                  theme={VictoryTheme.clean}
+                  padding={{ top: 20, bottom: 20, left: 70, right: 20 }}
+                  domainPadding={{ y: 0 }}
+                  height={height}
+                >
+                  <VictoryAxis
+                    dependentAxis
+                    tickFormat={(value) => `${Math.round(value / 1024)} KB`}
+                    style={axisStyle}
+                  />
+                  <VictoryArea
+                    data={stats.map((stat, i) => ({
+                      x: i,
+                      y: stat.networkOut,
+                    }))}
+                    style={{
+                      data: {
+                        fill: "url(#networkOutGradient)",
+                        stroke: "#F90",
+                        strokeWidth: 2,
+                      },
+                    }}
+                  />
+                  <VictoryArea
+                    data={stats.map((stat, i) => ({
+                      x: i,
+                      y: stat.networkIn,
+                    }))}
+                    style={{
+                      data: {
+                        fill: "url(#networkInGradient)",
+                        stroke: "#0CC",
                         strokeWidth: 2,
                       },
                     }}

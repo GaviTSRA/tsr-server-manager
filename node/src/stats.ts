@@ -20,7 +20,19 @@ export async function watchStats(
 
   const result = docker.containerStats(containerId);
   try {
+    let previousNetworkIn = 0;
+    let previousNetworkOut = 0;
+
     for await (const part of result) {
+      let networkIn = part.networkIn;
+      let networkOut = part.networkOut;
+
+      if (previousNetworkIn <= networkIn) networkIn -= previousNetworkIn;
+      if (previousNetworkOut <= networkOut) networkOut -= previousNetworkOut;
+
+      previousNetworkIn = part.networkIn;
+      previousNetworkOut = part.networkOut;
+
       await db.insert(ServerStat).values({
         date: new Date(),
         serverId,
@@ -30,8 +42,8 @@ export async function watchStats(
         ramAvailable: part.ramAvailable,
         // TODO
         diskUsage: 0,
-        networkIn: part.networkIn,
-        networkOut: part.networkOut,
+        networkIn: networkIn,
+        networkOut: networkOut,
       });
     }
   } catch (error) {

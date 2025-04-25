@@ -143,7 +143,8 @@ export async function createContainer(
   restartRetryCount: number
 ): Promise<{ status: CreateContainerResponse; containerId?: string }> {
   const hostDirectory = (process.env.SERVERS_DIR as string) + id;
-  if (!fs.existsSync(hostDirectory)) fs.mkdirSync(hostDirectory);
+  const serversDir = "servers/" + id;
+  if (!fs.existsSync(serversDir)) fs.mkdirSync(serversDir);
   const exposedPorts: { [port: string]: {} } = {};
   const portBindings: { [port: string]: { HostPort: string }[] } = {};
   ports.forEach((port) => (exposedPorts[`${port}/tcp`] = {}));
