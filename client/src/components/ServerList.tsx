@@ -6,7 +6,7 @@ import {
   Settings,
   StopCircle,
 } from "react-feather";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Dropdown } from "../components/Dropdown";
 import { Input } from "../components/Input";
@@ -14,6 +14,7 @@ import { MoonLoader } from "react-spinners";
 import { trpc } from "../main";
 import { AppRouter, ServerType } from "@tsm/server";
 import { inferProcedureOutput } from "@trpc/server";
+import { VictoryArea, VictoryAxis, VictoryChart, VictoryTheme } from "victory";
 
 function ServerTypeDisplay({
   type,
@@ -147,9 +148,189 @@ function CreateServerModal({
   );
 }
 
+function Server({
+  server,
+  node,
+  serverTypes,
+}: {
+  server: inferProcedureOutput<AppRouter["servers"]>[number]["servers"][number];
+  node: { nodeName: string; nodeId: string };
+  serverTypes: ServerType[] | undefined;
+}) {
+  const navigate = useNavigate();
+  const axisStyle = {
+    axis: {
+      stroke: "#292929",
+    },
+    tickLabels: {
+      fill: "#555",
+    },
+    grid: {
+      stroke: "#292929",
+    },
+  };
+  const height = 100;
+
+  const [availableCpu, setAvailableCpu] = useState(
+    undefined as number | undefined
+  );
+  const [availableRam, setAvailableRam] = useState(
+    undefined as number | undefined
+  );
+
+  useEffect(() => {
+    if (!server.recentStats || server.recentStats.length === 0) return;
+    const latestStats = server.recentStats[server.recentStats.length - 1];
+    if (latestStats.cpuCount) setAvailableCpu(latestStats.cpuCount * 100);
+
+    if (latestStats.ramAvailable) {
+      setAvailableRam(
+        Math.round((latestStats.ramAvailable / 1024 / 1024 / 1024) * 100) / 100
+      );
+    } else if (latestStats.ramUsage) {
+      setAvailableRam(
+        Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100
+      );
+    }
+  }, [server.recentStats]);
+
+  let status = undefined;
+  const statusSize = 30;
+  switch (server.status) {
+    case undefined:
+      status = <Settings size={statusSize} className="text-gray-500" />;
+      break;
+    case "created":
+    case "exited":
+      status = <StopCircle size={statusSize} className="text-red-600" />;
+      break;
+    case "running":
+      status = <PlayCircle size={statusSize} className="text-success" />;
+      break;
+    case "restarting":
+      status = <ArrowUpCircle size={statusSize} className="text-gray-500" />;
+      break;
+    case "dead":
+      status = <AlertCircle size={statusSize} className="text-red-600" />;
+      break;
+  }
+
+  function range(start: number, stop: number, step: number) {
+    const a = [start];
+    let b = start;
+    while (b < stop) {
+      a.push((b += step || 1));
+    }
+    return a;
+  }
+
+  return (
+    <div
+      key={server.id}
+      className="bg-neutral-200 flex flex-col hover:bg-neutral-300 transition-colors cursor-pointer px-4 py-2 rounded"
+      onClick={() => navigate(`/server/${node.nodeId}/${server.id}/console`)}
+    >
+      <div className="flex flex-row items-center">
+        <p className="text-2xl">{server.name}</p>
+        <div className="ml-auto">{status}</div>
+      </div>
+      <p className="text-secondary-text">{server.id}</p>
+      <p className="text-secondary-text mb-2">{node.nodeName}</p>
+      {serverTypes && (
+        <ServerTypeDisplay type={server.type} serverTypes={serverTypes ?? []} />
+      )}
+      {server.recentStats && server.recentStats.length > 0 && (
+        <>
+          <svg style={{ height: 0 }}>
+            <defs>
+              <linearGradient id="cpuGradient" gradientTransform="rotate(90)">
+                <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
+              </linearGradient>
+              <linearGradient id="ramGradient" gradientTransform="rotate(90)">
+                <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
+              </linearGradient>
+            </defs>
+          </svg>
+          <VictoryChart
+            theme={VictoryTheme.clean}
+            padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
+            height={height}
+          >
+            <VictoryAxis
+              dependentAxis
+              tickValues={
+                availableCpu
+                  ? range(0, availableCpu, availableCpu >= 400 ? 200 : 100)
+                  : undefined
+              }
+              tickFormat={(value) => `${value}%`}
+              style={axisStyle}
+            />
+            <VictoryArea
+              data={server.recentStats
+                ?.filter((el) => el.cpuUsage !== null)
+                .map((stat, i) => ({ x: i, y: stat.cpuUsage }))}
+              style={{
+                data: {
+                  fill: "url(#cpuGradient)",
+                  stroke: "#66F",
+                  strokeWidth: 2,
+                },
+              }}
+            />
+          </VictoryChart>
+          <div className="px-2">
+            <VictoryChart
+              theme={VictoryTheme.clean}
+              padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
+              domainPadding={{ y: 0 }}
+              height={height}
+            >
+              <VictoryAxis
+                dependentAxis
+                tickValues={
+                  availableRam
+                    ? range(
+                        0,
+                        availableRam * 1024 * 1024 * 1024,
+                        (availableRam * 1024 >= 4096
+                          ? availableRam * 1024 >= 8192
+                            ? 4096
+                            : 2048
+                          : 1024) *
+                          1024 *
+                          1024
+                      )
+                    : undefined
+                }
+                tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
+                style={axisStyle}
+              />
+              <VictoryArea
+                data={server.recentStats?.map((stat, i) => ({
+                  x: i,
+                  y: stat.ramUsage,
+                }))}
+                style={{
+                  data: {
+                    fill: "url(#ramGradient)",
+                    stroke: "#6F6",
+                    strokeWidth: 2,
+                  },
+                }}
+              />
+            </VictoryChart>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ServerList() {
   const [creatingServer, setCreatingServer] = useState(false);
-  const navigate = useNavigate();
 
   const {
     data: servers,
@@ -157,6 +338,7 @@ export default function ServerList() {
     refetch,
   } = trpc.servers.useQuery(undefined, {
     retry: 1,
+    refetchInterval: 5000,
   });
 
   const { data: serverTypes } = trpc.serverTypes.useQuery();
@@ -168,58 +350,19 @@ export default function ServerList() {
 
   return (
     <div>
-      <div className="flex flex-col m-4 gap-4">
+      <div className="grid grid-cols-4 m-4 gap-4">
         {servers &&
           servers.map((node) => {
             return node.servers.map((server) => {
-              let status = undefined;
-              switch (server.status) {
-                case undefined:
-                  status = <Settings size={40} className="text-gray-500" />;
-                  break;
-                case "created":
-                case "exited":
-                  status = <StopCircle size={40} className="text-red-600" />;
-                  break;
-                case "running":
-                  status = <PlayCircle size={40} className="text-success" />;
-                  break;
-                case "restarting":
-                  status = (
-                    <ArrowUpCircle size={40} className="text-gray-500" />
-                  );
-                  break;
-                case "dead":
-                  status = <AlertCircle size={40} className="text-red-600" />;
-                  break;
-              }
               return (
-                <div
-                  key={server.id}
-                  className="w-full bg-neutral-200 flex flex-row hover:bg-neutral-300 transition-colors cursor-pointer p-4 rounded"
-                  onClick={() =>
-                    navigate(`/server/${node.nodeId}/${server.id}/console`)
+                <Server
+                  server={server}
+                  node={node}
+                  serverTypes={
+                    serverTypes?.find((entry) => entry.nodeId === node.nodeId)
+                      ?.serverTypes
                   }
-                >
-                  <div className="flex flex-col">
-                    <p className="text-xl mb-2 gap-2">{server.name}</p>
-                    {serverTypes && (
-                      <ServerTypeDisplay
-                        type={server.type}
-                        serverTypes={
-                          serverTypes.find(
-                            (entry) => entry.nodeId === node.nodeId
-                          )?.serverTypes ?? []
-                        }
-                      />
-                    )}
-                    <p>{node.nodeName}</p>
-                  </div>
-
-                  <div className="ml-auto flex items-center mr-2">
-                    <div className="p-2 rounded">{status}</div>
-                  </div>
-                </div>
+                />
               );
             });
           })}

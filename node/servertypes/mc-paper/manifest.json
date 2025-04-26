@@ -1,6 +1,6 @@
 {
   "name": "Minecraft Paper",
-  "icon": "https://docs.papermc.io/assets/images/papermc-logomark-512-f125384f3367cd4d9291ca983fcb7334.png",
+  "icon": "https://papermc.io/assets/logo/256x.png",
   "image": null,
   "command": "java -Xms128M -Xmx${SERVER_RAM}M -Dterminal.jline=false -Dterminal.ansi=true -jar server.jar --nogui",
   "options": {
@@ -14,11 +14,7 @@
       "name": "Image",
       "description": "Java image to use, depending on the minecraft version",
       "type": "enum",
-      "options": [
-        "java21",
-        "java17",
-        "java8"
-      ],
+      "options": ["java21", "java17", "java8"],
       "default": "java21"
     },
     "notifyWebhook": {
@@ -28,7 +24,5 @@
       "default": ""
     }
   },
-  "tabs": [
-    "mc-players"
-  ]
+  "tabs": ["mc-players"]
 }

@@ -26,6 +26,13 @@ type ServerStatus = {
     | "exited"
     | "dead";
   type: string;
+  recentStats?: {
+    date: Date;
+    cpuUsage: number;
+    ramUsage: number;
+    cpuCount: number;
+    ramAvailable: number;
+  }[];
 };
 
 export const nodeRouter = router({
@@ -81,6 +88,16 @@ export const nodeRouter = router({
             ])
             .optional(),
           type: z.string(),
+          recentStats: z
+            .object({
+              date: z.date(),
+              cpuUsage: z.number(),
+              cpuCount: z.number(),
+              ramUsage: z.number(),
+              ramAvailable: z.number(),
+            })
+            .array()
+            .optional(),
         })
         .array()
     )
@@ -112,6 +129,18 @@ export const nodeRouter = router({
           continue;
         }
         const data = await docker.inspectContainer(server.containerId);
+        const recentStats = await ctx.db.query.ServerStat.findMany({
+          where: (stat, { eq }) => eq(stat.serverId, server.id),
+          orderBy: (stat, { desc }) => [desc(stat.date)],
+          limit: 100,
+          columns: {
+            date: true,
+            cpuUsage: true,
+            ramUsage: true,
+            cpuCount: true,
+            ramAvailable: true,
+          },
+        });
         if (!data || !data.data) continue;
         result.push({
           id: server.id,
@@ -119,6 +148,7 @@ export const nodeRouter = router({
           name: server.name,
           status: data.data.status,
           type: server.type,
+          recentStats: recentStats.reverse(),
         });
       }
       return result;
