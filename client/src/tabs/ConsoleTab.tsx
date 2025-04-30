@@ -120,7 +120,7 @@ export function ConsoleTab({
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row">
-      <div className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
+      <div className="bg-neutral-150 mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
         {logsError ? (
           <Container className="h-full !rounded-b-none" expanded={true}>
             <Error error={logsError} />
@@ -168,7 +168,7 @@ export function ConsoleTab({
             <Error error={statsError} />
           </Container>
         ) : (
-          <div className="flex flex-col md:flex-row lg:flex-col gap-4">
+          <div className="grid grid-rows-3 gap-2">
             <Container
               className="overflow-hidden flex flex-col !p-0"
               title={

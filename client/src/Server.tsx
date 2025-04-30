@@ -30,6 +30,58 @@ import { MoonLoader } from "react-spinners";
 import { UsersTab } from "./tabs/UsersTab";
 import { LogsTab } from "./tabs/LogsTab";
 import { MinecraftPlayersTab } from "./tabs/custom/MinecraftPlayersTab";
+import { motion } from "motion/react";
+
+type Tab = {
+  id: string;
+  title: string;
+  icon: JSX.Element;
+  tab: JSX.Element;
+  custom?: boolean;
+};
+
+function ServerTab({
+  tab,
+  index,
+  serverId,
+  nodeId,
+  selected,
+}: {
+  selected: boolean;
+  tab: Tab;
+  index: number;
+  serverId: string;
+  nodeId: string;
+}) {
+  return (
+    <motion.div
+      initial={{
+        x: -50,
+        opacity: 0,
+      }}
+      animate={{
+        x: 0,
+        opacity: 1,
+      }}
+      transition={{
+        delay: index * 0.02,
+      }}
+      className={
+        "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
+        (selected
+          ? "bg-neutral-150 border-l-primary-100"
+          : "bg-neutral-200 hover:bg-neutral-300")
+      }
+    >
+      <Link to={`/server/${nodeId}/${serverId}/${tab.id}`} key={tab.id}>
+        <div className="mx-auto flex flex-row gap-2">
+          {tab.icon}
+          <p>{tab.title}</p>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
 
 export function Server() {
   const { nodeId, serverId, tab } = useParams() as {
@@ -74,7 +126,7 @@ export function Server() {
   const [restartButtonEnabled, setRestartButtonEnabled] = useState(false);
   const [stopButtonEnabled, setStopButtonEnabled] = useState(false);
   const [killButtonEnabled, setKillButtonEnabled] = useState(false);
-  const [status, setStatus] = useState("");
+  // const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
   const [logs, setLogs] = useState([] as string[]);
   const [wasOffline, setWasOffline] = useState(
@@ -114,7 +166,7 @@ export function Server() {
         setStopButtonEnabled(false);
         setKillButtonEnabled(false);
         setStatusIcon(<Settings size={30} className="text-gray-500" />);
-        setStatus("Not Configured");
+        // setStatus("Not Configured");
         break;
       case "created":
       case "exited":
@@ -123,7 +175,7 @@ export function Server() {
         setStopButtonEnabled(false);
         setKillButtonEnabled(false);
         setStatusIcon(<StopCircle size={30} className="text-red-600" />);
-        setStatus("Stopped");
+        // setStatus("Stopped");
         break;
       case "running":
         setStartButtonEnabled(false);
@@ -131,7 +183,7 @@ export function Server() {
         setStopButtonEnabled(true);
         setKillButtonEnabled(true);
         setStatusIcon(<PlayCircle size={30} className="text-success" />);
-        setStatus("Running");
+        // setStatus("Running");
         break;
       case "restarting":
         setStartButtonEnabled(false);
@@ -139,7 +191,7 @@ export function Server() {
         setStopButtonEnabled(false);
         setKillButtonEnabled(true);
         setStatusIcon(<ArrowUpCircle size={30} className="text-gray-500" />);
-        setStatus("Restarting");
+        // setStatus("Restarting");
         break;
       case "dead":
         setStartButtonEnabled(true);
@@ -147,7 +199,7 @@ export function Server() {
         setStopButtonEnabled(false);
         setKillButtonEnabled(false);
         setStatusIcon(<AlertCircle size={30} className="text-red-600" />);
-        setStatus("Dead");
+        // setStatus("Dead");
         break;
     }
   }, [server]);
@@ -185,7 +237,7 @@ export function Server() {
       }
     );
 
-  const tabs = useMemo(
+  const tabs: Tab[] = useMemo(
     () => [
       {
         id: "console",
@@ -276,16 +328,16 @@ export function Server() {
             (screenWidth < 600 ? " absolute z-50" : "")
           }
         >
-          <div className="p-2 rounded flex flex-col gap-2">
+          <div className="p-2 rounded flex flex-col gap-2 border-neutral-150 border-b-4 rounded-b-lg">
             {!server && (
-              <div className="w-full py-2 flex items-center justify-center">
+              <div className="w-full py-1 flex items-center justify-center">
                 {screenWidth < 600 && (
                   <Menu
                     size={30}
                     onClick={() => setsidebarOpen(!sidebarOpen)}
                   />
                 )}
-                <MoonLoader size={30} color={"#FFFFFF"} />
+                <MoonLoader size={18} color={"#FFFFFF"} />
               </div>
             )}
             {server && (
@@ -297,11 +349,10 @@ export function Server() {
                       onClick={() => setsidebarOpen(!sidebarOpen)}
                     />
                   )}
-                  <p className="text-2xl mx-auto">{server.name}</p>
                 </div>
                 <div className="flex flex-row items-center gap-2">
+                  <p className="text-2xl mr-auto">{server.name}</p>
                   {statusIcon}
-                  <p>{status}</p>
                 </div>
               </div>
             )}
@@ -312,7 +363,7 @@ export function Server() {
                   `p-2 rounded-l-lg border-neutral-400 border-1 ` +
                   (startButtonEnabled
                     ? "bg-neutral-300 hover:bg-green-800"
-                    : "bg-neutral-100")
+                    : "bg-neutral-150")
                 }
                 onClick={() => {
                   if (startButtonEnabled) {
@@ -326,7 +377,7 @@ export function Server() {
                   `p-2 border-neutral-400 border-1 ` +
                   (restartButtonEnabled
                     ? "bg-neutral-300 hover:bg-danger"
-                    : "bg-neutral-100")
+                    : "bg-neutral-150")
                 }
                 onClick={() => {
                   if (restartButtonEnabled) {
@@ -340,7 +391,7 @@ export function Server() {
                   `p-2 border-neutral-400 border-1 ` +
                   (stopButtonEnabled
                     ? "bg-neutral-300 hover:bg-danger"
-                    : "bg-neutral-100")
+                    : "bg-neutral-150")
                 }
                 onClick={() => {
                   if (stopButtonEnabled) {
@@ -354,7 +405,7 @@ export function Server() {
                   `p-2 rounded-r-lg border-neutral-400 border-1 ` +
                   (killButtonEnabled
                     ? "bg-neutral-300 hover:bg-danger"
-                    : "bg-neutral-100")
+                    : "bg-neutral-150")
                 }
                 onClick={() => {
                   if (killButtonEnabled) {
@@ -365,26 +416,52 @@ export function Server() {
             </div>
           </div>
           <div className="w-full h-full gap-2 flex flex-col items-center p-2">
-            {tabs.map((data) => {
-              if (data.custom && !customTabs.includes(data.id)) return;
-              return (
-                <Link
-                  className={
-                    "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
-                    (tab === data.id
-                      ? "bg-neutral-100 border-l-primary-100"
-                      : "bg-neutral-200 hover:bg-neutral-300")
-                  }
-                  to={`/server/${nodeId}/${serverId}/${data.id}`}
-                  key={data.id}
-                >
-                  <div className="mx-auto flex flex-row gap-2">
-                    {data.icon}
-                    <p>{data.title}</p>
-                  </div>
-                </Link>
-              );
-            })}
+            {tabs
+              .filter((tab) => !tab.custom)
+              .map((data, index) => {
+                if (data.custom) return;
+                return (
+                  <ServerTab
+                    selected={data.id === tab}
+                    tab={data}
+                    key={index}
+                    index={index}
+                    nodeId={nodeId}
+                    serverId={serverId}
+                  />
+                );
+              })}
+            {tabs.filter((tab) => tab.custom).length && (
+              <motion.div
+                className="w-full flex flex-row gap-2 items-center"
+                initial={{
+                  x: -50,
+                  opacity: 0,
+                }}
+                animate={{
+                  x: 0,
+                  opacity: 1,
+                }}
+              >
+                <div className="w-full border-b-2 border-neutral-400"></div>
+                <p className="text-neutral-500">Custom</p>
+                <div className="w-full border-b-2 border-neutral-400"></div>
+              </motion.div>
+            )}
+            {tabs
+              .filter((tab) => tab.custom && customTabs.includes(tab.id))
+              .map((data, index) => {
+                return (
+                  <ServerTab
+                    selected={data.id === tab}
+                    tab={data}
+                    key={index}
+                    index={index}
+                    nodeId={nodeId}
+                    serverId={serverId}
+                  />
+                );
+              })}
           </div>
         </div>
       )}

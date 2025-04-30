@@ -29,15 +29,15 @@ code {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0e0f10;
+  background: #1c1c1f;
   border-radius: 1px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1d333b;
+  background: #222225;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #23404a;
+  background: #2c2c2f;
 }

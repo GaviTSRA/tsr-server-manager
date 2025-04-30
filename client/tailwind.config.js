@@ -17,18 +17,19 @@ module.exports = {
           // 200: "#222222",
           // 300: "#3b3b3b",
           // 400: "#636363",
-          100: "#1c1f26",
-          200: "#16181d",
-          300: "#172a31",
-          400: "#1d333b",
-          500: "#23404a"
+          // 100: "#1c1f26",
+          // 200: "#16181d",
+          // 300: "#172a31",
+          // 400: "#1d333b",
+          // 500: "#23404a",
+          100: "#101013",
+          150: "#161618",
+          200: "#1d1d20",
+          300: "#222225",
+          400: "#2c2c2f",
         },
-        dark: {
-          100: "#0e0f10",
-          200: "#18191a"
-        },
-        "primary-text": "#CCCCCC",
-        "secondary-text": "#909090",
+        "primary-text": "#CCCCD0",
+        "secondary-text": "#808080",
         "dark-text": "#222222",
         disabled: "#666666",
         danger: "#FF4D4D",
@@ -37,14 +38,14 @@ module.exports = {
           normal: "#1f7a47",
           hover: "#1a693d",
           active: "#155c35",
-          disabled: "#0f3d23"
+          disabled: "#0f3d23",
         },
         cancel: {
           normal: "#40444B",
           hover: "#353A40",
           active: "#2B2F34",
-          disabled: "#383c42"
-        }
+          disabled: "#383c42",
+        },
       },
     },
   },

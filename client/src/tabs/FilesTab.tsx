@@ -123,7 +123,7 @@ function FileRow({
 
   return (
     <div
-      className="flex flex-row gap-2 hover:bg-neutral-100 p-2 rounded cursor-pointer"
+      className="flex flex-row gap-2 hover:bg-neutral-150 p-2 rounded cursor-pointer"
       onClick={() => {
         setPath(path + file.name + (file.type === "folder" ? "/" : ""));
       }}
@@ -264,7 +264,7 @@ export function FilesTab({
         <Modal data={modal.data} />
         <div className="flex flex-row items-center">
           <p
-            className="py-1 rounded cursor-pointer text-secondary-text hover:bg-neutral-100"
+            className="py-1 rounded cursor-pointer text-secondary-text hover:bg-neutral-150"
             onClick={() => {
               setPath("/");
               refetch();
@@ -294,7 +294,7 @@ export function FilesTab({
                   refetch();
                 }}
               >
-                <p className="py-1 rounded cursor-pointer hover:bg-neutral-100">
+                <p className="py-1 rounded cursor-pointer hover:bg-neutral-150">
                   {part}
                 </p>
                 {(files.type === "folder" ||
@@ -433,7 +433,7 @@ export function FilesTab({
         <Container className="h-full" expanded={true}>
           <textarea
             value={content}
-            className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-100 resize-none outline-none"
+            className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-150 resize-none outline-none"
             onChange={(event) => setContent(event.target.value)}
           />
         </Container>
