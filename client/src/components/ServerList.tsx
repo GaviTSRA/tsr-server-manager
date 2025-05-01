@@ -10,11 +10,11 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Dropdown } from "../components/Dropdown";
 import { Input } from "../components/Input";
-import { MoonLoader } from "react-spinners";
 import { trpc } from "../main";
 import { AppRouter, ServerType } from "@tsm/server";
 import { inferProcedureOutput } from "@trpc/server";
 import { VictoryArea, VictoryAxis, VictoryChart, VictoryTheme } from "victory";
+import { useModal } from "./Modal";
 
 function ServerTypeDisplay({
   type,
@@ -30,120 +30,6 @@ function ServerTypeDisplay({
     <div className="flex flex-row items-center gap-1">
       <img src={data.icon} className="w-8 rounded" />
       <p>{data.name}</p>
-    </div>
-  );
-}
-
-function CreateServerModal({
-  close,
-  serverTypes,
-  nodes,
-}: {
-  close: () => void;
-  serverTypes: inferProcedureOutput<AppRouter["serverTypes"]>;
-  nodes: inferProcedureOutput<AppRouter["node"]["list"]>;
-}) {
-  const [createServerRunning, setCreateServerRunning] = useState(false);
-  const [serverName, setServerName] = useState(undefined as string | undefined);
-  const [serverType, setServerType] = useState(undefined as string | undefined);
-  const [serverNode, setServerNode] = useState(undefined as string | undefined);
-
-  const createServer = trpc.createServer.useMutation();
-
-  return (
-    <div
-      className="fixed top-0 w-screen h-screen flex bg-black/75"
-      onClick={close}
-    >
-      <div
-        className="bg-neutral-200 p-4 m-auto rounded flex flex-col w-full sm:w-3/4 md:w-2/4 lg:w-1/4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="text-2xl mb-4 text-center">Create New Server</p>
-        <div className="mb-4">
-          <p className="text-secondary-text mt-2">Node</p>
-          <Dropdown
-            color="bg-neutral-300 hover:bg-neutral-400"
-            values={nodes.map((node) => node.id)}
-            render={(option) => (
-              <p>
-                {nodes.find((node) => node.id === option)?.name ??
-                  "Unknown node"}
-              </p>
-            )}
-            onSelect={(value: string) => {
-              setServerType(undefined);
-              setServerNode(value);
-            }}
-            placeholder="Select a node..."
-          />
-          <p className="text-secondary-text mt-2">Name</p>
-          <Input
-            className="rounded"
-            onValueChange={(value) => setServerName(value)}
-          />
-          <p className="text-secondary-text mt-2">Type</p>
-          <Dropdown
-            color="bg-neutral-300 hover:bg-neutral-400"
-            values={
-              serverTypes
-                .find((entry) => entry.nodeId === serverNode)
-                ?.serverTypes.map((type) => type.id) ?? []
-            }
-            render={(option) => (
-              <ServerTypeDisplay
-                type={option}
-                serverTypes={
-                  serverTypes.find((entry) => entry.nodeId === serverNode)
-                    ?.serverTypes ?? []
-                }
-              />
-            )}
-            onSelect={(value: string) => {
-              setServerType(value);
-            }}
-            placeholder={
-              serverNode ? "Select server type..." : "Select a node first"
-            }
-          />
-        </div>
-        <button
-          className="px-4 py-2 mt-auto flex justify-center bg-primary-100 text-dark-text rounded outline-none disabled:bg-disabled"
-          onClick={() => {
-            setCreateServerRunning(true);
-            if (!serverName || !serverType || !serverNode) return;
-            createServer.mutate(
-              {
-                name: serverName,
-                type: serverType,
-                nodeId: serverNode,
-              },
-              {
-                onSuccess: async () => {
-                  setCreateServerRunning(false);
-                  close();
-                },
-                onError: (err) => {
-                  setCreateServerRunning(false);
-                  alert(err);
-                },
-              }
-            );
-          }}
-          disabled={
-            createServerRunning ||
-            serverNode === undefined ||
-            serverType === undefined ||
-            serverName === undefined
-          }
-        >
-          {createServerRunning ? (
-            <MoonLoader size={18} color={"#FFFFFF"} />
-          ) : (
-            <p>Create</p>
-          )}
-        </button>
-      </div>
     </div>
   );
 }
@@ -330,8 +216,6 @@ function Server({
 }
 
 export default function ServerList() {
-  const [creatingServer, setCreatingServer] = useState(false);
-
   const {
     data: servers,
     error,
@@ -343,6 +227,102 @@ export default function ServerList() {
 
   const { data: serverTypes } = trpc.serverTypes.useQuery();
   const { data: nodes } = trpc.node.list.useQuery({ connected: true });
+
+  const [createServerRunning, setCreateServerRunning] = useState(false);
+  const [serverName, setServerName] = useState(undefined as string | undefined);
+  const [serverType, setServerType] = useState(undefined as string | undefined);
+  const [serverNode, setServerNode] = useState(undefined as string | undefined);
+
+  const createServer = trpc.createServer.useMutation();
+
+  const createServerModal = useModal([
+    {
+      title: "Create Server",
+      description: "Select a name and node",
+      body: (
+        <>
+          <p className="text-secondary-text mt-2">Node</p>
+          <Dropdown
+            color="bg-neutral-300 hover:bg-neutral-400"
+            values={(nodes ?? []).map((node) => node.id)}
+            render={(option) => (
+              <p>
+                {(nodes ?? []).find((node) => node.id === option)?.name ??
+                  "Unknown node"}
+              </p>
+            )}
+            defaultValue={serverNode}
+            onSelect={(value: string) => {
+              setServerType(undefined);
+              setServerNode(value);
+            }}
+            placeholder="Select a node..."
+          />
+          <p className="text-secondary-text mt-2">Name</p>
+          <Input
+            defaultValue={serverName}
+            className="rounded"
+            onValueChange={(value) => setServerName(value)}
+          />
+        </>
+      ),
+    },
+    {
+      title: "Create Server",
+      description: "Select a type",
+      body: (
+        <Dropdown
+          color="bg-neutral-300 hover:bg-neutral-400"
+          values={
+            (serverTypes ?? [])
+              .find((entry) => entry.nodeId === serverNode)
+              ?.serverTypes.map((type) => type.id) ?? []
+          }
+          render={(option) => (
+            <ServerTypeDisplay
+              type={option}
+              serverTypes={
+                (serverTypes ?? []).find((entry) => entry.nodeId === serverNode)
+                  ?.serverTypes ?? []
+              }
+            />
+          )}
+          onSelect={(value: string) => {
+            setServerType(value);
+          }}
+          placeholder={
+            serverNode ? "Select server type..." : "Select a node first"
+          }
+        />
+      ),
+      onConfirm: () => {
+        if (createServerRunning) return;
+        setCreateServerRunning(true);
+        if (!serverName || !serverType || !serverNode) return;
+        createServerModal.fetching();
+        createServer.mutate(
+          {
+            name: serverName,
+            type: serverType,
+            nodeId: serverNode,
+          },
+          {
+            onSuccess: async () => {
+              createServerModal.success();
+              setCreateServerRunning(false);
+              setTimeout(createServerModal.close, 2000);
+              refetch();
+            },
+            onError: (err) => {
+              createServerModal.error();
+              setCreateServerRunning(false);
+              alert(err);
+            },
+          }
+        );
+      },
+    },
+  ]);
 
   if (error && error.data?.code === "UNAUTHORIZED") {
     return <Navigate to="/login" />;
@@ -369,21 +349,12 @@ export default function ServerList() {
       </div>
       <div
         className="fixed bottom-0 right-0 m-8 transition-colors bg-neutral-200 flex flex-row items-center gap-2 hover:bg-neutral-300 p-2 rounded"
-        onClick={() => setCreatingServer(true)}
+        onClick={createServerModal.open}
       >
         <Plus className="text-primary-200" size={40} />
       </div>
 
-      {creatingServer && serverTypes && nodes && (
-        <CreateServerModal
-          close={() => {
-            setCreatingServer(false);
-            refetch();
-          }}
-          serverTypes={serverTypes}
-          nodes={nodes}
-        />
-      )}
+      {createServerModal.Modal}
     </div>
   );
 }

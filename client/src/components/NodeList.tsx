@@ -13,13 +13,104 @@ import { trpc } from "../main";
 import { useState } from "react";
 import { inferProcedureOutput } from "@trpc/server";
 import { AppRouter } from "@tsm/server";
-import Modal, { useModal } from "./Modal";
+import { useModal } from "./Modal";
+import { Input } from "./Input";
 
 type NodeType = inferProcedureOutput<AppRouter["node"]["list"]>["0"];
 
 export function Node({ node }: { node: NodeType }) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const modal = useModal();
+  const [renameInput, setRenameInput] = useState("");
+  const [urlInput, setURLInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+
+  const renameNodeModal = useModal([
+    {
+      title: "Rename node",
+      description: `Rename node '${node.name}'`,
+      body: (
+        <Input
+          onValueChange={(value) => setRenameInput(value)}
+          className="rounded"
+        />
+      ),
+      onConfirm: () => {
+        if (!renameInput) return;
+        renameNodeModal.fetching();
+        editNode.mutate(
+          { nodeId: node.id, name: renameInput },
+          {
+            onError: () => {
+              renameNodeModal.error();
+              setTimeout(() => renameNodeModal.close(), 2000);
+            },
+            onSuccess: () => {
+              renameNodeModal.success();
+              setTimeout(() => renameNodeModal.close(), 2000);
+            },
+          }
+        );
+      },
+    },
+  ]);
+  const editURLModal = useModal([
+    {
+      title: "Edit node url",
+      description: `Edit url of node '${node.name}'`,
+      body: (
+        <Input
+          onValueChange={(value) => setURLInput(value)}
+          className="rounded"
+        />
+      ),
+      onConfirm: () => {
+        if (!urlInput) return;
+        editURLModal.fetching();
+        editNode.mutate(
+          { nodeId: node.id, url: urlInput },
+          {
+            onError: () => {
+              editURLModal.error();
+              setTimeout(() => editURLModal.close(), 2000);
+            },
+            onSuccess: () => {
+              editURLModal.success();
+              setTimeout(() => editURLModal.close(), 2000);
+            },
+          }
+        );
+      },
+    },
+  ]);
+  const editPasswordModal = useModal([
+    {
+      title: "Edit node password",
+      description: `Edit password of node '${node.name}'`,
+      body: (
+        <Input
+          onValueChange={(value) => setPasswordInput(value)}
+          className="rounded"
+        />
+      ),
+      onConfirm: () => {
+        if (!passwordInput) return;
+        editPasswordModal.fetching();
+        editNode.mutate(
+          { nodeId: node.id, password: passwordInput },
+          {
+            onError: () => {
+              editPasswordModal.error();
+              setTimeout(() => editPasswordModal.close(), 2000);
+            },
+            onSuccess: () => {
+              editPasswordModal.success();
+              setTimeout(() => editPasswordModal.close(), 2000);
+            },
+          }
+        );
+      },
+    },
+  ]);
 
   const editNode = trpc.node.edit.useMutation();
 
@@ -27,98 +118,25 @@ export function Node({ node }: { node: NodeType }) {
     {
       label: "Rename",
       icon: <Edit2 />,
-      onClick: () =>
-        modal.open(
-          "Rename node",
-          `Rename node '${node.name}'`,
-          true,
-          (input) => {
-            if (!input) return;
-            modal.fetching();
-            editNode.mutate(
-              { nodeId: node.id, name: input },
-              {
-                onError: () => {
-                  modal.error();
-                  setTimeout(() => modal.close(), 2000);
-                },
-                onSuccess: () => {
-                  modal.success();
-                  setTimeout(() => modal.close(), 2000);
-                },
-              }
-            );
-          },
-          () => {
-            modal.close();
-          }
-        ),
+      onClick: renameNodeModal.open,
     },
     {
       label: "Edit URL",
       icon: <Link />,
-      onClick: () =>
-        modal.open(
-          "Edit node url",
-          `Edit url of node '${node.name}'`,
-          true,
-          (input) => {
-            if (!input) return;
-            modal.fetching();
-            editNode.mutate(
-              { nodeId: node.id, url: input },
-              {
-                onError: () => {
-                  modal.error();
-                  setTimeout(() => modal.close(), 2000);
-                },
-                onSuccess: () => {
-                  modal.success();
-                  setTimeout(() => modal.close(), 2000);
-                },
-              }
-            );
-          },
-          () => {
-            modal.close();
-          }
-        ),
+      onClick: editURLModal.open,
     },
     {
       label: "Edit Password",
       icon: <Key />,
-      onClick: () =>
-        modal.open(
-          "Edit node password",
-          `Edit password of node '${node.name}'`,
-          true,
-          (input) => {
-            if (!input) return;
-            modal.fetching();
-            editNode.mutate(
-              { nodeId: node.id, password: input },
-              {
-                onError: () => {
-                  modal.error();
-                  setTimeout(() => modal.close(), 2000);
-                },
-                onSuccess: () => {
-                  modal.success();
-                  setTimeout(() => modal.close(), 2000);
-                },
-              }
-            );
-          },
-          () => {
-            modal.close();
-          }
-        ),
+      onClick: editPasswordModal.open,
     },
   ];
 
   return (
     <div className="bg-neutral-200 w-fit px-4 py-2 rounded">
-      <Modal data={modal.data} />
+      {renameNodeModal.Modal}
+      {editURLModal.Modal}
+      {editPasswordModal.Modal}
       <div className="flex flex-row gap-2 items-center">
         <Server />
         <p className="text-xl">{node.name}</p>

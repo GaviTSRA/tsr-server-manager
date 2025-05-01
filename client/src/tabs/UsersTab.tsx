@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { type Permission } from "@tsm/server";
 import { Toggle } from "../components/Toggle";
 import { Dropdown } from "../components/Dropdown";
-import Modal, { useModal } from "../components/Modal";
+import { useModal } from "../components/Modal";
 
 const PERMISSIONS = [
   // "server", implicit permission that gives base access to the server
@@ -66,11 +66,29 @@ export function UserSettings({
   const writePermission = trpc.server.users.writePermissions.useMutation();
   const deleteUser = trpc.server.users.deleteUser.useMutation();
 
-  const modal = useModal();
+  const deleteUserModal = useModal([
+    {
+      title: "Remove user?",
+      description: `Confirm removal of user '${user.name}'`,
+      onConfirm: () => {
+        deleteUserModal.fetching();
+        deleteUser.mutate(
+          { deleteUserId: user.id, serverId, nodeId },
+          {
+            onSuccess: () => {
+              deleteUserModal.success();
+              refetch();
+            },
+            onError: () => deleteUserModal.error(),
+          }
+        );
+      },
+    },
+  ]);
 
   return (
     <Container className="flex flex-col p-2 rounded h-fit">
-      <Modal data={modal.data} />
+      {deleteUserModal.Modal}
       <div
         className="flex flex-row text-2xl items-center gap-2"
         onClick={() => setExpanded(!expanded)}
@@ -129,25 +147,7 @@ export function UserSettings({
                 className="flex flex-row px-2 py-1 bg-danger gap-2 rounded w-fit text-white mx-auto"
                 onClick={(e) => {
                   e.stopPropagation();
-                  modal.open(
-                    "Remove user?",
-                    `Confirm removal of user '${user.name}'`,
-                    false,
-                    () => {
-                      modal.fetching();
-                      deleteUser.mutate(
-                        { deleteUserId: user.id, serverId, nodeId },
-                        {
-                          onSuccess: () => {
-                            modal.success();
-                            refetch();
-                          },
-                          onError: () => modal.error(),
-                        }
-                      );
-                    },
-                    () => modal.close()
-                  );
+                  deleteUserModal.open();
                 }}
               >
                 <Trash2 />

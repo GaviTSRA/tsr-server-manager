@@ -67,14 +67,14 @@ function ServerTab({
         delay: index * 0.02,
       }}
       className={
-        "w-full py-2 px-2 rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
+        "w-full rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
         (selected
           ? "bg-neutral-150 border-l-primary-100"
           : "bg-neutral-200 hover:bg-neutral-300")
       }
     >
       <Link to={`/server/${nodeId}/${serverId}/${tab.id}`} key={tab.id}>
-        <div className="mx-auto flex flex-row gap-2">
+        <div className="mx-auto flex flex-row gap-2 px-2 py-1">
           {tab.icon}
           <p>{tab.title}</p>
         </div>
@@ -431,7 +431,8 @@ export function Server() {
                   />
                 );
               })}
-            {tabs.filter((tab) => tab.custom).length && (
+            {tabs.filter((tab) => tab.custom && customTabs.includes(tab.id))
+              .length > 0 && (
               <motion.div
                 className="w-full flex flex-row gap-2 items-center"
                 initial={{

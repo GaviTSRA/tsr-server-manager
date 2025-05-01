@@ -12,7 +12,8 @@ import {
 } from "react-feather";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
-import Modal, { useModal } from "../components/Modal";
+import { useModal } from "../components/Modal";
+import { Input } from "../components/Input";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -45,79 +46,78 @@ function FileRow({
     name: string;
     type: "file" | "folder";
     size: number;
-    lastEdited: string;
+    lastEdited: Date;
   };
   refetch: () => void;
   nodeId: string;
 }): JSX.Element {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [renameInput, setRenameInput] = useState("");
 
   const renameFile = trpc.server.files.rename.useMutation();
   const deleteFile = trpc.server.files.delete.useMutation();
 
-  const modal = useModal();
+  const renameModal = useModal([
+    {
+      title: "Rename file",
+      description: `Rename file '${file.name}'`,
+      body: (
+        <Input
+          onValueChange={(value) => setRenameInput(value)}
+          className="rounded"
+        />
+      ),
+      onConfirm: () => {
+        if (!renameInput) return;
+        renameModal.fetching();
+        renameFile.mutate(
+          { path: path + file.name, name: renameInput, serverId, nodeId },
+          {
+            onError: () => {
+              renameModal.error();
+            },
+            onSuccess: () => {
+              renameModal.success();
+              refetch();
+            },
+          }
+        );
+      },
+    },
+  ]);
+
+  const deleteModal = useModal([
+    {
+      title: "Delete file",
+      description: `Delete file '${file.name}'`,
+      onConfirm: () => {
+        deleteModal.fetching();
+        deleteFile.mutate(
+          { path: path + file.name, serverId, nodeId },
+          {
+            onError: () => {
+              deleteModal.error();
+            },
+            onSuccess: () => {
+              deleteModal.success();
+              refetch();
+            },
+          }
+        );
+      },
+    },
+  ]);
 
   const moreOptions = [
     {
       label: "Rename",
       icon: <Edit2 />,
-      onClick: (fileName: string) =>
-        modal.open(
-          "Rename file",
-          `Rename file '${fileName}'`,
-          true,
-          (input) => {
-            if (!input) return;
-            modal.fetching();
-            renameFile.mutate(
-              { path: path + file.name, name: input, serverId, nodeId },
-              {
-                onError: () => {
-                  modal.error();
-                  setTimeout(() => modal.close(), 2000);
-                },
-                onSuccess: () => {
-                  modal.success();
-                  setTimeout(() => modal.close(), 2000);
-                  refetch();
-                },
-              }
-            );
-          },
-          () => {
-            modal.close();
-          }
-        ),
+      onClick: renameModal.open,
     },
     {
       label: "Delete",
       icon: <Trash2 />,
-      onClick: (fileName: string) =>
-        modal.open(
-          "Delete file?",
-          `Confirm deletion of '${fileName}'`,
-          false,
-          () => {
-            modal.fetching();
-            deleteFile.mutate(
-              { path: path + file.name, serverId, nodeId },
-              {
-                onError: () => {
-                  modal.error();
-                  setTimeout(() => modal.close(), 2000);
-                },
-                onSuccess: () => {
-                  modal.success();
-                  setTimeout(() => modal.close(), 2000);
-                  refetch();
-                },
-              }
-            );
-          },
-          () => {
-            modal.close();
-          }
-        ),
+      onClick: deleteModal.open,
     },
   ];
 
@@ -128,7 +128,8 @@ function FileRow({
         setPath(path + file.name + (file.type === "folder" ? "/" : ""));
       }}
     >
-      <Modal data={modal.data} />
+      {renameModal.Modal}
+      {deleteModal.Modal}
       {file.type === "folder" && <Folder />}
       {file.type === "file" && <File />}
       <p>{file.name}</p>
@@ -166,7 +167,7 @@ function FileRow({
                   onClick={(e) => {
                     e.stopPropagation();
                     setMoreOpen(false);
-                    value.onClick(file.name);
+                    value.onClick();
                   }}
                   key={index}
                 >
@@ -191,7 +192,9 @@ export function FilesTab({
 }) {
   const [path, setPath] = useState("/");
   const [content, setContent] = useState(undefined as string | undefined);
-  const [file, setFile] = useState<File | null>(null);
+  // const [file, setFile] = useState<File | null>(null);
+  const [createFileInput, setCreateFileInput] = useState("");
+  const [createFolderInput, setCreateFolderInput] = useState("");
 
   const {
     data: files,
@@ -206,42 +209,111 @@ export function FilesTab({
     }
   );
 
-  const modal = useModal();
+  const createFileModal = useModal([
+    {
+      title: "Create file",
+      description: "Enter the name of the new file",
+      body: (
+        <Input
+          onValueChange={(value) => setCreateFileInput(value)}
+          className="rounded"
+        />
+      ),
+      onConfirm: () => {
+        if (!createFileInput) return;
+        createFileModal.fetching();
+        createFile.mutate(
+          {
+            path: path.endsWith("/")
+              ? path + createFileInput
+              : path + "/" + createFileInput,
+            serverId,
+            nodeId,
+          },
+          {
+            onError: () => {
+              createFileModal.error();
+            },
+            onSuccess: () => {
+              createFileModal.success();
+              setTimeout(() => createFileModal.close(), 2000);
+              refetch();
+            },
+          }
+        );
+      },
+    },
+  ]);
+  const createFolderModal = useModal([
+    {
+      title: "Create folder",
+      description: "Enter the name of the new folder",
+      body: (
+        <Input
+          onValueChange={(value) => setCreateFolderInput(value)}
+          className="rounded"
+        />
+      ),
+      onConfirm: () => {
+        if (!createFolderInput) return;
+        createFolderModal.fetching();
+        createFolder.mutate(
+          {
+            path: path.endsWith("/")
+              ? path + createFolderInput
+              : path + "/" + createFolderInput,
+            serverId,
+            nodeId,
+          },
+          {
+            onError: () => {
+              createFolderModal.error();
+            },
+            onSuccess: () => {
+              createFolderModal.success();
+              setTimeout(() => createFolderModal.close(), 2000);
+              refetch();
+            },
+          }
+        );
+      },
+    },
+  ]);
 
   const editFile = trpc.server.files.edit.useMutation();
   const createFile = trpc.server.files.create.useMutation();
-  const createDir = trpc.server.files.createFolder.useMutation();
-  const uploadFile = trpc.server.files.upload.useMutation();
+  const createFolder = trpc.server.files.createFolder.useMutation();
+  // const uploadFile = trpc.server.files.upload.useMutation();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files) {
+  //     setFile(e.target.files[0]);
+  //   }
+  // };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    if (!file) {
-      alert("Please select a file");
-      return;
-    }
+  //   if (!file) {
+  //     alert("Please select a file");
+  //     return;
+  //   }
 
-    const formData = new FormData();
-    formData.append("path", path);
-    formData.append("serverId", serverId);
-    formData.append("file", file);
+  //   const formData = new FormData();
+  //   formData.append("path", path);
+  //   formData.append("serverId", serverId);
+  //   formData.append("file", file);
 
-    await uploadFile.mutateAsync(
-      { ...formData, nodeId },
-      {
-        onSuccess: () => {
-          refetch();
-          alert("done");
-        },
-      }
-    );
-  };
+  //   await uploadFile.mutateAsync(
+  //     { ...formData, nodeId },
+  //     {
+  //       onSuccess: () => {
+  //         refetch();
+  //         alert("done");
+  //       },
+  //     }
+  //   );
+  // };
 
   if (error) {
     return <Error error={error} />;
@@ -260,8 +332,9 @@ export function FilesTab({
 
   return (
     <div className="h-full flex flex-col">
+      {createFileModal.Modal}
+      {createFolderModal.Modal}
       <Container className="flex flex-row p-2 mb-2">
-        <Modal data={modal.data} />
         <div className="flex flex-row items-center">
           <p
             className="py-1 rounded cursor-pointer text-secondary-text hover:bg-neutral-150"
@@ -326,79 +399,13 @@ export function FilesTab({
             <div className="flex flex-row ml-auto mr-4 gap-4">
               <button
                 className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded"
-                onClick={() => {
-                  modal.open(
-                    "Create file",
-                    "Enter the name of the new file",
-                    true,
-                    (input) => {
-                      if (!input) return;
-                      modal.fetching();
-                      createFile.mutate(
-                        {
-                          path: path.endsWith("/")
-                            ? path + input
-                            : path + "/" + input,
-                          serverId,
-                          nodeId,
-                        },
-                        {
-                          onError: () => {
-                            modal.error();
-                            setTimeout(() => modal.close(), 2000);
-                          },
-                          onSuccess: () => {
-                            modal.success();
-                            setTimeout(() => modal.close(), 2000);
-                            refetch();
-                          },
-                        }
-                      );
-                    },
-                    () => {
-                      modal.close();
-                    }
-                  );
-                }}
+                onClick={createFileModal.open}
               >
                 Create File
               </button>
               <button
                 className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded"
-                onClick={() => {
-                  modal.open(
-                    "Create folder",
-                    "Enter the name of the new folder",
-                    true,
-                    (input) => {
-                      if (!input) return;
-                      modal.fetching();
-                      createDir.mutate(
-                        {
-                          path: path.endsWith("/")
-                            ? path + input
-                            : path + "/" + input,
-                          serverId,
-                          nodeId,
-                        },
-                        {
-                          onError: () => {
-                            modal.error();
-                            setTimeout(() => modal.close(), 2000);
-                          },
-                          onSuccess: () => {
-                            modal.success();
-                            setTimeout(() => modal.close(), 2000);
-                            refetch();
-                          },
-                        }
-                      );
-                    },
-                    () => {
-                      modal.close();
-                    }
-                  );
-                }}
+                onClick={createFolderModal.open}
               >
                 Create Folder
               </button>
