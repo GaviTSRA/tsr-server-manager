@@ -19,7 +19,7 @@ export function ConsoleTab({
   nodeId,
 }: {
   serverId: string;
-  stats: inferProcedureOutput<AppRouter["server"]["status"]>;
+  stats: inferProcedureOutput<AppRouter["server"]["status"]> | undefined;
   statsError: ErrorType | null;
   logs: string[];
   logsError: ErrorType | null;
@@ -167,7 +167,7 @@ export function ConsoleTab({
           <Container expanded={true} className="h-full">
             <Error error={statsError} />
           </Container>
-        ) : (
+        ) : stats ? (
           <div className="grid grid-rows-3 gap-2">
             <Container
               className="overflow-hidden flex flex-col !p-0"
@@ -361,6 +361,13 @@ export function ConsoleTab({
               </div>
             </Container>
           </div>
+        ) : (
+          <Container
+            expanded={true}
+            className="h-full w-full flex items-center justify-center"
+          >
+            <MoonLoader color={"#FFFFFF"} />
+          </Container>
         )}
       </div>
     </div>

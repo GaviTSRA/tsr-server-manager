@@ -246,7 +246,7 @@ export function Server() {
         tab: (
           <ConsoleTab
             serverId={serverId}
-            stats={stats ?? []}
+            stats={stats}
             statsError={statsError}
             logs={logs}
             logsError={logsError}
@@ -442,6 +442,9 @@ export function Server() {
                   x: 0,
                   opacity: 1,
                 }}
+                transition={{
+                  delay: tabs.filter((tab) => !tab.custom).length * 0.02,
+                }}
               >
                 <div className="w-full border-b-2 border-neutral-400"></div>
                 <p className="text-neutral-500">Custom</p>
@@ -456,7 +459,7 @@ export function Server() {
                     selected={data.id === tab}
                     tab={data}
                     key={index}
-                    index={index}
+                    index={index + tabs.filter((tab) => !tab.custom).length}
                     nodeId={nodeId}
                     serverId={serverId}
                   />

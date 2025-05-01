@@ -16,6 +16,7 @@ import {
 } from "trpc-to-openapi";
 import { ConnectedNode, registerNode } from "./nodes";
 import { EventSource } from "eventsource";
+import compression from "compression";
 
 if (typeof global !== "undefined") {
   // @ts-expect-error EventSource polyfill
@@ -43,6 +44,7 @@ for (const node of dbNodes) {
 
 const app = express();
 app.use(cors());
+app.use(compression());
 app.use("/trpc", createExpressMiddleware({ router: appRouter, createContext }));
 // app.use(
 //   "/api",

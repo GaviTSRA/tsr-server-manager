@@ -11,6 +11,7 @@ import { createContext } from "./trpc/trpc";
 import http from "http";
 import cors from "cors";
 import { watchStats } from "./stats";
+import compression from "compression";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 export type { NodeRouter } from "./trpc/router";
@@ -132,6 +133,7 @@ db.query.Server.findMany().then((servers) => {
 
 const app = express();
 app.use(cors());
+app.use(compression());
 app.use("/", createExpressMiddleware({ router: nodeRouter, createContext }));
 const server = http.createServer({}, app);
 server.listen(8771);
