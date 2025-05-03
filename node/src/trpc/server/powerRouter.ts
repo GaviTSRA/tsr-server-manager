@@ -88,14 +88,18 @@ export const powerRouter = router({
       const res = await docker.attachToContainer(containerId);
       const asyncIterable = docker.createAsyncIterable(res.data);
 
-      watchStats(ctx.server.id, containerId, ctx.server.cpuLimit);
+      setTimeout(async () => {
+        watchStats(ctx.server.id, containerId, ctx.server.cpuLimit);
+      }, 0)
 
-      for await (const chunk of asyncIterable) {
-        const data = chunk.toString() as string;
-        for (const logLine of data.split("\n")) {
-          await emitLogEvent(ctx.server.id, logLine, ctx.server.type);
+      setTimeout(async () => {
+        for await (const chunk of asyncIterable) {
+          const data = chunk.toString() as string;
+          for (const logLine of data.split("\n")) {
+            await emitLogEvent(ctx.server.id, logLine, ctx.server.type);
+          }
         }
-      }
+      }, 0)
 
       return result;
     }),

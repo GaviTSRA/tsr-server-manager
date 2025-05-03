@@ -6,13 +6,9 @@ import {
   StopCircle,
   ArrowUpCircle,
   AlertCircle,
-  RotateCw,
   Server as ServerIcon,
-  X,
   Cpu,
   Settings,
-  Square,
-  Play,
   Users,
   Menu,
   Book,
@@ -31,6 +27,7 @@ import { UsersTab } from "./tabs/UsersTab";
 import { LogsTab } from "./tabs/LogsTab";
 import { MinecraftPlayersTab } from "./tabs/custom/MinecraftPlayersTab";
 import { motion } from "motion/react";
+import { ServerControls } from "./components/ServerControls";
 
 type Tab = {
   id: string;
@@ -122,10 +119,6 @@ export function Server() {
     }
   }, [error]);
 
-  const [startButtonEnabled, setStartButtonEnabled] = useState(false);
-  const [restartButtonEnabled, setRestartButtonEnabled] = useState(false);
-  const [stopButtonEnabled, setStopButtonEnabled] = useState(false);
-  const [killButtonEnabled, setKillButtonEnabled] = useState(false);
   // const [status, setStatus] = useState("");
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
   const [logs, setLogs] = useState([] as string[]);
@@ -144,11 +137,6 @@ export function Server() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const startServer = trpc.server.power.start.useMutation();
-  const restartServer = trpc.server.power.restart.useMutation();
-  const stopServer = trpc.server.power.stop.useMutation();
-  const killServer = trpc.server.power.kill.useMutation();
-
   useEffect(() => {
     if (!server) return;
     if (server.status === "running") {
@@ -161,43 +149,23 @@ export function Server() {
     }
     switch (server.status) {
       case undefined:
-        setStartButtonEnabled(true);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(false);
         setStatusIcon(<Settings size={30} className="text-gray-500" />);
         // setStatus("Not Configured");
         break;
       case "created":
       case "exited":
-        setStartButtonEnabled(true);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(false);
         setStatusIcon(<StopCircle size={30} className="text-red-600" />);
         // setStatus("Stopped");
         break;
       case "running":
-        setStartButtonEnabled(false);
-        setRestartButtonEnabled(true);
-        setStopButtonEnabled(true);
-        setKillButtonEnabled(true);
         setStatusIcon(<PlayCircle size={30} className="text-success" />);
         // setStatus("Running");
         break;
       case "restarting":
-        setStartButtonEnabled(false);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(true);
         setStatusIcon(<ArrowUpCircle size={30} className="text-gray-500" />);
         // setStatus("Restarting");
         break;
       case "dead":
-        setStartButtonEnabled(true);
-        setRestartButtonEnabled(false);
-        setStopButtonEnabled(false);
-        setKillButtonEnabled(false);
         setStatusIcon(<AlertCircle size={30} className="text-red-600" />);
         // setStatus("Dead");
         break;
@@ -350,70 +318,13 @@ export function Server() {
                     />
                   )}
                 </div>
-                <div className="flex flex-row items-center gap-2">
+                <div className="flex flex-row items-center gap-2 mb-2">
                   <p className="text-2xl mr-auto">{server.name}</p>
                   {statusIcon}
                 </div>
+                <ServerControls serverId={serverId} nodeId={nodeId} status={server.status} />
               </div>
             )}
-            <div className="flex rounded-xl flex-row">
-              <Play
-                size={40}
-                className={
-                  `p-2 rounded-l-lg border-neutral-400 border-1 ` +
-                  (startButtonEnabled
-                    ? "bg-neutral-300 hover:bg-green-800"
-                    : "bg-neutral-150")
-                }
-                onClick={() => {
-                  if (startButtonEnabled) {
-                    startServer.mutate({ serverId, nodeId });
-                  }
-                }}
-              />
-              <RotateCw
-                size={40}
-                className={
-                  `p-2 border-neutral-400 border-1 ` +
-                  (restartButtonEnabled
-                    ? "bg-neutral-300 hover:bg-danger"
-                    : "bg-neutral-150")
-                }
-                onClick={() => {
-                  if (restartButtonEnabled) {
-                    restartServer.mutate({ serverId, nodeId });
-                  }
-                }}
-              />
-              <Square
-                size={40}
-                className={
-                  `p-2 border-neutral-400 border-1 ` +
-                  (stopButtonEnabled
-                    ? "bg-neutral-300 hover:bg-danger"
-                    : "bg-neutral-150")
-                }
-                onClick={() => {
-                  if (stopButtonEnabled) {
-                    stopServer.mutate({ serverId, nodeId });
-                  }
-                }}
-              />
-              <X
-                size={40}
-                className={
-                  `p-2 rounded-r-lg border-neutral-400 border-1 ` +
-                  (killButtonEnabled
-                    ? "bg-neutral-300 hover:bg-danger"
-                    : "bg-neutral-150")
-                }
-                onClick={() => {
-                  if (killButtonEnabled) {
-                    killServer.mutate({ serverId, nodeId });
-                  }
-                }}
-              />
-            </div>
           </div>
           <div className="w-full h-full gap-2 flex flex-col items-center p-2">
             {tabs
@@ -433,25 +344,25 @@ export function Server() {
               })}
             {tabs.filter((tab) => tab.custom && customTabs.includes(tab.id))
               .length > 0 && (
-              <motion.div
-                className="w-full flex flex-row gap-2 items-center"
-                initial={{
-                  x: -50,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: 0,
-                  opacity: 1,
-                }}
-                transition={{
-                  delay: tabs.filter((tab) => !tab.custom).length * 0.02,
-                }}
-              >
-                <div className="w-full border-b-2 border-neutral-400"></div>
-                <p className="text-neutral-500">Custom</p>
-                <div className="w-full border-b-2 border-neutral-400"></div>
-              </motion.div>
-            )}
+                <motion.div
+                  className="w-full flex flex-row gap-2 items-center"
+                  initial={{
+                    x: -50,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    x: 0,
+                    opacity: 1,
+                  }}
+                  transition={{
+                    delay: tabs.filter((tab) => !tab.custom).length * 0.02,
+                  }}
+                >
+                  <div className="w-full border-b-2 border-neutral-400"></div>
+                  <p className="text-neutral-500">Custom</p>
+                  <div className="w-full border-b-2 border-neutral-400"></div>
+                </motion.div>
+              )}
             {tabs
               .filter((tab) => tab.custom && customTabs.includes(tab.id))
               .map((data, index) => {
