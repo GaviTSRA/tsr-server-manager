@@ -12,23 +12,19 @@ import {
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, X } from "react-feather";
+import { useServerQueryParams } from "../Server";
 
 type Log = {
   user: {
     name: string;
   };
   success: boolean;
-  date: string;
+  date: Date;
   log: string;
 };
 
-export function LogsTab({
-  serverId,
-  nodeId,
-}: {
-  serverId: string;
-  nodeId: string;
-}) {
+export function LogsTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const { data: logs, error } = trpc.server.logs.read.useQuery(
     { serverId, nodeId },
     {
@@ -94,7 +90,7 @@ export function LogsTab({
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
       typeof window !== "undefined" &&
-      navigator.userAgent.indexOf("Firefox") === -1
+        navigator.userAgent.indexOf("Firefox") === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
     overscan: 5,

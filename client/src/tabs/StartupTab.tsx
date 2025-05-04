@@ -3,16 +3,14 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
+import { useServerQueryParams } from "../Server";
 
 export function StartupTab({
-  serverId,
   serverType,
-  nodeId,
 }: {
-  serverId: string;
-  nodeId: string;
   serverType: string | undefined;
 }) {
+  const { nodeId, serverId } = useServerQueryParams();
   const { data: serverTypes, error: serverTypesError } =
     trpc.serverTypes.useQuery();
   const {

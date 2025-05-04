@@ -4,14 +4,10 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
+import { useServerQueryParams } from "../Server";
 
-export function LimitsTab({
-  serverId,
-  nodeId,
-}: {
-  serverId: string;
-  nodeId: string;
-}) {
+export function LimitsTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const { data: limits, error } = trpc.server.limits.read.useQuery(
     { serverId, nodeId },
     {

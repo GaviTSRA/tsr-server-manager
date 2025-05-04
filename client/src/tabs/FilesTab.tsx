@@ -14,6 +14,7 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { useModal } from "../components/Modal";
 import { Input } from "../components/Input";
+import { useServerQueryParams } from "../Server";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -32,14 +33,11 @@ function formatFileSize(size: number): string {
 }
 
 function FileRow({
-  serverId,
   file,
   path,
   setPath,
   refetch,
-  nodeId,
 }: {
-  serverId: string;
   path: string;
   setPath: (newPath: string) => void;
   file: {
@@ -49,8 +47,8 @@ function FileRow({
     lastEdited: Date;
   };
   refetch: () => void;
-  nodeId: string;
 }): JSX.Element {
+  const { nodeId, serverId } = useServerQueryParams();
   const [moreOpen, setMoreOpen] = useState(false);
   const [renameInput, setRenameInput] = useState("");
 
@@ -183,13 +181,8 @@ function FileRow({
   );
 }
 
-export function FilesTab({
-  serverId,
-  nodeId,
-}: {
-  serverId: string;
-  nodeId: string;
-}) {
+export function FilesTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const [path, setPath] = useState("/");
   const [content, setContent] = useState(undefined as string | undefined);
   // const [file, setFile] = useState<File | null>(null);
@@ -357,12 +350,12 @@ export function FilesTab({
                 onClick={() => {
                   setPath(
                     "/" +
-                      path
-                        .split("/")
-                        .filter((part) => part !== "")
-                        .slice(0, index + 1)
-                        .join("/") +
-                      "/"
+                    path
+                      .split("/")
+                      .filter((part) => part !== "")
+                      .slice(0, index + 1)
+                      .join("/") +
+                    "/"
                   );
                   refetch();
                 }}
@@ -372,7 +365,7 @@ export function FilesTab({
                 </p>
                 {(files.type === "folder" ||
                   path.split("/").filter((part) => part !== "").length !==
-                    index + 1) && <p>/</p>}
+                  index + 1) && <p>/</p>}
               </div>
             ))}
           {files.type === "file" && (
@@ -425,11 +418,9 @@ export function FilesTab({
             )
             .map((file) => (
               <FileRow
-                nodeId={nodeId}
                 file={file}
                 path={path}
                 setPath={setPath}
-                serverId={serverId}
                 key={file.name + file.size}
                 refetch={refetch}
               />

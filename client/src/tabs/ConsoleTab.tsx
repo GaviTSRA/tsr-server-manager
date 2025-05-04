@@ -9,22 +9,21 @@ import { Error, ErrorType } from "../components/Error";
 import { MoonLoader } from "react-spinners";
 import { inferProcedureOutput } from "@trpc/server";
 import { AppRouter } from "@tsm/server";
+import { useServerQueryParams } from "../Server";
 
 export function ConsoleTab({
-  serverId,
   stats,
   statsError,
   logs,
   logsError,
-  nodeId,
 }: {
-  serverId: string;
   stats: inferProcedureOutput<AppRouter["server"]["status"]> | undefined;
   statsError: ErrorType | null;
   logs: string[];
   logsError: ErrorType | null;
-  nodeId: string;
 }) {
+  const { nodeId, serverId } = useServerQueryParams();
+
   const ansiConverter = new AnsiToHtml();
   const consoleRef = useRef(null as HTMLDivElement | null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -272,16 +271,16 @@ export function ConsoleTab({
                     tickValues={
                       availableRam
                         ? range(
-                            0,
-                            availableRam * 1024 * 1024 * 1024,
-                            (availableRam * 1024 >= 4096
-                              ? availableRam * 1024 >= 8192
-                                ? 2048
-                                : 1024
-                              : 512) *
-                              1024 *
-                              1024
-                          )
+                          0,
+                          availableRam * 1024 * 1024 * 1024,
+                          (availableRam * 1024 >= 4096
+                            ? availableRam * 1024 >= 8192
+                              ? 2048
+                              : 1024
+                            : 512) *
+                          1024 *
+                          1024
+                        )
                         : undefined
                     }
                     tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}

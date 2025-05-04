@@ -17,6 +17,7 @@ import { type Permission } from "@tsm/server";
 import { Toggle } from "../components/Toggle";
 import { Dropdown } from "../components/Dropdown";
 import { useModal } from "../components/Modal";
+import { useServerQueryParams } from "../Server";
 
 const PERMISSIONS = [
   // "server", implicit permission that gives base access to the server
@@ -42,10 +43,8 @@ const PERMISSIONS = [
 export function UserSettings({
   user,
   ownPermissions,
-  serverId,
   refetch,
   isOwner,
-  nodeId,
 }: {
   user: {
     id: string;
@@ -55,10 +54,9 @@ export function UserSettings({
   };
   ownPermissions: Permission[];
   isOwner: boolean;
-  serverId: string;
   refetch: () => void;
-  nodeId: string;
 }) {
+  const { nodeId, serverId } = useServerQueryParams();
   const [expanded, setExpanded] = useState(false);
   const [addPermissions, setAddPermissions] = useState([] as string[]);
   const [removePermissions, setRemovePermissions] = useState([] as string[]);
@@ -179,13 +177,8 @@ export function UserSettings({
   );
 }
 
-export function UsersTab({
-  serverId,
-  nodeId,
-}: {
-  serverId: string;
-  nodeId: string;
-}) {
+export function UsersTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const {
     data: users,
     error,
@@ -233,11 +226,9 @@ export function UsersTab({
         <UserSettings
           user={user}
           ownPermissions={ownPermissions}
-          serverId={serverId}
           isOwner={isOwner}
           key={user.id}
           refetch={refetch}
-          nodeId={nodeId}
         />
       ))}
       <Container className="h-fit">
