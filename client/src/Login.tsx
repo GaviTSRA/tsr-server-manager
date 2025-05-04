@@ -24,7 +24,7 @@ export function Login(): JSX.Element {
             <User />
             <p>Username</p>
           </div>
-          <Input className="rounded" onValueChange={setUsername} />
+          <Input className="rounded-sm" onValueChange={setUsername} />
         </div>
         <div className="flex flex-col">
           <div className="flex flex-row items-center pr-2 py-2 gap-2 mt-4">
@@ -32,7 +32,7 @@ export function Login(): JSX.Element {
             <p>Password</p>
           </div>
           <Input
-            className="rounded"
+            className="rounded-sm"
             onValueChange={setPassword}
             type="password"
           />
@@ -40,7 +40,7 @@ export function Login(): JSX.Element {
         <div className="w-full flex flex-col sm:flex-row items-center justify-center mt-8 gap-2 sm:gap-8">
           <button
             disabled={!username || !password || loggingIn || registering}
-            className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded px-4 py-2 text-white gap-2"
+            className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded-sm px-4 py-2 text-white gap-2"
             onClick={() => {
               if (!username || !password) {
                 return;
@@ -88,7 +88,7 @@ export function Login(): JSX.Element {
           </button>
           <button
             disabled={!username || !password || loggingIn || registering}
-            className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded px-4 py-2 text-white gap-2"
+            className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded-sm px-4 py-2 text-white gap-2"
             onClick={() => {
               if (!username || !password) {
                 return;

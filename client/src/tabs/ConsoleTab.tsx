@@ -121,7 +121,7 @@ export function ConsoleTab({
     <div className="w-full h-full flex flex-col lg:flex-row">
       <div className="bg-neutral-150 mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
         {logsError ? (
-          <Container className="h-full !rounded-b-none" expanded={true}>
+          <Container className="h-full rounded-b-none!" expanded={true}>
             <Error error={logsError} />
           </Container>
         ) : (
@@ -169,7 +169,7 @@ export function ConsoleTab({
         ) : stats ? (
           <div className="grid grid-rows-3 gap-2">
             <Container
-              className="overflow-hidden flex flex-col !p-0"
+              className="overflow-hidden flex flex-col p-0!"
               title={
                 <>
                   <Cpu size={20} />
@@ -245,7 +245,7 @@ export function ConsoleTab({
               </VictoryChart>
             </Container>
             <Container
-              className="overflow-hidden flex flex-col !p-0"
+              className="overflow-hidden flex flex-col p-0!"
               title={
                 <>
                   <Server size={20} />
@@ -300,7 +300,7 @@ export function ConsoleTab({
               </div>
             </Container>
             <Container
-              className="overflow-hidden flex flex-col !p-0"
+              className="overflow-hidden flex flex-col p-0!"
               title={
                 <>
                   <Rss size={20} />

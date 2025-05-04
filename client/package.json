@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.5",
     "@tanstack/react-query": "^5.62.8",
     "@tanstack/react-table": "^8.20.6",
     "@tanstack/react-virtual": "^3.11.2",
@@ -33,7 +34,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.13.0",
-    "tailwindcss": "^3.4.14",
+    "tailwindcss": "^4.1.5",
     "typescript": "5.7.2",
     "typescript-eslint": "^8.18.1",
     "vite": "^6.0.3"

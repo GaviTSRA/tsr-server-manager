@@ -28,7 +28,7 @@ function ServerTypeDisplay({
 
   return (
     <div className="flex flex-row items-center gap-1">
-      <img src={data.icon} className="w-8 rounded" />
+      <img src={data.icon} className="w-8 rounded-sm" />
       <p>{data.name}</p>
     </div>
   );
@@ -113,7 +113,7 @@ function Server({
   return (
     <div
       key={server.id}
-      className="bg-neutral-200 flex flex-col hover:bg-neutral-300 transition-colors cursor-pointer px-4 py-2 rounded"
+      className="bg-neutral-200 flex flex-col hover:bg-neutral-300 transition-colors cursor-pointer px-4 py-2 rounded-sm"
       onClick={() => navigate(`/server/${node.nodeId}/${server.id}/console`)}
     >
       <div className="flex flex-row items-center">
@@ -261,7 +261,7 @@ export default function ServerList() {
           <p className="text-secondary-text mt-2">Name</p>
           <Input
             defaultValue={serverName}
-            className="rounded"
+            className="rounded-sm"
             onValueChange={(value) => setServerName(value)}
           />
         </>
@@ -348,7 +348,7 @@ export default function ServerList() {
           })}
       </div>
       <div
-        className="fixed bottom-0 right-0 m-8 transition-colors bg-neutral-200 flex flex-row items-center gap-2 hover:bg-neutral-300 p-2 rounded"
+        className="fixed bottom-0 right-0 m-8 transition-colors bg-neutral-200 flex flex-row items-center gap-2 hover:bg-neutral-300 p-2 rounded-sm"
         onClick={createServerModal.open}
       >
         <Plus className="text-primary-200" size={40} />

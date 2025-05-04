@@ -31,7 +31,7 @@ export function Node({ node }: { node: NodeType }) {
       body: (
         <Input
           onValueChange={(value) => setRenameInput(value)}
-          className="rounded"
+          className="rounded-sm"
         />
       ),
       onConfirm: () => {
@@ -60,7 +60,7 @@ export function Node({ node }: { node: NodeType }) {
       body: (
         <Input
           onValueChange={(value) => setURLInput(value)}
-          className="rounded"
+          className="rounded-sm"
         />
       ),
       onConfirm: () => {
@@ -89,7 +89,7 @@ export function Node({ node }: { node: NodeType }) {
       body: (
         <Input
           onValueChange={(value) => setPasswordInput(value)}
-          className="rounded"
+          className="rounded-sm"
         />
       ),
       onConfirm: () => {
@@ -133,7 +133,7 @@ export function Node({ node }: { node: NodeType }) {
   ];
 
   return (
-    <div className="bg-neutral-200 w-fit px-4 py-2 rounded">
+    <div className="bg-neutral-200 w-fit px-4 py-2 rounded-sm">
       {renameNodeModal.Modal}
       {editURLModal.Modal}
       {editPasswordModal.Modal}
@@ -151,7 +151,7 @@ export function Node({ node }: { node: NodeType }) {
           {moreOpen && (
             <div className="absolute w-fit shadow-lg text-white">
               <div
-                className="fixed top-0 left-0 w-full h-full z-[50]"
+                className="fixed top-0 left-0 w-full h-full z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   setMoreOpen(false);
@@ -160,7 +160,7 @@ export function Node({ node }: { node: NodeType }) {
               <div>
                 {moreOptions.map((value, index) => (
                   <div
-                    className={`relative w-full z-[60] cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
+                    className={`relative w-full z-60 cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setMoreOpen(false);

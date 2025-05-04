@@ -41,12 +41,12 @@ export function NetworkTab() {
       {ports.map((port) => {
         return (
           <Container
-            className="px-4 flex items-center gap-2 rounded bg-neutral-200"
+            className="px-4 flex items-center gap-2 rounded-sm bg-neutral-200"
             key={port}
           >
             <p className="text-xl">{port}</p>
             <div
-              className="p-1 bg-danger rounded"
+              className="p-1 bg-danger rounded-sm"
               onClick={() =>
                 writePorts.mutate(
                   {
@@ -65,16 +65,16 @@ export function NetworkTab() {
           </Container>
         );
       })}
-      <Container className="w-fit flex flex-row gap-2 p-2 rounded bg-neutral-200">
+      <Container className="w-fit flex flex-row gap-2 p-2 rounded-sm bg-neutral-200">
         <Input
-          className="rounded"
+          className="rounded-sm"
           placeholder="Add port..."
           onValueChange={(value) => {
             setNewPort(value);
           }}
         />
         <button
-          className="p-2 bg-success rounded"
+          className="p-2 bg-success rounded-sm"
           onClick={() => {
             if (!newPort) return;
             writePorts.mutate(

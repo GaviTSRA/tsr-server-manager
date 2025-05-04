@@ -73,7 +73,7 @@ function ServerTab({
         delay: index * 0.02,
       }}
       className={
-        "w-full rounded border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
+        "w-full rounded-sm border-neutral-400 border-l-4 cursor-pointer select-none transition-colors " +
         (selected
           ? "bg-neutral-150 border-l-primary-100"
           : "bg-neutral-200 hover:bg-neutral-300")
@@ -286,7 +286,7 @@ export function Server() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
           >
-            <div className="p-2 rounded flex flex-col gap-2 border-neutral-150 border-b-4 rounded-b-lg">
+            <div className="p-2 rounded-sm flex flex-col gap-2 border-neutral-150 border-b-4 rounded-b-lg">
               <div className="flex flex-row items-center">
                 <ChevronLeft
                   size={24}

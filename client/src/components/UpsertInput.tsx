@@ -67,7 +67,7 @@ export function UpsertInput(
           setEdited(true);
           mutate(currentValue);
         }}
-        className="rounded"
+        className="rounded-sm"
       />
     </Container>
   )

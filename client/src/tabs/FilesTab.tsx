@@ -62,7 +62,7 @@ function FileRow({
       body: (
         <Input
           onValueChange={(value) => setRenameInput(value)}
-          className="rounded"
+          className="rounded-sm"
         />
       ),
       onConfirm: () => {
@@ -121,7 +121,7 @@ function FileRow({
 
   return (
     <div
-      className="flex flex-row gap-2 hover:bg-neutral-150 p-2 rounded cursor-pointer"
+      className="flex flex-row gap-2 hover:bg-neutral-150 p-2 rounded-sm cursor-pointer"
       onClick={() => {
         setPath(path + file.name + (file.type === "folder" ? "/" : ""));
       }}
@@ -152,7 +152,7 @@ function FileRow({
         {moreOpen && (
           <div className="absolute w-full shadow-lg">
             <div
-              className="fixed top-0 left-0 w-full h-full z-[50]"
+              className="fixed top-0 left-0 w-full h-full z-50"
               onClick={(e) => {
                 e.stopPropagation();
                 setMoreOpen(false);
@@ -161,7 +161,7 @@ function FileRow({
             <div>
               {moreOptions.map((value, index) => (
                 <div
-                  className={`relative w-full z-[60] cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
+                  className={`relative w-full z-60 cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setMoreOpen(false);
@@ -209,7 +209,7 @@ export function FilesTab() {
       body: (
         <Input
           onValueChange={(value) => setCreateFileInput(value)}
-          className="rounded"
+          className="rounded-sm"
         />
       ),
       onConfirm: () => {
@@ -244,7 +244,7 @@ export function FilesTab() {
       body: (
         <Input
           onValueChange={(value) => setCreateFolderInput(value)}
-          className="rounded"
+          className="rounded-sm"
         />
       ),
       onConfirm: () => {
@@ -330,7 +330,7 @@ export function FilesTab() {
       <Container className="flex flex-row p-2 mb-2">
         <div className="flex flex-row items-center">
           <p
-            className="py-1 rounded cursor-pointer text-secondary-text hover:bg-neutral-150"
+            className="py-1 rounded-sm cursor-pointer text-secondary-text hover:bg-neutral-150"
             onClick={() => {
               setPath("/");
               refetch();
@@ -360,7 +360,7 @@ export function FilesTab() {
                   refetch();
                 }}
               >
-                <p className="py-1 rounded cursor-pointer hover:bg-neutral-150">
+                <p className="py-1 rounded-sm cursor-pointer hover:bg-neutral-150">
                   {part}
                 </p>
                 {(files.type === "folder" ||
@@ -370,7 +370,7 @@ export function FilesTab() {
             ))}
           {files.type === "file" && (
             <button
-              className="flex items-center bg-confirm-normal hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded ml-auto"
+              className="flex items-center bg-confirm-normal hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded-sm ml-auto"
               onClick={() => {
                 if (content) {
                   editFile.mutate({ content, path, serverId, nodeId });
@@ -391,13 +391,13 @@ export function FilesTab() {
           {files.type === "folder" && (
             <div className="flex flex-row ml-auto mr-4 gap-4">
               <button
-                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded"
+                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded-sm"
                 onClick={createFileModal.open}
               >
                 Create File
               </button>
               <button
-                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded"
+                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded-sm"
                 onClick={createFolderModal.open}
               >
                 Create Folder
@@ -431,7 +431,7 @@ export function FilesTab() {
         <Container className="h-full" expanded={true}>
           <textarea
             value={content}
-            className="w-full h-full overflow-auto p-4 relative rounded bg-neutral-150 resize-none outline-none"
+            className="w-full h-full overflow-auto p-4 relative rounded-sm bg-neutral-150 resize-none outline-hidden"
             onChange={(event) => setContent(event.target.value)}
           />
         </Container>

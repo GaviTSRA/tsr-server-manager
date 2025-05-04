@@ -85,7 +85,7 @@ export function UserSettings({
   ]);
 
   return (
-    <Container className="flex flex-col p-2 rounded h-fit">
+    <Container className="flex flex-col p-2 rounded-sm h-fit">
       {deleteUserModal.Modal}
       <div
         className="flex flex-row text-2xl items-center gap-2"
@@ -142,7 +142,7 @@ export function UserSettings({
           {!user.owner && (
             <div className="flex flex-row items-center">
               <button
-                className="flex flex-row px-2 py-1 bg-danger gap-2 rounded w-fit text-white mx-auto"
+                className="flex flex-row px-2 py-1 bg-danger gap-2 rounded-sm w-fit text-white mx-auto"
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteUserModal.open();
@@ -152,7 +152,7 @@ export function UserSettings({
                 Delete
               </button>
               <button
-                className="flex flex-row px-2 py-1 bg-success gap-2 rounded w-fit text-white mx-auto"
+                className="flex flex-row px-2 py-1 bg-success gap-2 rounded-sm w-fit text-white mx-auto"
                 onClick={(e) => {
                   e.stopPropagation();
                   writePermission.mutate({
@@ -256,7 +256,7 @@ export function UsersTab() {
               />
               <div className="flex flex-row items-center">
                 <button
-                  className="flex flex-row gap-2 bg-success rounded px-2 py-1 mt-2 w-fit text-white disabled:bg-neutral-300"
+                  className="flex flex-row gap-2 bg-success rounded-sm px-2 py-1 mt-2 w-fit text-white disabled:bg-neutral-300"
                   disabled={newUser === null}
                   onClick={() => {
                     if (!newUser) return;

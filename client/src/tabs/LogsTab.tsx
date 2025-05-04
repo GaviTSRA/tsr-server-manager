@@ -110,7 +110,7 @@ export function LogsTab() {
 
   return (
     <Container
-      className="overflow-auto relative h-full !p-0"
+      className="overflow-auto relative h-full p-0!"
       expanded={true}
       innerRef={tableContainerRef}
     >

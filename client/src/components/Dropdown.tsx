@@ -26,7 +26,7 @@ export function Dropdown({
       <div
         className={
           `flex flex-row items-center select-none p-2 ${color} ` +
-          (open ? "rounded-t " : "rounded ") +
+          (open ? "rounded-t-sm " : "rounded-sm ") +
           (selected ? "" : "text-secondary-text")
         }
       >
@@ -40,12 +40,12 @@ export function Dropdown({
       {open && (
         <div className="absolute w-full shadow-lg">
           <div
-            className="fixed top-0 left-0 w-full h-full z-[50]"
+            className="fixed top-0 left-0 w-full h-full z-50"
             onClick={() => setOpen(false)}
           ></div>
           {values.map((value, index) => (
             <div
-              className={`relative w-full z-[60] cursor-pointer ${color} p-2 last:rounded-b`}
+              className={`relative w-full z-60 cursor-pointer ${color} p-2 last:rounded-b`}
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen(false);

@@ -19,15 +19,20 @@ export function Toggle({
         setChecked(!checked);
       }}
       className={
-        "w-12 h-6 flex items-center rounded-full p-1 cursor-pointer " +
-        `${checked ? "bg-success" : "bg-danger"}`
+        "w-12 h-6 flex items-center rounded-full p-1 " +
+        `${disabled
+          ? "bg-neutral-400 cursor-not-allowed"
+          : "bg-neutral-400 cursor-pointer"
+        }`
       }
     >
       <div
         className={
-          "w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out " +
-          `${checked ? "translate-x-6 " : "translate-x-0 "}` +
-          `${disabled ? "bg-neutral-300" : "bg-neutral-200"}`
+          "w-4 h-4 transition-all rounded-full shadow-md transform duration-300 ease-in-out " +
+          `${checked
+            ? `translate-x-6 ${disabled ? "bg-success-disabled" : "bg-success"}`
+            : `translate-x-0 ${disabled ? "bg-danger-disabled" : "bg-danger"}`
+          }`
         }
       />
     </div >

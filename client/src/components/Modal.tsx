@@ -84,7 +84,7 @@ export const useModal = (tabs: ModalTab[]) => {
                     previousTab();
                   }
                 }}
-                className="px-4 py-2 text-white bg-cancel-normal rounded hover:bg-cancel-hover active:bg-cancel-active disabled:bg-cancel-disabled"
+                className="px-4 py-2 text-white bg-cancel-normal rounded-sm hover:bg-cancel-hover active:bg-cancel-active disabled:bg-cancel-disabled"
                 disabled={
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
@@ -99,7 +99,7 @@ export const useModal = (tabs: ModalTab[]) => {
                     nextTab();
                   }
                 }}
-                className="flex items-center px-4 py-2 text-white bg-confirm-normal rounded hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled transition-colors"
+                className="flex items-center px-4 py-2 text-white bg-confirm-normal rounded-sm hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled transition-colors"
                 disabled={
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
