@@ -103,7 +103,7 @@ export const nodeRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const accessableServers = (
-        await ctx.db.query.Permission.findMany({
+        await ctx.db.query.AssignedPermission.findMany({
           where: (permission, { eq, and }) =>
             and(
               eq(permission.userId, input.userId),

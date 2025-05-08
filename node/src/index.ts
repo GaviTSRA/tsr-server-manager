@@ -12,67 +12,14 @@ import http from "http";
 import cors from "cors";
 import { watchStats } from "./stats";
 import compression from "compression";
+import { loadServerTypes } from "./serverTypes";
+import { registerDefaultPermissions } from "./permissions";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 export type { NodeRouter } from "./trpc/router";
 
-export type ServerType = {
-  id: string;
-  icon: string;
-  command: string;
-  name: string;
-  image: string | null;
-  options: {
-    [id: string]: {
-      name: string;
-      description: string;
-      type: "string" | "enum";
-      default: string;
-      options?: string[];
-    };
-  };
-  tabs?: string[];
-  eventHandler?: (event: PlatformEvent) => Promise<void>;
-};
-
-export type Permission =
-  | "server"
-  | "status"
-  | "power" // TODO frontend
-  | "console.read"
-  | "console.write"
-  | "files.read"
-  | "files.rename"
-  | "files.edit"
-  | "files.delete"
-  | "network.read"
-  | "network.write" // TODO frontend
-  | "startup.read"
-  | "startup.write"
-  | "limits.read"
-  | "limits.write"
-  | "users.read"
-  | "users.write"
-  | "logs.read";
-
-export const serverTypes: ServerType[] = [];
-fs.readdirSync("servertypes").forEach(async (folder) => {
-  const json = fs
-    .readFileSync(`servertypes/${folder}/manifest.json`)
-    .toString();
-  const data = JSON.parse(json);
-  let imported = await import(`../servertypes/${folder}/handler.ts`);
-  serverTypes.push({
-    id: folder,
-    name: data.name,
-    icon: data.icon,
-    image: data.image,
-    command: data.command,
-    options: data.options,
-    tabs: data.tabs,
-    eventHandler: imported.handleEvent,
-  });
-});
+registerDefaultPermissions(db);
+export const serverTypes = loadServerTypes(db);
 
 const customImages = [] as string[];
 fs.readdirSync("images").forEach((folder) => {

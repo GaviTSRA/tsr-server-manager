@@ -24,5 +24,12 @@
       "default": ""
     }
   },
-  "tabs": ["mc-players"]
+  "tabs": ["mc-players"],
+  "permissions": [
+    {
+      "id": "mc-paper.players.read",
+      "name": "Read Players",
+      "description": "Read the list of players on the server"
+    }
+  ]
 }

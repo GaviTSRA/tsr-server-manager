@@ -115,7 +115,7 @@ export function ConsoleTab({
       stroke: "#292929",
     },
   };
-  const height = 222;
+  const height = 210;
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row">
@@ -167,7 +167,7 @@ export function ConsoleTab({
             <Error error={statsError} />
           </Container>
         ) : stats ? (
-          <div className="grid grid-rows-3 gap-2">
+          <div className="grid grid-rows-3 gap-2 h-full">
             <Container
               className="overflow-hidden flex flex-col p-0!"
               title={
@@ -271,16 +271,16 @@ export function ConsoleTab({
                     tickValues={
                       availableRam
                         ? range(
-                          0,
-                          availableRam * 1024 * 1024 * 1024,
-                          (availableRam * 1024 >= 4096
-                            ? availableRam * 1024 >= 8192
-                              ? 2048
-                              : 1024
-                            : 512) *
-                          1024 *
-                          1024
-                        )
+                            0,
+                            availableRam * 1024 * 1024 * 1024,
+                            (availableRam * 1024 >= 4096
+                              ? availableRam * 1024 >= 8192
+                                ? 2048
+                                : 1024
+                              : 512) *
+                              1024 *
+                              1024
+                          )
                         : undefined
                     }
                     tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}

@@ -1,11 +1,18 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { Permission } from "../..";
-import { Permission as PermissionTable } from "../../schema";
+import { Permission, AssignedPermission } from "../../schema";
 import { hasPermission, log, router, serverProcedure } from "../trpc";
 import { z } from "zod";
 
-// TODO openapi
 export const usersRouter = router({
+  permissions: serverProcedure.query(async ({ ctx }) => {
+    return await ctx.db.query.Permission.findMany({
+      where: (Permission, { or, eq }) =>
+        or(
+          eq(Permission.serverType, "default"),
+          eq(Permission.serverType, ctx.server.type)
+        ),
+    });
+  }),
   read: serverProcedure
     .meta({
       permission: "users.read",
@@ -28,14 +35,14 @@ export const usersRouter = router({
       const finalUsers = [] as {
         id: string;
         name: string;
-        permissions: Permission[];
+        permissions: string[];
         owner: boolean;
         self: boolean;
       }[];
       for (const user of users) {
         const permissions = user.permissions.map(
           (permission) => permission.permission
-        ) as Permission[];
+        );
         const owner = user.id === ctx.server.ownerId;
         if (!permissions.includes("server") && !owner) continue;
         finalUsers.push({
@@ -95,7 +102,7 @@ export const usersRouter = router({
 
       if (addPermissions.length > 0) {
         await ctx.db
-          .insert(PermissionTable)
+          .insert(AssignedPermission)
           .values(
             addPermissions.map((permission) => ({
               userId: input.editUserId,
@@ -107,12 +114,12 @@ export const usersRouter = router({
       }
 
       await ctx.db
-        .delete(PermissionTable)
+        .delete(AssignedPermission)
         .where(
           and(
-            eq(PermissionTable.serverId, ctx.server.id),
-            eq(PermissionTable.userId, input.editUserId),
-            inArray(PermissionTable.permission, removePermissions)
+            eq(AssignedPermission.serverId, ctx.server.id),
+            eq(AssignedPermission.userId, input.editUserId),
+            inArray(AssignedPermission.permission, removePermissions)
           )
         );
       const user = await ctx.db.query.User.findFirst({
@@ -152,7 +159,7 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(PermissionTable).values({
+      await ctx.db.insert(AssignedPermission).values({
         userId: input.newUserId,
         serverId: ctx.server.id,
         permission: "server",
@@ -182,11 +189,11 @@ export const usersRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.db
-        .delete(PermissionTable)
+        .delete(AssignedPermission)
         .where(
           and(
-            eq(PermissionTable.userId, input.deleteUserId),
-            eq(PermissionTable.serverId, ctx.server.id)
+            eq(AssignedPermission.userId, input.deleteUserId),
+            eq(AssignedPermission.serverId, ctx.server.id)
           )
         );
       const user = await ctx.db.query.User.findFirst({

@@ -7,7 +7,6 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import { z } from "zod";
 import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import { Permission } from "..";
 import jwt from "jsonwebtoken";
 import SuperJSON from "superjson";
 
@@ -34,7 +33,7 @@ export const createContext = async ({
 };
 export type Context = Awaited<ReturnType<typeof createContext>>;
 export type Meta = {
-  permission?: Permission;
+  permission?: string;
   log?: string;
 };
 
@@ -148,12 +147,12 @@ export async function hasPermission(
   permission: string
 ) {
   if (server.ownerId === userId) return true;
-  const result = await ctx.db.query.Permission.findFirst({
-    where: (permissionTable, { and, eq }) =>
+  const result = await ctx.db.query.AssignedPermission.findFirst({
+    where: (AssignedPermission, { and, eq }) =>
       and(
-        eq(permissionTable.permission, permission),
-        eq(permissionTable.userId, userId),
-        eq(permissionTable.serverId, server.id)
+        eq(AssignedPermission.permission, permission),
+        eq(AssignedPermission.userId, userId),
+        eq(AssignedPermission.serverId, server.id)
       ),
   });
   return result !== undefined;

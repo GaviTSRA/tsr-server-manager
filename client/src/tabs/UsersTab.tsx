@@ -19,32 +19,12 @@ import { Dropdown } from "../components/Dropdown";
 import { useModal } from "../components/Modal";
 import { useServerQueryParams } from "../Server";
 
-const PERMISSIONS = [
-  // "server", implicit permission that gives base access to the server
-  "status",
-  "power",
-  "console.read",
-  "console.write",
-  "files.read",
-  "files.rename",
-  "files.edit",
-  "files.delete",
-  "network.read",
-  "network.write",
-  "startup.read",
-  "startup.write",
-  "limits.read",
-  "limits.write",
-  "users.read",
-  "users.write",
-  "logs.read",
-] as Permission[];
-
 export function UserSettings({
   user,
   ownPermissions,
   refetch,
   isOwner,
+  allPermissions,
 }: {
   user: {
     id: string;
@@ -55,6 +35,7 @@ export function UserSettings({
   ownPermissions: Permission[];
   isOwner: boolean;
   refetch: () => void;
+  allPermissions: Permission[];
 }) {
   const { nodeId, serverId } = useServerQueryParams();
   const [expanded, setExpanded] = useState(false);
@@ -110,10 +91,9 @@ export function UserSettings({
       </div>
       {expanded ? (
         <div className="flex flex-col gap-2 mt-2">
-          {PERMISSIONS.map((permission) => (
-            <div className="flex flex-row" key={permission}>
-              <p>{permission}</p>
-              <div className="ml-auto">
+          {allPermissions.map((permission) => (
+            <div className="flex flex-row items-center gap-2" key={permission}>
+              <div>
                 <Toggle
                   disabled={
                     user.owner ||
@@ -136,6 +116,13 @@ export function UserSettings({
                     }
                   }}
                 />
+              </div>
+              <div className="flex flex-col leading-none">
+                <div className="flex flex-row items-center gap-2">
+                  <p className="text-lg">{permission.name}</p>
+                  <p className="text-secondary-text text-sm">{permission.id}</p>
+                </div>
+                <p className="text-secondary-text">{permission.description}</p>
               </div>
             </div>
           ))}
@@ -189,6 +176,12 @@ export function UsersTab() {
     error: usersError,
     refetch: refetchAllUsers,
   } = trpc.user.list.useQuery();
+  const { data: allPermissions, error: permissionsError } =
+    trpc.server.users.permissions.useQuery({
+      serverId,
+      nodeId,
+    });
+
   const [ownPermissions, setOwnPermissions] = useState([] as Permission[]);
   const [isOwner, setIsOwner] = useState(false);
   const [newUser, setNewUser] = useState(null as string | null);
@@ -212,7 +205,11 @@ export function UsersTab() {
     return <Error error={error} />;
   }
 
-  if (!users) {
+  if (permissionsError) {
+    return <Error error={permissionsError} />;
+  }
+
+  if (!users || !allPermissions) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <MoonLoader size={100} color={"#FFFFFF"} />
@@ -229,6 +226,7 @@ export function UsersTab() {
           isOwner={isOwner}
           key={user.id}
           refetch={refetch}
+          allPermissions={allPermissions}
         />
       ))}
       <Container className="h-fit">

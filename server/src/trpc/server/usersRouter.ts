@@ -5,6 +5,27 @@ import { NodeRouter } from "@tsm/node";
 
 // TODO openapi
 export const usersRouter = router({
+  permissions: nodeProcedure
+    .meta({})
+    .input(
+      z.custom<
+        Omit<
+          inferProcedureInput<NodeRouter["server"]["users"]["permissions"]>,
+          "userId"
+        >
+      >()
+    )
+    .output(
+      z.custom<
+        inferProcedureOutput<NodeRouter["server"]["users"]["permissions"]>
+      >()
+    )
+    .query(async ({ ctx, input }) => {
+      return await ctx.node.trpc.server.users.permissions.query({
+        ...input,
+        userId: ctx.user.id,
+      });
+    }),
   read: nodeProcedure
     .meta({})
     .input(z.object({ serverId: z.string() }))

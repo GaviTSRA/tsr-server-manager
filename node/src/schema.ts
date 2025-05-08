@@ -13,6 +13,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
+import { permission } from "process";
 import { z } from "zod";
 
 // Data Types
@@ -75,8 +76,15 @@ export const Log = pgTable(
   ]
 );
 
-export const Permission = pgTable(
-  "Permission",
+export const Permission = pgTable("Permission", {
+  id: varchar().primaryKey(),
+  name: varchar().notNull(),
+  description: text().notNull(),
+  serverType: varchar().notNull(),
+});
+
+export const AssignedPermission = pgTable(
+  "AssignedPermission",
   {
     userId: uuid()
       .notNull()
@@ -100,7 +108,7 @@ export const User = pgTable("User", {
 
 // Relations
 export const ServerRelations = relations(Server, ({ one, many }) => ({
-  permissions: many(Permission),
+  permissions: many(AssignedPermission),
   logs: many(Log),
   owner: one(User, {
     fields: [Server.ownerId],
@@ -116,16 +124,19 @@ export const ServerStatRelations = relations(ServerStat, ({ one }) => ({
   }),
 }));
 
-export const PermissionsRelations = relations(Permission, ({ one }) => ({
-  server: one(Server, {
-    fields: [Permission.serverId],
-    references: [Server.id],
-  }),
-  user: one(User, {
-    fields: [Permission.userId],
-    references: [User.id],
-  }),
-}));
+export const AssignedPermissionsRelations = relations(
+  AssignedPermission,
+  ({ one }) => ({
+    server: one(Server, {
+      fields: [AssignedPermission.serverId],
+      references: [Server.id],
+    }),
+    user: one(User, {
+      fields: [AssignedPermission.userId],
+      references: [User.id],
+    }),
+  })
+);
 
 export const LogRelations = relations(Log, ({ one }) => ({
   server: one(Server, {
@@ -140,7 +151,7 @@ export const LogRelations = relations(Log, ({ one }) => ({
 
 export const UserRelations = relations(User, ({ many }) => ({
   servers: many(Server),
-  permissions: many(Permission),
+  permissions: many(AssignedPermission),
   logs: many(Log),
 }));
 
@@ -149,10 +160,12 @@ export const ServerSchema = createSelectSchema(Server).extend({
   ports: z.string().array(),
 });
 export const PermissionSchema = createSelectSchema(Permission);
+export const AssignedPermissionSchema = createSelectSchema(AssignedPermission);
 export const LogSchema = createSelectSchema(Log);
 export const UserSchema = createSelectSchema(User);
 
 export type ServerType = z.infer<typeof ServerSchema>;
 export type PermissionType = z.infer<typeof PermissionSchema>;
+export type AssignedPermissionType = z.infer<typeof AssignedPermissionSchema>;
 export type LogType = z.infer<typeof LogSchema>;
 export type UserType = z.infer<typeof UserSchema>;

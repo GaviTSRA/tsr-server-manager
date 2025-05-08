@@ -15,6 +15,27 @@
       "when": 1745605453397,
       "tag": "0001_faulty_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746709497286,
+      "tag": "0002_cynical_orphan",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1746709661506,
+      "tag": "0003_luxuriant_sandman",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1746710809863,
+      "tag": "0004_keen_tinkerer",
+      "breakpoints": true
     }
   ]
 }

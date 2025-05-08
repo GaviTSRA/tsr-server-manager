@@ -20,11 +20,7 @@
       "name": "Image",
       "description": "Java image to use, depending on the minecraft version",
       "type": "enum",
-      "options": [
-        "java21",
-        "java17",
-        "java8"
-      ],
+      "options": ["java21", "java17", "java8"],
       "default": "java21"
     },
     "notifyWebhook": {
@@ -34,7 +30,12 @@
       "default": ""
     }
   },
-  "tabs": [
-    "mc-players"
+  "tabs": ["mc-players"],
+  "permissions": [
+    {
+      "id": "mc-forge.players.read",
+      "name": "Read Players",
+      "description": "Read the list of players on the server"
+    }
   ]
 }

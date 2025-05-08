@@ -1,0 +1,1 @@
+ALTER TABLE "Permission" ADD COLUMN "serverType" varchar NOT NULL;
