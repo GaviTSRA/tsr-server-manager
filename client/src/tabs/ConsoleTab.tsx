@@ -52,6 +52,7 @@ export function ConsoleTab({
   );
   const [networkIn, setNetworkIn] = useState(0);
   const [networkOut, setNetworkOut] = useState(0);
+
   useEffect(() => {
     if (!stats || stats.length === 0) return;
     const latestStats = stats[stats.length - 1];
@@ -119,6 +120,29 @@ export function ConsoleTab({
 
   return (
     <div className="w-full h-full flex flex-col lg:flex-row">
+      <svg style={{ height: 0, width: 0 }}>
+        <defs>
+          <linearGradient id="cpuGradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
+          </linearGradient>
+          <linearGradient id="ramGradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
+          </linearGradient>
+          <linearGradient id="networkInGradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stopColor="#0CC" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#0CC" stopOpacity={0.2} />
+          </linearGradient>
+          <linearGradient
+            id="networkOutGradient"
+            gradientTransform="rotate(90)"
+          >
+            <stop offset="0%" stopColor="#F90" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#F90" stopOpacity={0.2} />
+          </linearGradient>
+        </defs>
+      </svg>
       <div className="bg-neutral-150 mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
         {logsError ? (
           <Container className="h-full rounded-b-none!" expanded={true}>
@@ -169,9 +193,9 @@ export function ConsoleTab({
         ) : stats ? (
           <div className="grid grid-rows-3 gap-2 h-full">
             <Container
-              className="overflow-hidden flex flex-col p-0!"
+              className="p-0!"
               title={
-                <>
+                <div className="flex flex-row items-center w-full gap-2">
                   <Cpu size={20} />
                   <p className="font-bold">CPU Usage</p>
                   <div className="ml-auto flex flex-row gap-2">
@@ -180,45 +204,13 @@ export function ConsoleTab({
                       <p className="text-secondary-text">/ {availableCpu} %</p>
                     )}
                   </div>
-                </>
+                </div>
               }
             >
-              <svg style={{ height: 0 }}>
-                <defs>
-                  <linearGradient
-                    id="cpuGradient"
-                    gradientTransform="rotate(90)"
-                  >
-                    <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient
-                    id="ramGradient"
-                    gradientTransform="rotate(90)"
-                  >
-                    <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient
-                    id="networkInGradient"
-                    gradientTransform="rotate(90)"
-                  >
-                    <stop offset="0%" stopColor="#0CC" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#0CC" stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient
-                    id="networkOutGradient"
-                    gradientTransform="rotate(90)"
-                  >
-                    <stop offset="0%" stopColor="#F90" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#F90" stopOpacity={0.2} />
-                  </linearGradient>
-                </defs>
-              </svg>
               <VictoryChart
                 theme={VictoryTheme.clean}
-                padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
                 height={height}
+                padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
               >
                 <VictoryAxis
                   dependentAxis
@@ -245,9 +237,9 @@ export function ConsoleTab({
               </VictoryChart>
             </Container>
             <Container
-              className="overflow-hidden flex flex-col p-0!"
+              className="p-0!"
               title={
-                <>
+                <div className="flex flex-row items-center w-full gap-2">
                   <Server size={20} />
                   <p className="font-bold">RAM Usage</p>
                   <div className="ml-auto flex flex-row gap-2">
@@ -256,14 +248,13 @@ export function ConsoleTab({
                       <p className="text-secondary-text">/ {availableRam} GB</p>
                     )}
                   </div>
-                </>
+                </div>
               }
             >
               <div className="px-2">
                 <VictoryChart
                   theme={VictoryTheme.clean}
                   padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
-                  domainPadding={{ y: 0 }}
                   height={height}
                 >
                   <VictoryAxis
@@ -300,9 +291,9 @@ export function ConsoleTab({
               </div>
             </Container>
             <Container
-              className="overflow-hidden flex flex-col p-0!"
+              className="p-0!"
               title={
-                <>
+                <div className="flex flex-row items-center w-full gap-2">
                   <Rss size={20} />
                   <p className="font-bold">Network Usage</p>
                   <div className="ml-auto flex flex-row gap-2">
@@ -315,14 +306,13 @@ export function ConsoleTab({
                       <ArrowUp />
                     </div>
                   </div>
-                </>
+                </div>
               }
             >
               <div className="px-2">
                 <VictoryChart
                   theme={VictoryTheme.clean}
                   padding={{ top: 20, bottom: 20, left: 70, right: 20 }}
-                  domainPadding={{ y: 0 }}
                   height={height}
                 >
                   <VictoryAxis

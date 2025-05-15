@@ -231,7 +231,7 @@ export function Server() {
         id: "startup",
         title: "Startup",
         icon: <PlayCircle />,
-        tab: <StartupTab serverType={server?.type} />
+        tab: <StartupTab serverType={server?.type} />,
       },
       {
         id: "limits",
@@ -305,13 +305,17 @@ export function Server() {
                 </div>
               )}
               {server && (
-                <>
+                <div>
                   <div className="flex flex-row items-center gap-2">
                     <p className="text-2xl mr-auto">{server.name}</p>
                     {statusIcon}
                   </div>
-                  <ServerControls serverId={serverId} nodeId={nodeId} status={server.status} />
-                </>
+                  <ServerControls
+                    serverId={serverId}
+                    nodeId={nodeId}
+                    status={server.status}
+                  />
+                </div>
               )}
             </div>
             <div className="w-full h-full gap-2 flex flex-col items-center p-2">
@@ -332,25 +336,25 @@ export function Server() {
                 })}
               {tabs.filter((tab) => tab.custom && customTabs.includes(tab.id))
                 .length > 0 && (
-                  <motion.div
-                    className="w-full flex flex-row gap-2 items-center"
-                    initial={{
-                      x: -50,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      x: 0,
-                      opacity: 1,
-                    }}
-                    transition={{
-                      delay: tabs.filter((tab) => !tab.custom).length * 0.02,
-                    }}
-                  >
-                    <div className="w-full border-b-2 border-neutral-400"></div>
-                    <p className="text-neutral-500">Custom</p>
-                    <div className="w-full border-b-2 border-neutral-400"></div>
-                  </motion.div>
-                )}
+                <motion.div
+                  className="w-full flex flex-row gap-2 items-center"
+                  initial={{
+                    x: -50,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    x: 0,
+                    opacity: 1,
+                  }}
+                  transition={{
+                    delay: tabs.filter((tab) => !tab.custom).length * 0.02,
+                  }}
+                >
+                  <div className="w-full border-b-2 border-neutral-400"></div>
+                  <p className="text-neutral-500">Custom</p>
+                  <div className="w-full border-b-2 border-neutral-400"></div>
+                </motion.div>
+              )}
               {tabs
                 .filter((tab) => tab.custom && customTabs.includes(tab.id))
                 .map((data, index) => {

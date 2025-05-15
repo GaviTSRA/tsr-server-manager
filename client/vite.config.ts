@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       port: parseInt(env.PORT ?? "3001"),
       https: https,
+      watch: {
+        usePolling: true,
+      },
     },
   };
 });

@@ -31,7 +31,7 @@ export function Container({
         className={
           "bg-neutral-200 rounded-b-lg p-2 " +
           (title ? "" : "rounded-t-lg ") +
-          className
+          (className ?? "")
         }
         ref={innerRef}
       >
