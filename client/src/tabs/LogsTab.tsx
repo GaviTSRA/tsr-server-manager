@@ -12,7 +12,7 @@ import {
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, X } from "react-feather";
-import { useServerQueryParams } from "../Server";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 type Log = {
   user: {
@@ -67,7 +67,7 @@ export function LogsTab() {
         cell: (cell) => cell.getValue(),
       }),
     ],
-    []
+    [columnHelper]
   );
 
   const table = useReactTable<Log>({
@@ -90,7 +90,7 @@ export function LogsTab() {
     //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
       typeof window !== "undefined" &&
-        navigator.userAgent.indexOf("Firefox") === -1
+      navigator.userAgent.indexOf("Firefox") === -1
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
     overscan: 5,

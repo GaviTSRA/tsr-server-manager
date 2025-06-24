@@ -9,7 +9,7 @@ import { Error, ErrorType } from "../components/Error";
 import { MoonLoader } from "react-spinners";
 import { inferProcedureOutput } from "@trpc/server";
 import { AppRouter } from "@tsm/server";
-import { useServerQueryParams } from "../Server";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 export function ConsoleTab({
   stats,

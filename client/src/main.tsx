@@ -21,6 +21,8 @@ import NodeList from "./components/NodeList";
 import ErrorPage from "./components/ErrorPage";
 import SuperJSON from "superjson";
 
+// FIXME
+// @ts-expect-error Type is wrong for some reason
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const router = createBrowserRouter([
   {

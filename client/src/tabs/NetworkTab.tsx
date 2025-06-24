@@ -5,7 +5,7 @@ import { X } from "react-feather";
 import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
-import { useServerQueryParams } from "../Server";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 export function NetworkTab() {
   const { nodeId, serverId } = useServerQueryParams();

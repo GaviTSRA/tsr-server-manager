@@ -14,7 +14,7 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { useModal } from "../components/Modal";
 import { Input } from "../components/Input";
-import { useServerQueryParams } from "../Server";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -350,12 +350,12 @@ export function FilesTab() {
                 onClick={() => {
                   setPath(
                     "/" +
-                    path
-                      .split("/")
-                      .filter((part) => part !== "")
-                      .slice(0, index + 1)
-                      .join("/") +
-                    "/"
+                      path
+                        .split("/")
+                        .filter((part) => part !== "")
+                        .slice(0, index + 1)
+                        .join("/") +
+                      "/"
                   );
                   refetch();
                 }}
@@ -365,7 +365,7 @@ export function FilesTab() {
                 </p>
                 {(files.type === "folder" ||
                   path.split("/").filter((part) => part !== "").length !==
-                  index + 1) && <p>/</p>}
+                    index + 1) && <p>/</p>}
               </div>
             ))}
           {files.type === "file" && (

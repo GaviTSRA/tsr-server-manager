@@ -15,7 +15,7 @@ import {
   ChevronLeft,
   Sidebar,
 } from "react-feather";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Error } from "./components/Error";
 import { LimitsTab } from "./tabs/LimitsTab";
 import { trpc } from "./main";
@@ -29,6 +29,7 @@ import { LogsTab } from "./tabs/LogsTab";
 import { MinecraftPlayersTab } from "./tabs/custom/MinecraftPlayersTab";
 import { AnimatePresence, motion } from "motion/react";
 import { ServerControls } from "./components/ServerControls";
+import { useServerQueryParams } from "./useServerQueryParams";
 
 type Tab = {
   id: string;
@@ -37,14 +38,6 @@ type Tab = {
   tab: JSX.Element;
   custom?: boolean;
 };
-
-export function useServerQueryParams() {
-  return useParams() as {
-    serverId: string;
-    nodeId: string;
-    tab: string;
-  };
-}
 
 function ServerTab({
   tab,

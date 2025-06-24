@@ -13,11 +13,11 @@ import {
 } from "react-feather";
 import { Container } from "../components/Container";
 import { useEffect, useState } from "react";
-import { type Permission } from "@tsm/server";
 import { Toggle } from "../components/Toggle";
 import { Dropdown } from "../components/Dropdown";
 import { useModal } from "../components/Modal";
-import { useServerQueryParams } from "../Server";
+import { useServerQueryParams } from "../useServerQueryParams";
+import { Permission } from "@tsm/server";
 
 export function UserSettings({
   user,
@@ -30,9 +30,9 @@ export function UserSettings({
     id: string;
     name: string;
     owner: boolean;
-    permissions: Permission[];
+    permissions: string[];
   };
-  ownPermissions: Permission[];
+  ownPermissions: string[];
   isOwner: boolean;
   refetch: () => void;
   allPermissions: Permission[];
@@ -92,27 +92,30 @@ export function UserSettings({
       {expanded ? (
         <div className="flex flex-col gap-2 mt-2">
           {allPermissions.map((permission) => (
-            <div className="flex flex-row items-center gap-2" key={permission}>
+            <div
+              className="flex flex-row items-center gap-2"
+              key={permission.id}
+            >
               <div>
                 <Toggle
                   disabled={
                     user.owner ||
-                    (!ownPermissions.includes(permission) && !isOwner)
+                    (!ownPermissions.includes(permission.id) && !isOwner)
                   }
                   defaultValue={
-                    user.permissions.includes(permission) || user.owner
+                    user.permissions.includes(permission.id) || user.owner
                   }
                   onChange={(value) => {
                     if (value) {
-                      setAddPermissions((prev) => [...prev, permission]);
+                      setAddPermissions((prev) => [...prev, permission.id]);
                       setRemovePermissions((prev) => [
-                        ...prev.filter((el) => el !== permission),
+                        ...prev.filter((el) => el !== permission.id),
                       ]);
                     } else {
                       setAddPermissions((prev) => [
-                        ...prev.filter((el) => el !== permission),
+                        ...prev.filter((el) => el !== permission.id),
                       ]);
-                      setRemovePermissions((prev) => [...prev, permission]);
+                      setRemovePermissions((prev) => [...prev, permission.id]);
                     }
                   }}
                 />
@@ -182,7 +185,7 @@ export function UsersTab() {
       nodeId,
     });
 
-  const [ownPermissions, setOwnPermissions] = useState([] as Permission[]);
+  const [ownPermissions, setOwnPermissions] = useState([] as string[]);
   const [isOwner, setIsOwner] = useState(false);
   const [newUser, setNewUser] = useState(null as string | null);
 

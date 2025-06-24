@@ -4,7 +4,7 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
-import { useServerQueryParams } from "../Server";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 export function LimitsTab() {
   const { nodeId, serverId } = useServerQueryParams();

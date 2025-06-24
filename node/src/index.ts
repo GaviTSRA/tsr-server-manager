@@ -17,6 +17,8 @@ import { registerDefaultPermissions } from "./permissions";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 export type { NodeRouter } from "./trpc/router";
+export type { ServerType } from "./serverTypes";
+export type { Permission } from "./permissions";
 
 registerDefaultPermissions(db);
 export const serverTypes = loadServerTypes(db);
