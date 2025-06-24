@@ -1,4 +1,4 @@
-import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import AnsiToHtml from "ansi-to-html";
 import { trpc } from "../main";
 import { Input } from "../components/Input";
@@ -117,19 +117,7 @@ export function ConsoleTab({
     },
   };
 
-  const [height, setHeight] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    setHeight(ref.current.clientHeight);
-  });
-  const chartHeight = 220;
-  // const chartHeight = useMemo(() => {
-  //   console.info(height);
-  //   if (height < 600) return height - 42;
-  //   return Math.max(0, height / 3 - 90);
-  // }, [height]);
+  const chartHeight = 230;
 
   return (
     <div className="w-full h-full flex flex-col lg:grid lg:grid-rows-[0fr_3fr_1fr] 2xl:flex 2xl:flex-row">
@@ -198,19 +186,13 @@ export function ConsoleTab({
           </div>
         </div>
       </div>
-      <div
-        className="2xl:mx-4 w-full mt-4 2xl:mt-0 2xl:w-1/3 flex flex-col gap-2 h-full"
-        ref={ref}
-      >
+      <div className="2xl:mx-4 w-full mt-4 2xl:mt-0 2xl:w-1/3 flex flex-col gap-2 h-full">
         {statsError ? (
           <Container expanded={true} className="h-full">
             <Error error={statsError} />
           </Container>
         ) : stats ? (
-          <div
-            className="flex flex-col lg:flex-row 2xl:flex-col place-content-between h-full gap-4"
-            ref={ref}
-          >
+          <div className="flex flex-col lg:flex-row 2xl:flex-col place-content-between h-full gap-4">
             <Container
               className="p-0!"
               title={
