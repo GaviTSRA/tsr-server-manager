@@ -15,6 +15,7 @@ import { AppRouter, ServerType } from "@tsm/server";
 import { inferProcedureOutput } from "@trpc/server";
 import { VictoryArea, VictoryAxis, VictoryChart, VictoryTheme } from "victory";
 import { useModal } from "./Modal";
+import { Container } from "./Container";
 
 function ServerTypeDisplay({
   type,
@@ -111,107 +112,112 @@ function Server({
   }
 
   return (
-    <div
+    <Container
       key={server.id}
       className="bg-neutral-200 flex flex-col hover:bg-neutral-300 transition-colors cursor-pointer px-4 py-2 rounded-sm"
       onClick={() => navigate(`/server/${node.nodeId}/${server.id}/console`)}
     >
-      <div className="flex flex-row items-center">
-        <p className="text-2xl">{server.name}</p>
-        <div className="ml-auto">{status}</div>
-      </div>
-      <p className="text-secondary-text">{server.id}</p>
-      <p className="text-secondary-text mb-2">{node.nodeName}</p>
-      {serverTypes && (
-        <ServerTypeDisplay type={server.type} serverTypes={serverTypes ?? []} />
-      )}
-      {server.recentStats && server.recentStats.length > 0 && (
-        <>
-          <svg style={{ height: 0 }}>
-            <defs>
-              <linearGradient id="cpuGradient" gradientTransform="rotate(90)">
-                <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
-              </linearGradient>
-              <linearGradient id="ramGradient" gradientTransform="rotate(90)">
-                <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
-              </linearGradient>
-            </defs>
-          </svg>
-          <VictoryChart
-            theme={VictoryTheme.clean}
-            padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
-            height={height}
-          >
-            <VictoryAxis
-              dependentAxis
-              tickValues={
-                availableCpu
-                  ? range(0, availableCpu, availableCpu >= 400 ? 200 : 100)
-                  : undefined
-              }
-              tickFormat={(value) => `${value}%`}
-              style={axisStyle}
-            />
-            <VictoryArea
-              data={server.recentStats
-                ?.filter((el) => el.cpuUsage !== null)
-                .map((stat, i) => ({ x: i, y: stat.cpuUsage }))}
-              style={{
-                data: {
-                  fill: "url(#cpuGradient)",
-                  stroke: "#66F",
-                  strokeWidth: 2,
-                },
-              }}
-            />
-          </VictoryChart>
-          <div className="px-2">
+      <>
+        <div className="flex flex-row items-center">
+          <p className="text-2xl">{server.name}</p>
+          <div className="ml-auto">{status}</div>
+        </div>
+        <p className="text-secondary-text">{server.id}</p>
+        <p className="text-secondary-text mb-2">{node.nodeName}</p>
+        {serverTypes && (
+          <ServerTypeDisplay
+            type={server.type}
+            serverTypes={serverTypes ?? []}
+          />
+        )}
+        {server.recentStats && server.recentStats.length > 0 && (
+          <>
+            <svg style={{ height: 0 }}>
+              <defs>
+                <linearGradient id="cpuGradient" gradientTransform="rotate(90)">
+                  <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
+                </linearGradient>
+                <linearGradient id="ramGradient" gradientTransform="rotate(90)">
+                  <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
+                </linearGradient>
+              </defs>
+            </svg>
             <VictoryChart
               theme={VictoryTheme.clean}
               padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
-              domainPadding={{ y: 0 }}
               height={height}
             >
               <VictoryAxis
                 dependentAxis
                 tickValues={
-                  availableRam
-                    ? range(
-                        0,
-                        availableRam * 1024 * 1024 * 1024,
-                        (availableRam * 1024 >= 4096
-                          ? availableRam * 1024 >= 8192
-                            ? 4096
-                            : 2048
-                          : 1024) *
-                          1024 *
-                          1024
-                      )
+                  availableCpu
+                    ? range(0, availableCpu, availableCpu >= 400 ? 200 : 100)
                     : undefined
                 }
-                tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
+                tickFormat={(value) => `${value}%`}
                 style={axisStyle}
               />
               <VictoryArea
-                data={server.recentStats?.map((stat, i) => ({
-                  x: i,
-                  y: stat.ramUsage,
-                }))}
+                data={server.recentStats
+                  ?.filter((el) => el.cpuUsage !== null)
+                  .map((stat, i) => ({ x: i, y: stat.cpuUsage }))}
                 style={{
                   data: {
-                    fill: "url(#ramGradient)",
-                    stroke: "#6F6",
+                    fill: "url(#cpuGradient)",
+                    stroke: "#66F",
                     strokeWidth: 2,
                   },
                 }}
               />
             </VictoryChart>
-          </div>
-        </>
-      )}
-    </div>
+            <div className="px-2">
+              <VictoryChart
+                theme={VictoryTheme.clean}
+                padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
+                domainPadding={{ y: 0 }}
+                height={height}
+              >
+                <VictoryAxis
+                  dependentAxis
+                  tickValues={
+                    availableRam
+                      ? range(
+                          0,
+                          availableRam * 1024 * 1024 * 1024,
+                          (availableRam * 1024 >= 4096
+                            ? availableRam * 1024 >= 8192
+                              ? 4096
+                              : 2048
+                            : 1024) *
+                            1024 *
+                            1024
+                        )
+                      : undefined
+                  }
+                  tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
+                  style={axisStyle}
+                />
+                <VictoryArea
+                  data={server.recentStats?.map((stat, i) => ({
+                    x: i,
+                    y: stat.ramUsage,
+                  }))}
+                  style={{
+                    data: {
+                      fill: "url(#ramGradient)",
+                      stroke: "#6F6",
+                      strokeWidth: 2,
+                    },
+                  }}
+                />
+              </VictoryChart>
+            </div>
+          </>
+        )}
+      </>
+    </Container>
   );
 }
 

@@ -271,15 +271,15 @@ export function Server() {
 
   return (
     <div className="w-full flex flex-row h-full bg-neutral-100 text-primary-text">
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            className="h-full flex flex-col bg-neutral-200"
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
+            className="h-full flex flex-col bg-neutral-200 border-r-1 border-neutral-400"
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: "12rem" }}
+            exit={{ opacity: 0, width: 0 }}
           >
-            <div className="p-2 rounded-sm flex flex-col gap-2 border-neutral-150 border-b-4 rounded-b-lg">
+            <div className="p-2 rounded-sm flex flex-col gap-2 ">
               <div className="flex flex-row items-center">
                 <ChevronLeft
                   size={24}

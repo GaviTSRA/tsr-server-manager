@@ -15,6 +15,7 @@ import { inferProcedureOutput } from "@trpc/server";
 import { AppRouter } from "@tsm/server";
 import { useModal } from "./Modal";
 import { Input } from "./Input";
+import { Container } from "./Container";
 
 type NodeType = inferProcedureOutput<AppRouter["node"]["list"]>["0"];
 
@@ -133,77 +134,79 @@ export function Node({ node }: { node: NodeType }) {
   ];
 
   return (
-    <div className="bg-neutral-200 w-fit px-4 py-2 rounded-sm">
-      {renameNodeModal.Modal}
-      {editURLModal.Modal}
-      {editPasswordModal.Modal}
-      <div className="flex flex-row gap-2 items-center">
-        <Server />
-        <p className="text-xl">{node.name}</p>
-        <button
-          className="ml-auto text-secondary-text p-0 m-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            setMoreOpen(true);
-          }}
-        >
-          <Settings />
-          {moreOpen && (
-            <div className="absolute w-fit shadow-lg text-white">
-              <div
-                className="fixed top-0 left-0 w-full h-full z-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMoreOpen(false);
-                }}
-              ></div>
-              <div>
-                {moreOptions.map((value, index) => (
-                  <div
-                    className={`relative w-full z-60 cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMoreOpen(false);
-                      value.onClick();
-                    }}
-                    key={index}
-                  >
-                    {value.icon}
-                    <p>{value.label}</p>
-                  </div>
-                ))}
+    <Container className="w-fit px-4 py-2 rounded-sm">
+      <>
+        {renameNodeModal.Modal}
+        {editURLModal.Modal}
+        {editPasswordModal.Modal}
+        <div className="flex flex-row gap-2 items-center">
+          <Server />
+          <p className="text-xl">{node.name}</p>
+          <button
+            className="ml-auto text-secondary-text p-0 m-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMoreOpen(true);
+            }}
+          >
+            <Settings />
+            {moreOpen && (
+              <div className="absolute w-fit shadow-lg text-white border-neutral-400 border-1 rounded">
+                <div
+                  className="fixed top-0 left-0 w-full h-full z-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMoreOpen(false);
+                  }}
+                ></div>
+                <div>
+                  {moreOptions.map((value, index) => (
+                    <div
+                      className={`relative w-full z-60 cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMoreOpen(false);
+                        value.onClick();
+                      }}
+                      key={index}
+                    >
+                      {value.icon}
+                      <p>{value.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </button>
-      </div>
-      <p className="text-sm text-secondary-text mt-1 mb-2">{node.id}</p>
-      <p className="mb-2">{node.url}</p>
-      {node.state === "CONNECTED" && (
-        <div className="flex flex-row gap-2 items-center text-success">
-          <CheckCircle />
-          <p>Connected</p>
+            )}
+          </button>
         </div>
-      )}
-      {node.state === "SYNC_ERROR" && (
-        <div className="flex flex-row gap-2 items-center text-danger">
-          <RefreshCw />
-          <p>Sync Error</p>
-        </div>
-      )}
-      {node.state === "AUTHENTICATION_ERROR" && (
-        <div className="flex flex-row gap-2 items-center text-danger">
-          <AlertTriangle />
-          <p>Authentication Error</p>
-        </div>
-      )}
-      {node.state === "CONNECTION_ERROR" && (
-        <div className="flex flex-row gap-2 items-center text-danger">
-          <WifiOff />
-          <p>Connection Error</p>
-        </div>
-      )}
-    </div>
+        <p className="text-sm text-secondary-text mt-1 mb-2">{node.id}</p>
+        <p className="mb-2">{node.url}</p>
+        {node.state === "CONNECTED" && (
+          <div className="flex flex-row gap-2 items-center text-success">
+            <CheckCircle />
+            <p>Connected</p>
+          </div>
+        )}
+        {node.state === "SYNC_ERROR" && (
+          <div className="flex flex-row gap-2 items-center text-danger">
+            <RefreshCw />
+            <p>Sync Error</p>
+          </div>
+        )}
+        {node.state === "AUTHENTICATION_ERROR" && (
+          <div className="flex flex-row gap-2 items-center text-danger">
+            <AlertTriangle />
+            <p>Authentication Error</p>
+          </div>
+        )}
+        {node.state === "CONNECTION_ERROR" && (
+          <div className="flex flex-row gap-2 items-center text-danger">
+            <WifiOff />
+            <p>Connection Error</p>
+          </div>
+        )}
+      </>
+    </Container>
   );
 }
 

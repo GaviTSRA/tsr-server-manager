@@ -1,4 +1,4 @@
-import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import AnsiToHtml from "ansi-to-html";
 import { trpc } from "../main";
 import { Input } from "../components/Input";
@@ -116,10 +116,23 @@ export function ConsoleTab({
       stroke: "#292929",
     },
   };
-  const height = 210;
+
+  const [height, setHeight] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    setHeight(ref.current.clientHeight);
+  });
+  const chartHeight = 220;
+  // const chartHeight = useMemo(() => {
+  //   console.info(height);
+  //   if (height < 600) return height - 42;
+  //   return Math.max(0, height / 3 - 90);
+  // }, [height]);
 
   return (
-    <div className="w-full h-full flex flex-col lg:flex-row">
+    <div className="w-full h-full flex flex-col lg:grid lg:grid-rows-[0fr_3fr_1fr] 2xl:flex 2xl:flex-row">
       <svg style={{ height: 0, width: 0 }}>
         <defs>
           <linearGradient id="cpuGradient" gradientTransform="rotate(90)">
@@ -143,7 +156,7 @@ export function ConsoleTab({
           </linearGradient>
         </defs>
       </svg>
-      <div className="bg-neutral-150 mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
+      <div className="bg-neutral-150 border-neutral-400 border-x-1 border-t-1 mt-auto text-secondary-text w-full 2xl:w-2/3 h-full rounded-xl flex flex-col relative">
         {logsError ? (
           <Container className="h-full rounded-b-none!" expanded={true}>
             <Error error={logsError} />
@@ -185,13 +198,19 @@ export function ConsoleTab({
           </div>
         </div>
       </div>
-      <div className="lg:mx-4 w-full mt-4 lg:mt-0 lg:w-1/3 flex flex-col gap-2 h-full">
+      <div
+        className="2xl:mx-4 w-full mt-4 2xl:mt-0 2xl:w-1/3 flex flex-col gap-2 h-full"
+        ref={ref}
+      >
         {statsError ? (
           <Container expanded={true} className="h-full">
             <Error error={statsError} />
           </Container>
         ) : stats ? (
-          <div className="grid grid-rows-3 gap-2 h-full">
+          <div
+            className="flex flex-col lg:flex-row 2xl:flex-col place-content-between h-full gap-4"
+            ref={ref}
+          >
             <Container
               className="p-0!"
               title={
@@ -209,7 +228,7 @@ export function ConsoleTab({
             >
               <VictoryChart
                 theme={VictoryTheme.clean}
-                height={height}
+                height={chartHeight}
                 padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
               >
                 <VictoryAxis
@@ -255,7 +274,7 @@ export function ConsoleTab({
                 <VictoryChart
                   theme={VictoryTheme.clean}
                   padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
-                  height={height}
+                  height={chartHeight}
                 >
                   <VictoryAxis
                     dependentAxis
@@ -313,7 +332,7 @@ export function ConsoleTab({
                 <VictoryChart
                   theme={VictoryTheme.clean}
                   padding={{ top: 20, bottom: 20, left: 70, right: 20 }}
-                  height={height}
+                  height={chartHeight}
                 >
                   <VictoryAxis
                     dependentAxis
