@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   --color-primary-100: #ccbb6e;
@@ -13,6 +13,8 @@
   --color-neutral-200: #1d1d20;
   --color-neutral-300: #222225;
   --color-neutral-400: #2c2c2f;
+  --color-neutral-500: #313135;
+  --color-neutral-600: #37373f;
 
   --color-primary-text: #ccccd0;
   --color-secondary-text: #808080;
@@ -24,14 +26,14 @@
   --color-success: #28a745;
   --color-success-disabled: #155924;
 
-  --color-confirm-normal: #1f7a47;
+  --color-confirm: #1f7a47;
   --color-confirm-hover: #1a693d;
   --color-confirm-active: #155c35;
   --color-confirm-disabled: #0f3d23;
 
-  --color-cancel-normal: #40444b;
-  --color-cancel-hover: #353a40;
-  --color-cancel-active: #2b2f34;
+  --color-cancel: #cc2d2d;
+  --color-cancel-hover: #ff4d4d;
+  --color-cancel-active: #ff6d6d;
   --color-cancel-disabled: #383c42;
 }
 

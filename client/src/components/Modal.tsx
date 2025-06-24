@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Check, X } from "react-feather";
 import { MoonLoader } from "react-spinners";
+import { Button } from "./Button";
 
 enum ModalState {
   IDLE,
@@ -41,7 +42,7 @@ export const useModal = (tabs: ModalTab[]) => {
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
           onClick={(e) => {
             e.stopPropagation();
             if (!(state === ModalState.FETCHING)) {
@@ -74,9 +75,8 @@ export const useModal = (tabs: ModalTab[]) => {
               )}
             </AnimatePresence>
             <div className="mt-4 flex justify-end space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
+              <Button
+                onClick={() => {
                   tab.onCancel?.();
                   if (currentTab === 0) {
                     close();
@@ -84,37 +84,38 @@ export const useModal = (tabs: ModalTab[]) => {
                     previousTab();
                   }
                 }}
-                className="px-4 py-2 text-white bg-cancel-normal rounded-sm hover:bg-cancel-hover active:bg-cancel-active disabled:bg-cancel-disabled"
                 disabled={
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
-              >
-                Cancel
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
+                variant="danger"
+                text="Cancel"
+              />
+              <Button
+                onClick={() => {
                   tab.onConfirm?.();
                   if (currentTab !== tabs.length - 1) {
                     nextTab();
                   }
                 }}
-                className="flex items-center px-4 py-2 text-white bg-confirm-normal rounded-sm hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled transition-colors"
                 disabled={
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
-              >
-                {state === ModalState.FETCHING && (
-                  <MoonLoader size={18} color={"white"} />
-                )}
-                {state === ModalState.SUCCESS && (
-                  <Check size={22} className="text-success" />
-                )}
-                {state === ModalState.ERROR && (
-                  <X size={22} className="text-danger" />
-                )}
-                {state === ModalState.IDLE && <p>Confirm</p>}
-              </button>
+                variant="confirm"
+                text={
+                  <>
+                    {state === ModalState.FETCHING && (
+                      <MoonLoader size={18} color={"white"} />
+                    )}
+                    {state === ModalState.SUCCESS && (
+                      <Check size={22} className="text-success" />
+                    )}
+                    {state === ModalState.ERROR && (
+                      <X size={22} className="text-danger" />
+                    )}
+                    {state === ModalState.IDLE && <p>Confirm</p>}
+                  </>
+                }
+              />
             </div>
           </motion.div>
         </div>

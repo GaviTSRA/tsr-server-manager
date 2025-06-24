@@ -18,6 +18,8 @@ import { Dropdown } from "../components/Dropdown";
 import { useModal } from "../components/Modal";
 import { useServerQueryParams } from "../useServerQueryParams";
 import { Permission } from "@tsm/server";
+import { AnimatePresence, motion } from "motion/react";
+import { Button } from "../components/Button";
 
 export function UserSettings({
   user,
@@ -89,80 +91,90 @@ export function UserSettings({
           <Error error={writePermission.error} size="small" />
         )}
       </div>
-      {expanded ? (
-        <div className="flex flex-col gap-2 mt-2">
-          {allPermissions.map((permission) => (
-            <div
-              className="flex flex-row items-center gap-2"
-              key={permission.id}
-            >
-              <div>
-                <Toggle
-                  disabled={
-                    user.owner ||
-                    (!ownPermissions.includes(permission.id) && !isOwner)
-                  }
-                  defaultValue={
-                    user.permissions.includes(permission.id) || user.owner
-                  }
-                  onChange={(value) => {
-                    if (value) {
-                      setAddPermissions((prev) => [...prev, permission.id]);
-                      setRemovePermissions((prev) => [
-                        ...prev.filter((el) => el !== permission.id),
-                      ]);
-                    } else {
-                      setAddPermissions((prev) => [
-                        ...prev.filter((el) => el !== permission.id),
-                      ]);
-                      setRemovePermissions((prev) => [...prev, permission.id]);
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            className="flex flex-col gap-2 mt-2 overflow-hidden"
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {allPermissions.map((permission) => (
+              <div
+                className="flex flex-row items-center gap-2"
+                key={permission.id}
+              >
+                <div>
+                  <Toggle
+                    disabled={
+                      user.owner ||
+                      (!ownPermissions.includes(permission.id) && !isOwner)
                     }
+                    defaultValue={
+                      user.permissions.includes(permission.id) || user.owner
+                    }
+                    onChange={(value) => {
+                      if (value) {
+                        setAddPermissions((prev) => [...prev, permission.id]);
+                        setRemovePermissions((prev) => [
+                          ...prev.filter((el) => el !== permission.id),
+                        ]);
+                      } else {
+                        setAddPermissions((prev) => [
+                          ...prev.filter((el) => el !== permission.id),
+                        ]);
+                        setRemovePermissions((prev) => [
+                          ...prev,
+                          permission.id,
+                        ]);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col leading-none">
+                  <div className="flex flex-row items-center gap-2">
+                    <p className="text-lg">{permission.name}</p>
+                    <p className="text-secondary-text text-sm">
+                      {permission.id}
+                    </p>
+                  </div>
+                  <p className="text-secondary-text">
+                    {permission.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {!user.owner && (
+              <div className="flex flex-row items-center mt-2">
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    deleteUserModal.open();
                   }}
+                  icon={<Trash2 />}
+                  text="Remove"
+                />
+                <Button
+                  className="ml-auto"
+                  onClick={() => {
+                    writePermission.mutate({
+                      editUserId: user.id,
+                      nodeId,
+                      serverId,
+                      addPermissions,
+                      removePermissions,
+                    });
+                  }}
+                  variant="confirm"
+                  icon={<Save />}
+                  text="Save"
                 />
               </div>
-              <div className="flex flex-col leading-none">
-                <div className="flex flex-row items-center gap-2">
-                  <p className="text-lg">{permission.name}</p>
-                  <p className="text-secondary-text text-sm">{permission.id}</p>
-                </div>
-                <p className="text-secondary-text">{permission.description}</p>
-              </div>
-            </div>
-          ))}
-          {!user.owner && (
-            <div className="flex flex-row items-center">
-              <button
-                className="flex flex-row px-2 py-1 bg-danger gap-2 rounded-sm w-fit text-white mx-auto"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteUserModal.open();
-                }}
-              >
-                <Trash2 />
-                Delete
-              </button>
-              <button
-                className="flex flex-row px-2 py-1 bg-success gap-2 rounded-sm w-fit text-white mx-auto"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  writePermission.mutate({
-                    editUserId: user.id,
-                    nodeId,
-                    serverId,
-                    addPermissions,
-                    removePermissions,
-                  });
-                }}
-              >
-                <Save />
-                Save
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div></div>
-      )}
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Container>
   );
 }
@@ -256,8 +268,8 @@ export function UsersTab() {
                 }}
               />
               <div className="flex flex-row items-center">
-                <button
-                  className="flex flex-row gap-2 bg-success rounded-sm px-2 py-1 mt-2 w-fit text-white disabled:bg-neutral-300"
+                <Button
+                  className="mt-2"
                   disabled={newUser === null}
                   onClick={() => {
                     if (!newUser) return;
@@ -268,10 +280,9 @@ export function UsersTab() {
                       }
                     );
                   }}
-                >
-                  <Plus />
-                  Add User
-                </button>
+                  icon={<Plus />}
+                  text="Add User"
+                />
                 <div className="ml-auto flex items-center flex-row h-full">
                   {addUser.isPending && (
                     <MoonLoader size={20} color={"#FFFFFF"} />

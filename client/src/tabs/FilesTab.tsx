@@ -370,7 +370,7 @@ export function FilesTab() {
             ))}
           {files.type === "file" && (
             <button
-              className="flex items-center bg-confirm-normal hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded-sm ml-auto"
+              className="flex items-center bg-confirm hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded-sm ml-auto"
               onClick={() => {
                 if (content) {
                   editFile.mutate({ content, path, serverId, nodeId });
