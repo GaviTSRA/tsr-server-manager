@@ -4,6 +4,7 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { TRPCError } from "@trpc/server";
 import jwt from "jsonwebtoken";
+import { nodes } from "..";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -12,7 +13,9 @@ if (!SECRET_KEY) {
 
 export const userRouter = router({
   register: publicProcedure
-    .meta({ openapi: { method: "POST", path: "/users/register", protect: false } })
+    .meta({
+      openapi: { method: "POST", path: "/users/register", protect: false },
+    })
     .input(
       z.object({
         name: z.string(),
@@ -31,10 +34,17 @@ export const userRouter = router({
         });
       }
       const hashedPassword = await bcrypt.hash(input.password, 10);
-      await ctx.db.insert(User).values({
-        name: input.name,
-        password: hashedPassword,
-      });
+      const [newUser] = await ctx.db
+        .insert(User)
+        .values({
+          name: input.name,
+          password: hashedPassword,
+        })
+        .returning();
+
+      for (const node of Object.values(nodes)) {
+        node.trpc.syncUsers.mutate([newUser]);
+      }
     }),
   login: publicProcedure
     .meta({ openapi: { method: "POST", path: "/users/login", protect: false } })
@@ -69,16 +79,20 @@ export const userRouter = router({
   list: authedProcedure
     .meta({ openapi: { method: "GET", path: "/users/list", protect: true } })
     .input(z.void())
-    .output(z.object({
-      id: z.string(),
-      name: z.string()
-    }).array())
+    .output(
+      z
+        .object({
+          id: z.string(),
+          name: z.string(),
+        })
+        .array()
+    )
     .query(({ ctx }) => {
       return ctx.db.query.User.findMany({
         columns: {
           id: true,
           name: true,
-        }
+        },
       });
-    })
+    }),
 });

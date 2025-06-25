@@ -1,6 +1,5 @@
-import { TRPCError } from "@trpc/server";
-import * as docker from "../docker";
-import { hasPermission, log, router, serverProcedure, t } from "./trpc";
+import { inferProcedureInput, inferProcedureOutput } from "@trpc/server";
+import { nodeProcedure, router } from "./trpc";
 import { z } from "zod";
 import { serverFilesRouter } from "./server/filesRouter";
 import { startupRouter } from "./server/startupRouter";
@@ -9,6 +8,8 @@ import { limitsRouter } from "./server/limitsRouter";
 import { powerRouter } from "./server/powerRouter";
 import { usersRouter } from "./server/usersRouter";
 import { logsRouter } from "./server/logsRouter";
+import { NodeRouter } from "@tsm/node";
+import { handleNodeError } from "../nodes";
 
 export const serverRouter = router({
   power: powerRouter,
@@ -18,113 +19,97 @@ export const serverRouter = router({
   limits: limitsRouter,
   users: usersRouter,
   logs: logsRouter,
-  server: serverProcedure
+  server: nodeProcedure
     .meta({
-      permission: "server",
-      openapi: { method: "GET", path: "/server/{serverId}", protect: true }
+      openapi: {
+        method: "GET",
+        path: "/server/{nodeId}/{serverId}",
+        protect: true,
+      },
     })
-    .input(z.object({}))
-    .output(z.object({
-      id: z.string(),
-      containerId: z.string().nullable(),
-      name: z.string(),
-      type: z.string(),
-      status: z.enum(["created", "running", "paused", "restarting", "removing", "exited", "dead"]).optional(),
-      metadata: z.record(z.string(), z.any())
-    }))
-    .query(async ({ ctx }) => {
-      let inspect = undefined;
-      if (ctx.server.containerId) {
-        inspect = await docker.inspectContainer(ctx.server.containerId ?? "");
-      }
-      return {
-        id: ctx.server.id,
-        containerId: ctx.server.containerId,
-        name: ctx.server.name,
-        type: ctx.server.type,
-        status: inspect?.data?.status,
-        metadata: ctx.server.metadata,
-      };
-    }),
-  status: serverProcedure
-    .meta({
-      permission: "status",
-    })
-    .subscription(async function* ({ ctx, input }) {
-      if (!ctx.server.containerId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Server not installed",
-        });
-      }
-      const result = docker.containerStats(ctx.server.containerId);
-      const hasLimitPermission = await hasPermission(
-        ctx,
-        ctx.user.id,
-        ctx.server,
-        "limits.read"
-      );
+    .input(z.object({ serverId: z.string() }))
+    .output(z.custom<inferProcedureOutput<NodeRouter["server"]["server"]>>())
+    .query(async ({ input, ctx }) => {
       try {
-        for await (const part of result) {
-          yield {
-            cpuUsage: part.cpuUsage,
-            cpuAvailable: hasLimitPermission ? ctx.server.cpuLimit : undefined,
-            ramUsage: part.ramUsage,
-            ramAvailable: hasLimitPermission ? part.ramAvailable : undefined,
-          };
-        }
-      } catch (error) {
-        console.error("Error during iteration:", error);
+        return await ctx.node.trpc.server.server.query({
+          serverId: input.serverId,
+          userId: ctx.user.id,
+        });
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
       }
     }),
-  consoleLogs: serverProcedure
-    .meta({
-      permission: "console.read",
-    })
+  status: nodeProcedure
+    .input(z.object({ serverId: z.string() }))
+    .output(z.custom<inferProcedureOutput<NodeRouter["server"]["status"]>>())
+    .query(async ({ ctx, input }) => {
+      return ctx.node.trpc.server.status.query({
+        serverId: input.serverId,
+        userId: ctx.user.id,
+      });
+    }),
+  consoleLogs: nodeProcedure
+    .input(z.object({ serverId: z.string() }))
+    .output(
+      z.custom<inferProcedureOutput<NodeRouter["server"]["consoleLogs"]>>()
+    )
     .subscription(async function* ({ ctx, input }) {
-      if (!ctx.server.containerId) {
-        return;
+      const eventQueue: string[] = [];
+
+      let subscription;
+      try {
+        subscription = ctx.node.trpc.server.consoleLogs.subscribe(
+          {
+            serverId: input.serverId,
+            userId: ctx.user.id,
+          },
+          {
+            onData(data) {
+              eventQueue.push(data);
+            },
+          }
+        );
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
       }
 
       try {
-        const res = await docker.attachToContainer(ctx.server.containerId);
-        const asyncIterable = docker.createAsyncIterable(res.data);
-
-        for await (const chunk of asyncIterable) {
-          yield chunk.toString() as string;
+        while (true) {
+          if (eventQueue.length > 0) {
+            yield eventQueue.shift() as string;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
-      } catch (error) {
-        console.error("Error connecting to Docker API:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to connect to Docker API",
-        });
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
+      } finally {
+        try {
+          subscription.unsubscribe();
+        } catch (err) {}
       }
     }),
-  run: serverProcedure
+  run: nodeProcedure
     .meta({
-      permission: "console.write",
-      log: "Run command",
-      openapi: { method: "POST", path: "/server/{serverId}/run", protect: true }
+      openapi: {
+        method: "POST",
+        path: "/server/{nodeId}/{serverId}/run",
+        protect: true,
+      },
     })
-    .input(z.object({ command: z.string() }))
-    .output(z.void())
+    .input(
+      z.custom<
+        Omit<inferProcedureInput<NodeRouter["server"]["run"]>, "userId">
+      >()
+    )
+    .output(z.custom<inferProcedureOutput<NodeRouter["server"]["run"]>>())
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.server.containerId) {
-        await log(`Run command: '${input.command}'`, false, ctx);
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Server not installed",
+      try {
+        return await ctx.node.trpc.server.run.mutate({
+          ...input,
+          userId: ctx.user.id,
         });
+      } catch (err) {
+        throw await handleNodeError(ctx.node, err);
       }
-      await docker.exec(ctx.server.containerId, [
-        "screen",
-        "-S",
-        "server",
-        "-X",
-        "stuff",
-        input.command + "^M",
-      ]);
-      await log(`Run command: '${input.command}'`, true, ctx);
     }),
 });

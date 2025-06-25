@@ -1,5 +1,6 @@
 FROM node:20
-COPY . /workspace
+WORKDIR /workspace
+COPY . .
 WORKDIR /workspace/server
 EXPOSE 3000
 RUN npm install

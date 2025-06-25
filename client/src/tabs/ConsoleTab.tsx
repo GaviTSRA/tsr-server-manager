@@ -3,29 +3,27 @@ import AnsiToHtml from "ansi-to-html";
 import { trpc } from "../main";
 import { Input } from "../components/Input";
 import { Container } from "../components/Container";
-import { Check, Cpu, Server } from "react-feather";
+import { ArrowDown, ArrowUp, Check, Cpu, Rss, Server } from "react-feather";
 import { VictoryArea, VictoryAxis, VictoryChart, VictoryTheme } from "victory";
 import { Error, ErrorType } from "../components/Error";
 import { MoonLoader } from "react-spinners";
+import { inferProcedureOutput } from "@trpc/server";
+import { AppRouter } from "@tsm/server";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 export function ConsoleTab({
-  serverId,
   stats,
   statsError,
   logs,
   logsError,
 }: {
-  serverId: string;
-  stats: {
-    cpuUsage: number;
-    cpuAvailable?: number;
-    ramUsage: number;
-    ramAvailable?: number;
-  }[];
+  stats: inferProcedureOutput<AppRouter["server"]["status"]> | undefined;
   statsError: ErrorType | null;
   logs: string[];
   logsError: ErrorType | null;
 }) {
+  const { nodeId, serverId } = useServerQueryParams();
+
   const ansiConverter = new AnsiToHtml();
   const consoleRef = useRef(null as HTMLDivElement | null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -52,17 +50,25 @@ export function ConsoleTab({
   const [availableRam, setAvailableRam] = useState(
     undefined as number | undefined
   );
+  const [networkIn, setNetworkIn] = useState(0);
+  const [networkOut, setNetworkOut] = useState(0);
+
   useEffect(() => {
     if (!stats || stats.length === 0) return;
     const latestStats = stats[stats.length - 1];
     if (latestStats.cpuUsage)
       setCPUUsage(Math.round(latestStats.cpuUsage * 100) / 100);
-    if (latestStats.cpuAvailable)
-      setAvailableCpu(latestStats.cpuAvailable * 100);
+    if (latestStats.cpuCount) setAvailableCpu(latestStats.cpuCount * 100);
     if (latestStats.ramUsage)
       setUsedRam(
         Math.round((latestStats.ramUsage / 1024 / 1024 / 1024) * 100) / 100
       );
+    if (latestStats.networkIn) {
+      setNetworkIn(Math.round(latestStats.networkIn / 1024));
+    }
+    if (latestStats.networkOut) {
+      setNetworkOut(Math.round(latestStats.networkOut / 1024));
+    }
     if (latestStats.ramAvailable) {
       setAvailableRam(
         Math.round((latestStats.ramAvailable / 1024 / 1024 / 1024) * 100) / 100
@@ -82,7 +88,7 @@ export function ConsoleTab({
     if (event.key === "Enter") {
       event.preventDefault();
       runCommand.mutate(
-        { command, serverId },
+        { command, serverId, nodeId },
         {
           onSuccess: () => setCommand(""),
         }
@@ -99,11 +105,48 @@ export function ConsoleTab({
     return a;
   }
 
+  const axisStyle = {
+    axis: {
+      stroke: "#292929",
+    },
+    tickLabels: {
+      fill: "#555",
+    },
+    grid: {
+      stroke: "#292929",
+    },
+  };
+
+  const chartHeight = 230;
+
   return (
-    <div className="w-full h-full flex flex-col lg:flex-row">
-      <div className="bg-black mt-auto text-secondary-text w-full lg:w-2/3 h-full rounded-xl overflow-hidden flex flex-col relative">
+    <div className="w-full h-full flex flex-col lg:grid lg:grid-rows-[0fr_3fr_1fr] 2xl:flex 2xl:flex-row">
+      <svg style={{ height: 0, width: 0 }}>
+        <defs>
+          <linearGradient id="cpuGradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stopColor="#66F" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#66F" stopOpacity={0.2} />
+          </linearGradient>
+          <linearGradient id="ramGradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stopColor="#6F6" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#6F6" stopOpacity={0.2} />
+          </linearGradient>
+          <linearGradient id="networkInGradient" gradientTransform="rotate(90)">
+            <stop offset="0%" stopColor="#0CC" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#0CC" stopOpacity={0.2} />
+          </linearGradient>
+          <linearGradient
+            id="networkOutGradient"
+            gradientTransform="rotate(90)"
+          >
+            <stop offset="0%" stopColor="#F90" stopOpacity={0.8} />
+            <stop offset="100%" stopColor="#F90" stopOpacity={0.2} />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="bg-neutral-150 border-neutral-400 border-x-1 border-t-1 mt-auto text-secondary-text w-full 2xl:w-2/3 h-full rounded-xl flex flex-col relative">
         {logsError ? (
-          <Container className="h-full !rounded-b-none" expanded={true}>
+          <Container className="h-full rounded-b-none!" expanded={true}>
             <Error error={logsError} />
           </Container>
         ) : (
@@ -143,17 +186,17 @@ export function ConsoleTab({
           </div>
         </div>
       </div>
-      <div className="lg:mx-4 w-full mt-4 lg:mt-0 lg:w-1/3 flex flex-col gap-2 h-full">
+      <div className="2xl:mx-4 w-full mt-4 2xl:mt-0 2xl:w-1/3 flex flex-col gap-2 h-full">
         {statsError ? (
           <Container expanded={true} className="h-full">
             <Error error={statsError} />
           </Container>
-        ) : (
-          <div className="flex flex-col md:flex-row lg:flex-col gap-4">
+        ) : stats ? (
+          <div className="flex flex-col lg:flex-row 2xl:flex-col place-content-between h-full gap-4">
             <Container
-              className="overflow-hidden flex flex-col !p-0"
+              className="p-0!"
               title={
-                <>
+                <div className="flex flex-row items-center w-full gap-2">
                   <Cpu size={20} />
                   <p className="font-bold">CPU Usage</p>
                   <div className="ml-auto flex flex-row gap-2">
@@ -162,29 +205,23 @@ export function ConsoleTab({
                       <p className="text-secondary-text">/ {availableCpu} %</p>
                     )}
                   </div>
-                </>
+                </div>
               }
             >
               <VictoryChart
                 theme={VictoryTheme.clean}
+                height={chartHeight}
                 padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
               >
                 <VictoryAxis
                   dependentAxis
                   tickValues={
                     availableCpu
-                      ? range(0, availableCpu, availableCpu >= 500 ? 100 : 50)
+                      ? range(0, availableCpu, availableCpu >= 400 ? 100 : 50)
                       : undefined
                   }
                   tickFormat={(value) => `${value}%`}
-                  style={{
-                    tickLabels: {
-                      fill: "#909090",
-                    },
-                    grid: {
-                      stroke: "#444",
-                    },
-                  }}
+                  style={axisStyle}
                 />
                 <VictoryArea
                   data={stats
@@ -192,8 +229,7 @@ export function ConsoleTab({
                     .map((stat, i) => ({ x: i, y: stat.cpuUsage }))}
                   style={{
                     data: {
-                      fill: "#66F",
-                      fillOpacity: 0.3,
+                      fill: "url(#cpuGradient)",
                       stroke: "#66F",
                       strokeWidth: 2,
                     },
@@ -202,9 +238,9 @@ export function ConsoleTab({
               </VictoryChart>
             </Container>
             <Container
-              className="overflow-hidden flex flex-col !p-0"
+              className="p-0!"
               title={
-                <>
+                <div className="flex flex-row items-center w-full gap-2">
                   <Server size={20} />
                   <p className="font-bold">RAM Usage</p>
                   <div className="ml-auto flex flex-row gap-2">
@@ -213,14 +249,14 @@ export function ConsoleTab({
                       <p className="text-secondary-text">/ {availableRam} GB</p>
                     )}
                   </div>
-                </>
+                </div>
               }
             >
               <div className="px-2">
                 <VictoryChart
                   theme={VictoryTheme.clean}
                   padding={{ top: 20, bottom: 20, left: 50, right: 20 }}
-                  domainPadding={{ y: 0 }}
+                  height={chartHeight}
                 >
                   <VictoryAxis
                     dependentAxis
@@ -240,21 +276,13 @@ export function ConsoleTab({
                         : undefined
                     }
                     tickFormat={(value) => `${value / 1024 / 1024 / 1024} GB`}
-                    style={{
-                      tickLabels: {
-                        fill: "#909090",
-                      },
-                      grid: {
-                        stroke: "#444",
-                      },
-                    }}
+                    style={axisStyle}
                   />
                   <VictoryArea
                     data={stats.map((stat, i) => ({ x: i, y: stat.ramUsage }))}
                     style={{
                       data: {
-                        fill: "#6F6",
-                        fillOpacity: 0.3,
+                        fill: "url(#ramGradient)",
                         stroke: "#6F6",
                         strokeWidth: 2,
                       },
@@ -263,7 +291,73 @@ export function ConsoleTab({
                 </VictoryChart>
               </div>
             </Container>
+            <Container
+              className="p-0!"
+              title={
+                <div className="flex flex-row items-center w-full gap-2">
+                  <Rss size={20} />
+                  <p className="font-bold">Network Usage</p>
+                  <div className="ml-auto flex flex-row gap-2">
+                    <div className="flex flex-row items-center">
+                      <p>{networkIn} KB</p>
+                      <ArrowDown />
+                    </div>
+                    <div className="ml-2 flex flex-row items-center">
+                      <p>{networkOut} KB</p>
+                      <ArrowUp />
+                    </div>
+                  </div>
+                </div>
+              }
+            >
+              <div className="px-2">
+                <VictoryChart
+                  theme={VictoryTheme.clean}
+                  padding={{ top: 20, bottom: 20, left: 70, right: 20 }}
+                  height={chartHeight}
+                >
+                  <VictoryAxis
+                    dependentAxis
+                    tickFormat={(value) => `${Math.round(value / 1024)} KB`}
+                    style={axisStyle}
+                  />
+                  <VictoryArea
+                    data={stats.map((stat, i) => ({
+                      x: i,
+                      y: stat.networkOut,
+                    }))}
+                    style={{
+                      data: {
+                        fill: "url(#networkOutGradient)",
+                        stroke: "#F90",
+                        strokeWidth: 2,
+                      },
+                    }}
+                  />
+                  <VictoryArea
+                    data={stats.map((stat, i) => ({
+                      x: i,
+                      y: stat.networkIn,
+                    }))}
+                    style={{
+                      data: {
+                        fill: "url(#networkInGradient)",
+                        stroke: "#0CC",
+                        strokeWidth: 2,
+                      },
+                    }}
+                  />
+                </VictoryChart>
+              </div>
+            </Container>
           </div>
+        ) : (
+          <Container
+            expanded={true}
+            className="h-full w-full flex items-center justify-center"
+          >
+            <MoonLoader color={"#FFFFFF"} />
+          </Container>
         )}
       </div>
     </div>

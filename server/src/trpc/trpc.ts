@@ -1,16 +1,12 @@
-import {
-  inferProcedureBuilderResolverOptions,
-  initTRPC,
-  TRPCError,
-} from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../schema";
 import jwt from "jsonwebtoken";
-import { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
+import { CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import { OpenApiMeta } from "trpc-to-openapi";
+import { nodes } from "..";
 import { z } from "zod";
-import { Permission } from "..";
-import { ServerType } from "../schema";
-import { OpenApiMeta } from 'trpc-to-openapi';
+import SuperJSON from "superjson";
 
 const SECRET_KEY = process.env.SECRET_KEY;
 if (!SECRET_KEY) {
@@ -20,7 +16,7 @@ if (!SECRET_KEY) {
 export const createContext = async ({
   req,
   info,
-}: CreateHTTPContextOptions) => {
+}: CreateExpressContextOptions) => {
   let token = null;
   if (req.headers.authorization) {
     token = req.headers.authorization.split(" ")[1];
@@ -34,10 +30,7 @@ export const createContext = async ({
   };
 };
 export type Context = Awaited<ReturnType<typeof createContext>>;
-export type Meta = {
-  permission?: Permission;
-  log?: string;
-} & OpenApiMeta;
+export type Meta = {} & OpenApiMeta;
 
 export const t = initTRPC
   .context<typeof createContext>()
@@ -52,6 +45,7 @@ export const t = initTRPC
         reconnectAfterInactivityMs: 5_000,
       },
     },
+    transformer: SuperJSON,
   });
 
 export const router = t.router;
@@ -69,6 +63,9 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     };
     const user = await ctx.db.query.User.findFirst({
       where: (user, { eq }) => eq(user.id, res.id),
+      columns: {
+        password: false,
+      },
     });
     if (!user) {
       throw new TRPCError({
@@ -88,81 +85,20 @@ export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
     });
   }
 });
-export const serverProcedure = authedProcedure
-  .input(z.object({ serverId: z.string() }))
-  .use(async ({ ctx, input, next, meta }) => {
-    const server = await ctx.db.query.Server.findFirst({
-      where: (server, { eq }) => eq(server.id, input.serverId),
-      with: {
-        permissions: {
-          where: (permission, { eq }) => eq(permission.userId, ctx.user.id),
-        },
-      },
-    });
-    if (!server) {
+export const nodeProcedure = authedProcedure
+  .input(z.object({ nodeId: z.string() }))
+  .use(({ input, next }) => {
+    if (!nodes[input.nodeId]) {
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Server not found",
+        code: "BAD_REQUEST",
+        message: "Node not found",
       });
     }
-    if (
-      server.ownerId !== ctx.user.id &&
-      !server.permissions
-        .map((permission) => permission.permission)
-        .includes("server")
-    ) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Missing permission 'server'",
-      });
-    }
-    if (meta && meta.permission && server.ownerId !== ctx.user.id) {
-      if (
-        !server.permissions
-          .map((permission) => permission.permission)
-          .includes(meta.permission)
-      ) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: `Missing permission '${meta.permission}'`,
-        });
-      }
-    }
+
+    const node = nodes[input.nodeId];
     return next({
       ctx: {
-        server,
+        node,
       },
     });
   });
-
-type ServerContext = inferProcedureBuilderResolverOptions<
-  typeof serverProcedure
->["ctx"];
-
-export async function log(log: string, success: boolean, ctx: ServerContext) {
-  await ctx.db.insert(schema.Log).values({
-    serverId: ctx.server.id,
-    userId: ctx.user.id,
-    log: log,
-    success: success,
-    date: new Date(),
-  });
-}
-
-export async function hasPermission(
-  ctx: Context,
-  userId: string,
-  server: ServerType,
-  permission: string
-) {
-  if (server.ownerId === userId) return true;
-  const result = await ctx.db.query.Permission.findFirst({
-    where: (permissionTable, { and, eq }) =>
-      and(
-        eq(permissionTable.permission, permission),
-        eq(permissionTable.userId, userId),
-        eq(permissionTable.serverId, server.id)
-      ),
-  });
-  return result !== undefined;
-}

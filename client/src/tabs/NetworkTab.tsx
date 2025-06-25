@@ -5,14 +5,16 @@ import { X } from "react-feather";
 import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
+import { useServerQueryParams } from "../useServerQueryParams";
 
-export function NetworkTab({ serverId }: { serverId: string }) {
+export function NetworkTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const {
     data: ports,
     error,
     refetch,
   } = trpc.server.network.read.useQuery(
-    { serverId },
+    { serverId, nodeId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -39,17 +41,18 @@ export function NetworkTab({ serverId }: { serverId: string }) {
       {ports.map((port) => {
         return (
           <Container
-            className="px-4 flex items-center gap-2 rounded bg-neutral-200"
+            className="px-4 flex items-center gap-2 rounded-sm bg-neutral-200"
             key={port}
           >
             <p className="text-xl">{port}</p>
             <div
-              className="p-1 bg-danger rounded"
+              className="p-1 bg-danger rounded-sm"
               onClick={() =>
                 writePorts.mutate(
                   {
                     ports: [...ports.filter((el) => el !== port)],
                     serverId,
+                    nodeId,
                   },
                   {
                     onSuccess: () => refetch(),
@@ -62,22 +65,23 @@ export function NetworkTab({ serverId }: { serverId: string }) {
           </Container>
         );
       })}
-      <Container className="w-fit flex flex-row gap-2 p-2 rounded bg-neutral-200">
+      <Container className="w-fit flex flex-row gap-2 p-2 rounded-sm bg-neutral-200">
         <Input
-          className="rounded"
+          className="rounded-sm"
           placeholder="Add port..."
           onValueChange={(value) => {
             setNewPort(value);
           }}
         />
         <button
-          className="p-2 bg-success rounded"
+          className="p-2 bg-success rounded-sm"
           onClick={() => {
             if (!newPort) return;
             writePorts.mutate(
               {
                 ports: [...ports, newPort],
                 serverId,
+                nodeId,
               },
               {
                 onSuccess: () => refetch(),

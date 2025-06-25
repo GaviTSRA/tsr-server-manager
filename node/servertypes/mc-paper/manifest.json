@@ -1,0 +1,35 @@
+{
+  "name": "Minecraft Paper",
+  "icon": "https://papermc.io/assets/logo/256x.png",
+  "image": null,
+  "command": "java -Xms128M -Xmx${SERVER_RAM}M -Dterminal.jline=false -Dterminal.ansi=true -jar server.jar --nogui",
+  "options": {
+    "version": {
+      "name": "Version",
+      "description": "Minecraft version to install",
+      "type": "string",
+      "default": "1.20.4"
+    },
+    "image": {
+      "name": "Image",
+      "description": "Java image to use, depending on the minecraft version",
+      "type": "enum",
+      "options": ["java21", "java17", "java8"],
+      "default": "java21"
+    },
+    "notifyWebhook": {
+      "name": "Notify Webhook",
+      "description": "Webhook to notify about server events",
+      "type": "string",
+      "default": ""
+    }
+  },
+  "tabs": ["mc-players"],
+  "permissions": [
+    {
+      "id": "mc-paper.players.read",
+      "name": "Read Players",
+      "description": "Read the list of players on the server"
+    }
+  ]
+}

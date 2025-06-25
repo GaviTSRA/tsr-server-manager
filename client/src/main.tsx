@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import ServerList from "./ServerList";
+import MainPage from "./MainPage";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Server } from "./Server";
@@ -16,15 +16,32 @@ import {
 import { inferRouterOutputs } from "@trpc/server";
 import { unstable_httpSubscriptionLink } from "@trpc/react-query";
 import { Login } from "./Login";
+import ServerList from "./components/ServerList";
+import NodeList from "./components/NodeList";
+import ErrorPage from "./components/ErrorPage";
+import SuperJSON from "superjson";
 
+// FIXME
+// @ts-expect-error Type is wrong for some reason
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <ServerList />,
+    element: <MainPage />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/",
+        element: <ServerList />,
+      },
+      {
+        path: "/nodes",
+        element: <NodeList />,
+      },
+    ],
   },
   {
-    path: "/server/:serverId/:tab",
+    path: "/server/:nodeId/:serverId/:tab",
     element: <Server />,
   },
   {
@@ -44,6 +61,7 @@ const trpcClient = trpc.createClient({
       // uses the httpSubscriptionLink for subscriptions
       condition: (op) => op.type === "subscription",
       true: unstable_httpSubscriptionLink({
+        transformer: SuperJSON,
         url: API_BASE_URL,
         connectionParams: () => {
           const token = localStorage.getItem("authToken");
@@ -53,6 +71,7 @@ const trpcClient = trpc.createClient({
       false: splitLink({
         condition: (op) => isNonJsonSerializable(op.input),
         true: httpLink({
+          transformer: SuperJSON,
           url: API_BASE_URL,
           headers: () => {
             const token = localStorage.getItem("authToken");
@@ -63,6 +82,7 @@ const trpcClient = trpc.createClient({
         }),
         false: httpBatchLink({
           url: API_BASE_URL,
+          transformer: SuperJSON,
           headers: () => {
             const token = localStorage.getItem("authToken");
             return {

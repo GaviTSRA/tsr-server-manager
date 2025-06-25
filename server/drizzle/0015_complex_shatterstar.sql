@@ -1,1 +1,0 @@
-ALTER TABLE "User" ADD COLUMN "canCreateServers" boolean DEFAULT false NOT NULL;

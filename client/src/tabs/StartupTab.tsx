@@ -3,14 +3,10 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
+import { useServerQueryParams } from "../useServerQueryParams";
 
-export function StartupTab({
-  serverId,
-  serverType,
-}: {
-  serverId: string;
-  serverType: string | undefined;
-}) {
+export function StartupTab({ serverType }: { serverType: string | undefined }) {
+  const { nodeId, serverId } = useServerQueryParams();
   const { data: serverTypes, error: serverTypesError } =
     trpc.serverTypes.useQuery();
   const {
@@ -20,6 +16,7 @@ export function StartupTab({
   } = trpc.server.startup.read.useQuery(
     {
       serverId,
+      nodeId,
     },
     {
       refetchOnWindowFocus: false,
@@ -43,7 +40,9 @@ export function StartupTab({
       </div>
     );
   }
-  const type = serverTypes.find((type) => type.id === serverType);
+  const type = serverTypes
+    .find((entry) => entry.nodeId === nodeId)
+    ?.serverTypes.find((type) => type.id === serverType);
   if (!type || !type.options) return;
 
   function setOption(id: string, value: string) {
@@ -51,7 +50,7 @@ export function StartupTab({
     const newOptions = options;
     newOptions[id] = value;
     writeStartup.mutate(
-      { serverId: serverId, options: newOptions },
+      { serverId: serverId, options: newOptions, nodeId },
       {
         onSuccess: () => refetchOptions(),
       }

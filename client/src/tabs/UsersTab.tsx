@@ -1,6 +1,5 @@
 import { MoonLoader } from "react-spinners";
 import { trpc } from "../main";
-import { Error } from "../components/Error";
 import {
   Check,
   ChevronDown,
@@ -13,50 +12,34 @@ import {
 } from "react-feather";
 import { Container } from "../components/Container";
 import { useEffect, useState } from "react";
-import { type Permission } from "@tsm/server";
 import { Toggle } from "../components/Toggle";
 import { Dropdown } from "../components/Dropdown";
-import Modal, { useModal } from "../components/Modal";
-
-const PERMISSIONS = [
-  // "server", implicit permission that gives base access to the server
-  "status",
-  "power",
-  "console.read",
-  "console.write",
-  "files.read",
-  "files.rename",
-  "files.edit",
-  "files.delete",
-  "network.read",
-  "network.write",
-  "startup.read",
-  "startup.write",
-  "limits.read",
-  "limits.write",
-  "users.read",
-  "users.write",
-  "logs.read",
-] as Permission[];
+import { useModal } from "../components/Modal";
+import { useServerQueryParams } from "../useServerQueryParams";
+import { Permission } from "@tsm/server";
+import { AnimatePresence, motion } from "motion/react";
+import { Button } from "../components/Button";
+import { Error } from "../components/Error";
 
 export function UserSettings({
   user,
   ownPermissions,
-  serverId,
   refetch,
   isOwner,
+  allPermissions,
 }: {
   user: {
     id: string;
     name: string;
     owner: boolean;
-    permissions: Permission[];
+    permissions: string[];
   };
-  ownPermissions: Permission[];
+  ownPermissions: string[];
   isOwner: boolean;
-  serverId: string;
   refetch: () => void;
+  allPermissions: Permission[];
 }) {
+  const { nodeId, serverId } = useServerQueryParams();
   const [expanded, setExpanded] = useState(false);
   const [addPermissions, setAddPermissions] = useState([] as string[]);
   const [removePermissions, setRemovePermissions] = useState([] as string[]);
@@ -64,11 +47,29 @@ export function UserSettings({
   const writePermission = trpc.server.users.writePermissions.useMutation();
   const deleteUser = trpc.server.users.deleteUser.useMutation();
 
-  const modal = useModal();
+  const deleteUserModal = useModal([
+    {
+      title: "Remove user?",
+      description: `Confirm removal of user '${user.name}'`,
+      onConfirm: () => {
+        deleteUserModal.fetching();
+        deleteUser.mutate(
+          { deleteUserId: user.id, serverId, nodeId },
+          {
+            onSuccess: () => {
+              deleteUserModal.success();
+              refetch();
+            },
+            onError: () => deleteUserModal.error(),
+          }
+        );
+      },
+    },
+  ]);
 
   return (
-    <Container className="flex flex-col p-2 rounded h-fit">
-      <Modal data={modal.data} />
+    <Container className="flex flex-col p-2 rounded-sm h-fit">
+      {deleteUserModal.Modal}
       <div
         className="flex flex-row text-2xl items-center gap-2"
         onClick={() => setExpanded(!expanded)}
@@ -90,104 +91,117 @@ export function UserSettings({
           <Error error={writePermission.error} size="small" />
         )}
       </div>
-      {expanded ? (
-        <div className="flex flex-col gap-2 mt-2">
-          {PERMISSIONS.map((permission) => (
-            <div className="flex flex-row" key={permission}>
-              <p>{permission}</p>
-              <div className="ml-auto">
-                <Toggle
-                  disabled={
-                    user.owner ||
-                    (!ownPermissions.includes(permission) && !isOwner)
-                  }
-                  defaultValue={
-                    user.permissions.includes(permission) || user.owner
-                  }
-                  onChange={(value) => {
-                    if (value) {
-                      setAddPermissions((prev) => [...prev, permission]);
-                      setRemovePermissions((prev) => [
-                        ...prev.filter((el) => el !== permission),
-                      ]);
-                    } else {
-                      setAddPermissions((prev) => [
-                        ...prev.filter((el) => el !== permission),
-                      ]);
-                      setRemovePermissions((prev) => [...prev, permission]);
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            className="flex flex-col gap-2 mt-2 overflow-hidden"
+            initial={{ height: 0 }}
+            animate={{ height: "auto" }}
+            exit={{ height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {allPermissions.map((permission) => (
+              <div
+                className="flex flex-row items-center gap-2"
+                key={permission.id}
+              >
+                <div>
+                  <Toggle
+                    disabled={
+                      user.owner ||
+                      (!ownPermissions.includes(permission.id) && !isOwner)
                     }
-                  }}
-                />
+                    defaultValue={
+                      user.permissions.includes(permission.id) || user.owner
+                    }
+                    onChange={(value) => {
+                      if (value) {
+                        setAddPermissions((prev) => [...prev, permission.id]);
+                        setRemovePermissions((prev) => [
+                          ...prev.filter((el) => el !== permission.id),
+                        ]);
+                      } else {
+                        setAddPermissions((prev) => [
+                          ...prev.filter((el) => el !== permission.id),
+                        ]);
+                        setRemovePermissions((prev) => [
+                          ...prev,
+                          permission.id,
+                        ]);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col leading-none">
+                  <div className="flex flex-row items-center gap-2">
+                    <p className="text-lg">{permission.name}</p>
+                    <p className="text-secondary-text text-sm">
+                      {permission.id}
+                    </p>
+                  </div>
+                  <p className="text-secondary-text">
+                    {permission.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-          {!user.owner && (
-            <div className="flex flex-row items-center">
-              <button
-                className="flex flex-row px-2 py-1 bg-danger gap-2 rounded w-fit text-white mx-auto"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  modal.open(
-                    "Remove user?",
-                    `Confirm removal of user '${user.name}'`,
-                    false,
-                    (_) => {
-                      modal.fetching();
-                      deleteUser.mutate(
-                        { userId: user.id, serverId },
-                        {
-                          onSuccess: () => {
-                            modal.success();
-                            refetch();
-                          },
-                          onError: () => modal.error()
-                        }
-                      );
-                    },
-                    () => modal.close()
-                  )
-                }}
-              >
-                <Trash2 />
-                Delete
-              </button>
-              <button
-                className="flex flex-row px-2 py-1 bg-success gap-2 rounded w-fit text-white mx-auto"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  writePermission.mutate({
-                    userId: user.id,
-                    serverId,
-                    addPermissions,
-                    removePermissions,
-                  });
-                }}
-              >
-                <Save />
-                Save
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div></div>
-      )}
+            ))}
+            {!user.owner && (
+              <div className="flex flex-row items-center mt-2">
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    deleteUserModal.open();
+                  }}
+                  icon={<Trash2 />}
+                  query={deleteUser}
+                >
+                  <p>Remove</p>
+                </Button>
+                <Button
+                  className="ml-auto"
+                  onClick={() => {
+                    writePermission.mutate({
+                      editUserId: user.id,
+                      nodeId,
+                      serverId,
+                      addPermissions,
+                      removePermissions,
+                    });
+                  }}
+                  variant="confirm"
+                  icon={<Save />}
+                  query={writePermission}
+                >
+                  <p>Save</p>
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Container>
   );
 }
 
-export function UsersTab({ serverId }: { serverId: string }) {
+export function UsersTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const {
     data: users,
     error,
     refetch: refetchUsers,
-  } = trpc.server.users.read.useQuery({ serverId });
+  } = trpc.server.users.read.useQuery({ serverId, nodeId });
   const {
     data: allUsers,
     error: usersError,
     refetch: refetchAllUsers,
   } = trpc.user.list.useQuery();
-  const [ownPermissions, setOwnPermissions] = useState([] as Permission[]);
+  const { data: allPermissions, error: permissionsError } =
+    trpc.server.users.permissions.useQuery({
+      serverId,
+      nodeId,
+    });
+
+  const [ownPermissions, setOwnPermissions] = useState([] as string[]);
   const [isOwner, setIsOwner] = useState(false);
   const [newUser, setNewUser] = useState(null as string | null);
 
@@ -210,7 +224,11 @@ export function UsersTab({ serverId }: { serverId: string }) {
     return <Error error={error} />;
   }
 
-  if (!users) {
+  if (permissionsError) {
+    return <Error error={permissionsError} />;
+  }
+
+  if (!users || !allPermissions) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <MoonLoader size={100} color={"#FFFFFF"} />
@@ -224,10 +242,10 @@ export function UsersTab({ serverId }: { serverId: string }) {
         <UserSettings
           user={user}
           ownPermissions={ownPermissions}
-          serverId={serverId}
           isOwner={isOwner}
           key={user.id}
           refetch={refetch}
+          allPermissions={allPermissions}
         />
       ))}
       <Container className="h-fit">
@@ -254,31 +272,24 @@ export function UsersTab({ serverId }: { serverId: string }) {
                 }}
               />
               <div className="flex flex-row items-center">
-                <button
-                  className="flex flex-row gap-2 bg-success rounded px-2 py-1 mt-2 w-fit text-white disabled:bg-neutral-300"
+                <Button
+                  className="mt-2"
                   disabled={newUser === null}
                   onClick={() => {
                     if (!newUser) return;
                     addUser.mutate(
-                      { serverId, userId: newUser },
+                      { serverId, newUserId: newUser, nodeId },
                       {
                         onSuccess: () => refetch(),
                       }
                     );
                   }}
+                  icon={<Plus />}
+                  query={addUser}
                 >
-                  <Plus />
-                  Add User
-                </button>
-                <div className="ml-auto flex items-center flex-row h-full">
-                  {addUser.isPending && (
-                    <MoonLoader size={20} color={"#FFFFFF"} />
-                  )}
-                  {addUser.error && <Error error={addUser.error} />}
-                  {addUser.isSuccess && (
-                    <Check size={20} color={"green"} strokeWidth={4} />
-                  )}
-                </div>
+                  <p>Add User</p>
+                </Button>
+                <div className="ml-auto flex items-center flex-row h-full"></div>
               </div>
             </div>
           )}

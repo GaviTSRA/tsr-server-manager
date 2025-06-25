@@ -1,6 +1,59 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary-100: #ccbb6e;
+  --color-primary-200: #d2c27e;
+  --color-primary-300: #d8ca8e;
+  --color-primary-400: #ded19e;
+  --color-primary-500: #e4d9ae;
+  --color-primary-600: #eae0be;
+
+  --color-neutral-100: #101013;
+  --color-neutral-150: #161618;
+  --color-neutral-200: #1d1d20;
+  --color-neutral-300: #222225;
+  --color-neutral-400: #2c2c2f;
+  --color-neutral-500: #313135;
+  --color-neutral-600: #37373f;
+
+  --color-primary-text: #ccccd0;
+  --color-secondary-text: #808080;
+  --color-dark-text: #222222;
+  --color-disabled: #666666;
+
+  --color-danger: #ff4d4d;
+  --color-danger-disabled: #ba1616;
+  --color-success: #28a745;
+  --color-success-disabled: #155924;
+
+  --color-confirm: #1f7a47;
+  --color-confirm-hover: #1a693d;
+  --color-confirm-active: #155c35;
+  --color-confirm-disabled: #0f3d23;
+
+  --color-cancel: #cc2d2d;
+  --color-cancel-hover: #ff4d4d;
+  --color-cancel-active: #ff6d6d;
+  --color-cancel-disabled: #383c42;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 html,
 #root,
@@ -29,15 +82,15 @@ code {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0e0f10;
+  background: #1c1c1f;
   border-radius: 1px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1d333b;
+  background: #222225;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #23404a;
+  background: #2c2c2f;
 }

@@ -12,19 +12,21 @@ import {
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, X } from "react-feather";
+import { useServerQueryParams } from "../useServerQueryParams";
 
 type Log = {
   user: {
     name: string;
   };
   success: boolean;
-  date: string;
+  date: Date;
   log: string;
 };
 
-export function LogsTab({ serverId }: { serverId: string }) {
+export function LogsTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const { data: logs, error } = trpc.server.logs.read.useQuery(
-    { serverId },
+    { serverId, nodeId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -55,7 +57,7 @@ export function LogsTab({ serverId }: { serverId: string }) {
         cell: (cell) => <p className="px-2">{cell.getValue()}</p>,
       }),
       columnHelper.accessor("date", {
-        size: 160,
+        size: 180,
         header: () => <p>Date</p>,
         cell: (cell) => new Date(cell.getValue()).toLocaleString(),
       }),
@@ -65,7 +67,7 @@ export function LogsTab({ serverId }: { serverId: string }) {
         cell: (cell) => cell.getValue(),
       }),
     ],
-    []
+    [columnHelper]
   );
 
   const table = useReactTable<Log>({
@@ -108,19 +110,19 @@ export function LogsTab({ serverId }: { serverId: string }) {
 
   return (
     <Container
-      className="overflow-auto relative h-full !p-0"
+      className="overflow-auto relative h-full p-0!"
       expanded={true}
       innerRef={tableContainerRef}
     >
       <table className="grid">
-        <thead className="grid sticky top-0 z-10 bg-dark-100">
+        <thead className="grid sticky top-0 z-10 bg-neutral-150">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="flex w-full items-center">
               {headerGroup.headers.map((header) => {
                 return (
                   <th
                     key={header.id}
-                    className="flex items-center border-r-2 h-full last:border-r-0 border-dark-200 px-2 py-1"
+                    className="flex items-center border-r-2 h-full last:border-r-0 border-neutral-200 px-2 py-1"
                     style={{
                       width: header.getSize(),
                     }}

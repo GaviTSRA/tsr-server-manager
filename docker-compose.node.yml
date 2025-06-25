@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16.4
+    restart: always
+    ports:
+      - 5433:5432/tcp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: tsm-node
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./node-postgres-data:/var/lib/postgresql/data
+  server:
+    restart: always
+    build:
+      context: ./
+      dockerfile: ./node/Dockerfile
+    environment:
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+      - DB_HOST=db
+    ports:
+      - 8771:8771/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+      - /workspace/client
+      - /workspace/server
+      - /workspace/node_modules
+      - /workspace/node/node_modules

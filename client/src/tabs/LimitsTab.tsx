@@ -4,10 +4,12 @@ import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { UpsertInput } from "../components/UpsertInput";
 import { UpsertDropdown } from "../components/UpsertDropdown";
+import { useServerQueryParams } from "../useServerQueryParams";
 
-export function LimitsTab({ serverId }: { serverId: string }) {
+export function LimitsTab() {
+  const { nodeId, serverId } = useServerQueryParams();
   const { data: limits, error } = trpc.server.limits.read.useQuery(
-    { serverId },
+    { serverId, nodeId },
     {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
@@ -54,7 +56,11 @@ export function LimitsTab({ serverId }: { serverId: string }) {
           value={cpuLimit}
           type="text"
           mutate={(value) =>
-            writeLimits.mutate({ cpuLimit: Number.parseFloat(value), serverId })
+            writeLimits.mutate({
+              cpuLimit: Number.parseFloat(value),
+              serverId,
+              nodeId,
+            })
           }
           error={writeLimits.error}
           fetching={writeLimits.isPending}
@@ -66,7 +72,11 @@ export function LimitsTab({ serverId }: { serverId: string }) {
           value={ramLimit}
           type="number"
           mutate={(value) =>
-            writeLimits.mutate({ ramLimit: Number.parseInt(value), serverId })
+            writeLimits.mutate({
+              ramLimit: Number.parseInt(value),
+              serverId,
+              nodeId,
+            })
           }
           error={writeLimits.error}
           fetching={writeLimits.isPending}
@@ -87,6 +97,7 @@ export function LimitsTab({ serverId }: { serverId: string }) {
                 | "unless-stopped"
                 | "always",
               serverId,
+              nodeId,
             })
           }
           error={writeLimits.error}
@@ -102,6 +113,7 @@ export function LimitsTab({ serverId }: { serverId: string }) {
             writeLimits.mutate({
               restartRetryCount: Number.parseInt(value),
               serverId,
+              nodeId,
             })
           }
           error={writeLimits.error}

@@ -1,1 +1,0 @@
-ALTER TABLE "Log" DROP COLUMN IF EXISTS "inputs";

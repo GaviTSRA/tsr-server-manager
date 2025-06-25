@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16.4
+    restart: always
+    ports:
+      - 5432:5432/tcp
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: tsm-panel
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./panel-postgres-data:/var/lib/postgresql/data
+  server:
+    restart: always
+    ports:
+      - 3000:3000/tcp
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile
+    environment:
+      - DB_HOST=db
+    volumes:
+      - ./:/workspace
+      - /workspace/client
+      - /workspace/node_modules
+    depends_on:
+      - db
+  client:
+    restart: always
+    ports:
+      - 3001:3001/tcp
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+    volumes:
+      - ./:/workspace
+      - /workspace/node
+      - /workspace/node_modules
+    depends_on:
+      - server

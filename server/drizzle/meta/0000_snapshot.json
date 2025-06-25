@@ -1,11 +1,11 @@
 {
-  "id": "c2114282-b612-4258-a532-3b269fb7cdb9",
+  "id": "098c2e5f-3519-4596-ac4c-9e31f0a93739",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.Server": {
-      "name": "Server",
+    "public.Node": {
+      "name": "Node",
       "schema": "",
       "columns": {
         "id": {
@@ -21,9 +21,22 @@
           "primaryKey": false,
           "notNull": true
         },
-        "containerId": {
-          "name": "containerId",
+        "url": {
+          "name": "url",
           "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "NodeState",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         }
@@ -35,9 +48,67 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.User": {
+      "name": "User",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canCreateServers": {
+          "name": "canCreateServers",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "User_name_unique": {
+          "name": "User_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.NodeState": {
+      "name": "NodeState",
+      "schema": "public",
+      "values": [
+        "CONNECTION_ERROR",
+        "AUTHENTICATION_ERROR",
+        "SYNC_ERROR",
+        "CONNECTED"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},
