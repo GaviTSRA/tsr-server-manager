@@ -1,3 +1,9 @@
+import { TRPCClientErrorLike } from "@trpc/client";
+import { DefaultErrorShape } from "@trpc/server/unstable-core-do-not-import";
+import { Check } from "react-feather";
+import { MoonLoader } from "react-spinners";
+import { Error } from "./Error";
+
 const variants = {
   neutral:
     "border-1 bg-neutral-400 border-neutral-500 hover:bg-neutral-500 active:bg-neutral-600 disabled:bg-neutral-300 text-white disabled:text-secondary-text",
@@ -8,28 +14,53 @@ const variants = {
 };
 
 export function Button({
-  icon,
-  text,
+  children,
   onClick,
   className = "",
   variant = "neutral",
   disabled = false,
+  icon,
+  query,
 }: {
-  icon?: JSX.Element;
-  text: string | JSX.Element;
+  children?: JSX.Element | JSX.Element[] | string;
   disabled?: boolean;
   onClick?: () => void;
   variant?: "neutral" | "confirm" | "danger";
   className?: string;
+  icon?: JSX.Element;
+  query?: {
+    isSuccess: boolean;
+    isPending: boolean;
+    error: TRPCClientErrorLike<{
+      input: unknown;
+      output: unknown;
+      transformer: true;
+      errorShape: DefaultErrorShape;
+    }> | null;
+  };
 }) {
+  let actualIcon = icon;
+
+  if (query?.isPending) {
+    actualIcon = <MoonLoader size={20} color={"#FFFFFF"} />;
+  }
+  if (query?.isSuccess) {
+    actualIcon = <Check size={20} color={"green"} strokeWidth={4} />;
+  }
+
   return (
     <button
-      className={`flex flex-row gap-2 rounded px-2 py-1 ${variants[variant]} ${className}`}
+      className={`flex flex-row items-center gap-2 rounded px-2 py-1 transition-colors ${variants[variant]} ${className}`}
       onClick={onClick}
       disabled={disabled}
     >
-      {icon}
-      {text}
+      {query?.error && <Error error={query.error} />}
+      {(!query || !query.error) && (
+        <>
+          {actualIcon}
+          {children}
+        </>
+      )}
     </button>
   );
 }

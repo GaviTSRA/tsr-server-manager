@@ -88,8 +88,9 @@ export const useModal = (tabs: ModalTab[]) => {
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
                 variant="danger"
-                text="Cancel"
-              />
+              >
+                <p>Cancel</p>
+              </Button>
               <Button
                 onClick={() => {
                   tab.onConfirm?.();
@@ -101,21 +102,20 @@ export const useModal = (tabs: ModalTab[]) => {
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
                 variant="confirm"
-                text={
-                  <>
-                    {state === ModalState.FETCHING && (
-                      <MoonLoader size={18} color={"white"} />
-                    )}
-                    {state === ModalState.SUCCESS && (
-                      <Check size={22} className="text-success" />
-                    )}
-                    {state === ModalState.ERROR && (
-                      <X size={22} className="text-danger" />
-                    )}
-                    {state === ModalState.IDLE && <p>Confirm</p>}
-                  </>
-                }
-              />
+              >
+                <>
+                  {state === ModalState.FETCHING && (
+                    <MoonLoader size={18} color={"white"} />
+                  )}
+                  {state === ModalState.SUCCESS && (
+                    <Check size={22} className="text-success" />
+                  )}
+                  {state === ModalState.ERROR && (
+                    <X size={22} className="text-danger" />
+                  )}
+                  {state === ModalState.IDLE && <p>Confirm</p>}
+                </>
+              </Button>
             </div>
           </motion.div>
         </div>

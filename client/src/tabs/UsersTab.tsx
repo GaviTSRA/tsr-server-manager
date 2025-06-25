@@ -1,6 +1,5 @@
 import { MoonLoader } from "react-spinners";
 import { trpc } from "../main";
-import { Error } from "../components/Error";
 import {
   Check,
   ChevronDown,
@@ -20,6 +19,7 @@ import { useServerQueryParams } from "../useServerQueryParams";
 import { Permission } from "@tsm/server";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "../components/Button";
+import { Error } from "../components/Error";
 
 export function UserSettings({
   user,
@@ -153,8 +153,10 @@ export function UserSettings({
                     deleteUserModal.open();
                   }}
                   icon={<Trash2 />}
-                  text="Remove"
-                />
+                  query={deleteUser}
+                >
+                  <p>Remove</p>
+                </Button>
                 <Button
                   className="ml-auto"
                   onClick={() => {
@@ -168,8 +170,10 @@ export function UserSettings({
                   }}
                   variant="confirm"
                   icon={<Save />}
-                  text="Save"
-                />
+                  query={writePermission}
+                >
+                  <p>Save</p>
+                </Button>
               </div>
             )}
           </motion.div>
@@ -281,17 +285,11 @@ export function UsersTab() {
                     );
                   }}
                   icon={<Plus />}
-                  text="Add User"
-                />
-                <div className="ml-auto flex items-center flex-row h-full">
-                  {addUser.isPending && (
-                    <MoonLoader size={20} color={"#FFFFFF"} />
-                  )}
-                  {addUser.error && <Error error={addUser.error} />}
-                  {addUser.isSuccess && (
-                    <Check size={20} color={"green"} strokeWidth={4} />
-                  )}
-                </div>
+                  query={addUser}
+                >
+                  <p>Add User</p>
+                </Button>
+                <div className="ml-auto flex items-center flex-row h-full"></div>
               </div>
             </div>
           )}
