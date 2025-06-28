@@ -1,7 +1,7 @@
-import { hasPermission } from "./trpc/trpc";
-import * as docker from "./docker";
-import { db } from ".";
-import { ServerStat } from "./schema";
+import { hasPermission } from "./trpc/trpc.js";
+import * as docker from "./docker.js";
+import { db } from "./index.js";
+import { ServerStat } from "./schema.js";
 import { and, eq, lt } from "drizzle-orm";
 
 export async function watchStats(

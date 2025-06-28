@@ -1,6 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { Permission, AssignedPermission } from "../../schema";
-import { hasPermission, log, router, serverProcedure } from "../trpc";
+import { Permission, AssignedPermission } from "../../schema.js";
+import { hasPermission, log, router, serverProcedure } from "../trpc.js";
 import { z } from "zod";
 
 export const usersRouter = router({

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, serverProcedure } from "../trpc";
+import { router, serverProcedure } from "../trpc.js";
 
 export const logsRouter = router({
   read: serverProcedure

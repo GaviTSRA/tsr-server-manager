@@ -4,7 +4,7 @@ import {
   sendEmbed,
   setMetadata,
   type PlatformEvent,
-} from "../../src/events";
+} from "../../src/events.js";
 
 const dataSchema = z.object({
   players: z.string().array().optional(),

@@ -25,7 +25,9 @@ export function createAsyncIterable(emitter: EventEmitter) {
             } else {
               resolve = res;
             }
-          });
+          }) as Promise<{
+            value: any;
+          }>;
         },
       };
     },
@@ -180,6 +182,7 @@ export async function createContainer(
     case 201:
       return { status: "success", containerId: result.data["Id"] };
     case 400:
+      console.info(result.data);
       return { status: "bad paramater" };
     case 404:
       return { status: "no such image" };

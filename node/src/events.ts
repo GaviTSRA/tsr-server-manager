@@ -1,5 +1,5 @@
-import * as schema from "./schema";
-import { db, serverTypes } from ".";
+import * as schema from "./schema.js";
+import { db, serverTypes } from "./index.js";
 import { eq } from "drizzle-orm";
 import axios from "axios";
 

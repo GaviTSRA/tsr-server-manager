@@ -1,8 +1,8 @@
-import { log, router, serverProcedure } from "../trpc";
-import * as schema from "../../schema";
+import { log, router, serverProcedure } from "../trpc.js";
+import * as schema from "../../schema.js";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import * as docker from "../../docker";
+import * as docker from "../../docker.js";
 
 export const startupRouter = router({
   read: serverProcedure

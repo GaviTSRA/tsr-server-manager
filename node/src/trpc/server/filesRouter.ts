@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { authedProcedure, log, router, serverProcedure } from "../trpc";
+import { authedProcedure, log, router, serverProcedure } from "../trpc.js";
 import { TRPCError } from "@trpc/server";
 import path from "path";
 import fs from "fs";
@@ -209,10 +209,7 @@ export const serverFilesRouter = router({
       const filePath = path.join(target, input.file.name);
       try {
         const fd = fs.createWriteStream(filePath);
-        const fileStream = Readable.fromWeb(
-          // @ts-expect-error types should be compatible
-          input.file.stream()
-        );
+        const fileStream = Readable.fromWeb(input.file.stream());
         for await (const chunk of fileStream) {
           fd.write(chunk);
         }

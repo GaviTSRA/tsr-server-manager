@@ -4,6 +4,8 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "lib": ["es2022"],
+    "module": "nodenext"
   }
 }

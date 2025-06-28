@@ -1,24 +1,24 @@
-import { emitLogEvent, PlatformEvent } from "./events";
+import { emitLogEvent, PlatformEvent } from "./events.js";
 import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "./schema";
-import * as docker from "./docker";
+import * as schema from "./schema.js";
+import * as docker from "./docker.js";
 import fs from "fs";
 import "dotenv/config";
-import { nodeRouter } from "./trpc/router";
+import { nodeRouter } from "./trpc/router.js";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import express from "express";
-import { createContext } from "./trpc/trpc";
+import { createContext } from "./trpc/trpc.js";
 import http from "http";
 import cors from "cors";
-import { watchStats } from "./stats";
+import { watchStats } from "./stats.js";
 import compression from "compression";
-import { loadServerTypes } from "./serverTypes";
-import { registerDefaultPermissions } from "./permissions";
+import { loadServerTypes } from "./serverTypes.js";
+import { registerDefaultPermissions } from "./permissions.js";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
-export type { NodeRouter } from "./trpc/router";
-export type { ServerType } from "./serverTypes";
-export type { Permission } from "./permissions";
+export type { NodeRouter } from "./trpc/router.js";
+export type { ServerType } from "./serverTypes.js";
+export type { Permission } from "./permissions.js";
 
 registerDefaultPermissions(db);
 export const serverTypes = loadServerTypes(db);

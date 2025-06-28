@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { router, publicProcedure, authedProcedure } from "./trpc";
+import { router, publicProcedure, authedProcedure } from "./trpc.js";
 import { v4 } from "uuid";
 import { TRPCError } from "@trpc/server";
-import { serverRouter } from "./serverRouter";
-import * as schema from "../schema";
-import * as docker from "../docker";
-import { serverTypes } from "..";
+import { serverRouter } from "./serverRouter.js";
+import * as schema from "../schema.js";
+import * as docker from "../docker.js";
+import { serverTypes } from "../index.js";
 import jwt from "jsonwebtoken";
 
 const PASSWORD = process.env.PASSWORD;

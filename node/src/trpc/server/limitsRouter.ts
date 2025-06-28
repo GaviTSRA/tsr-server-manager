@@ -1,7 +1,7 @@
-import * as docker from "../../docker";
-import { log, router, serverProcedure } from "../trpc";
+import * as docker from "../../docker.js";
+import { log, router, serverProcedure } from "../trpc.js";
 import { z } from "zod";
-import * as schema from "../../schema";
+import * as schema from "../../schema.js";
 import { eq } from "drizzle-orm";
 
 export const limitsRouter = router({

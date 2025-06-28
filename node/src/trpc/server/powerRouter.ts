@@ -1,13 +1,13 @@
 import { TRPCError } from "@trpc/server";
-import { log, router, serverProcedure } from "../trpc";
-import * as docker from "../../docker";
-import { ServerType, serverTypes } from "../..";
-import * as schema from "../../schema";
+import { log, router, serverProcedure } from "../trpc.js";
+import * as docker from "../../docker.js";
+import { ServerType, serverTypes } from "../../index.js";
+import * as schema from "../../schema.js";
 import { eq } from "drizzle-orm";
 import fs from "fs";
-import { emitLogEvent, emitPowerEvent } from "../../events";
+import { emitLogEvent, emitPowerEvent } from "../../events.js";
 import { z } from "zod";
-import { watchStats } from "../../stats";
+import { watchStats } from "../../stats.js";
 
 export const powerRouter = router({
   start: serverProcedure
@@ -41,7 +41,7 @@ export const powerRouter = router({
         if (!containerId) {
           const result = await docker.createContainer(
             ctx.server.id,
-            ctx.server.name.toLowerCase().replace(" ", "-"),
+            ctx.server.name.toLowerCase().replaceAll(" ", "-"),
             type.image ?? ctx.server.options["image"],
             [
               "/bin/bash",
@@ -90,7 +90,7 @@ export const powerRouter = router({
 
       setTimeout(async () => {
         watchStats(ctx.server.id, containerId, ctx.server.cpuLimit);
-      }, 0)
+      }, 0);
 
       setTimeout(async () => {
         for await (const chunk of asyncIterable) {
@@ -99,7 +99,7 @@ export const powerRouter = router({
             await emitLogEvent(ctx.server.id, logLine, ctx.server.type);
           }
         }
-      }, 0)
+      }, 0);
 
       return result;
     }),

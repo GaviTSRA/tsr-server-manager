@@ -1,14 +1,14 @@
 import { TRPCError } from "@trpc/server";
-import * as docker from "../docker";
-import { hasPermission, log, router, serverProcedure, t } from "./trpc";
+import * as docker from "../docker.js";
+import { hasPermission, log, router, serverProcedure, t } from "./trpc.js";
 import { z } from "zod";
-import { serverFilesRouter } from "./server/filesRouter";
-import { startupRouter } from "./server/startupRouter";
-import { networkRouter } from "./server/networkRouter";
-import { limitsRouter } from "./server/limitsRouter";
-import { powerRouter } from "./server/powerRouter";
-import { usersRouter } from "./server/usersRouter";
-import { logsRouter } from "./server/logsRouter";
+import { serverFilesRouter } from "./server/filesRouter.js";
+import { startupRouter } from "./server/startupRouter.js";
+import { networkRouter } from "./server/networkRouter.js";
+import { limitsRouter } from "./server/limitsRouter.js";
+import { powerRouter } from "./server/powerRouter.js";
+import { usersRouter } from "./server/usersRouter.js";
+import { logsRouter } from "./server/logsRouter.js";
 
 export const serverRouter = router({
   power: powerRouter,

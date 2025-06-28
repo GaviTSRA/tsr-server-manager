@@ -4,7 +4,7 @@ import {
   sendEmbed,
   setMetadata,
   type PlatformEvent,
-} from "../../src/events";
+} from "../../src/events.js";
 
 const dataSchema = z.object({
   players: z.string().array().optional(),
@@ -50,8 +50,8 @@ export async function handleEvent(event: PlatformEvent) {
           event.data === "start"
             ? "Server is now starting..."
             : event.data === "kill"
-              ? "Server is now offline!"
-              : "Server is now stopping...";
+            ? "Server is now offline!"
+            : "Server is now stopping...";
         const color = event.data === "start" ? 13369291 : 16711680;
         sendEmbed(server.options.notifyWebhook, title, color);
       }
