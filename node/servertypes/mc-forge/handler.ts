@@ -5,7 +5,6 @@ import {
   setMetadata,
   type PlatformEvent,
 } from "../../src/events";
-import axios from "axios";
 
 const dataSchema = z.object({
   players: z.string().array().optional(),
@@ -51,8 +50,8 @@ export async function handleEvent(event: PlatformEvent) {
           event.data === "start"
             ? "Server is now starting..."
             : event.data === "kill"
-              ? "Server is now offline!"
-              : "Server is now stopping...";
+            ? "Server is now offline!"
+            : "Server is now stopping...";
         const color = event.data === "start" ? 13369291 : 16711680;
         sendEmbed(server.options.notifyWebhook, title, color);
       }
@@ -65,9 +64,9 @@ export async function handleEvent(event: PlatformEvent) {
       const serverOffline =
         /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO\] \[minecraft\/DedicatedServer\]: Done \(([0-9.]+)s\)!/;
       const join =
-        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([A-z]+) joined the game/;
+        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([\w]+) joined the game/;
       const leave =
-        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([A-z]+) left the game/;
+        /\[(\d\d:\d\d:\d\d)] \[Server thread\/INFO] \[minecraft\/MinecraftServer]: ([\w]+) left the game/;
 
       const joinMatch = join.exec(event.data);
       const leaveMatch = leave.exec(event.data);
