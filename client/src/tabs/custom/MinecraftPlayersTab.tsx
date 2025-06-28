@@ -1,4 +1,4 @@
-import { Rss } from "react-feather";
+import { Rss, X } from "react-feather";
 import { Container } from "../../components/Container";
 import { Server } from "../../main";
 import { MoonLoader } from "react-spinners";
@@ -33,10 +33,7 @@ export function MinecraftPlayersTab({
         title={
           <div className="flex flex-row gap-2">
             <Rss size={20} />
-            <p className="font-bold">
-              Online Players:{" "}
-              {server.metadata.players ? server.metadata.players.length : 0}
-            </p>
+            <p className="font-bold">Online Players</p>
           </div>
         }
       >
@@ -45,6 +42,13 @@ export function MinecraftPlayersTab({
             server.metadata.players.map((player: string) => (
               <MinecraftPlayer name={player} key={player} />
             ))}
+          {(!server.metadata.players ||
+            server.metadata.players.length === 0) && (
+            <div className="flex flex-col items-center w-full">
+              <X />
+              <p className="text-secondary-text">No players online</p>
+            </div>
+          )}
         </div>
       </Container>
     </div>

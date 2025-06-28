@@ -6,11 +6,11 @@ import { Error } from "./Error";
 
 const variants = {
   neutral:
-    "border-1 bg-neutral-400 border-neutral-500 hover:bg-neutral-500 active:bg-neutral-600 disabled:bg-neutral-300 text-white disabled:text-secondary-text",
+    "border-b-2 bg-neutral-400 border-neutral-600 hover:bg-neutral-500 active:bg-neutral-600 disabled:bg-neutral-300 text-white disabled:text-secondary-text",
   confirm:
-    "border-b-2 bg-neutral-400 border-confirm hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled text-white disabled:text-secondary-text",
+    "border-b-2 bg-neutral-400 border-confirm hover:bg-confirm-hover active:bg-confirm-active disabled:border-confirm-disabled disabled:bg-neutral-300 text-white disabled:text-secondary-text",
   danger:
-    "border-b-2 bg-neutral-400 border-cancel hover:bg-cancel-hover active:bg-cancel-active disabled:bg-cancel-disabled text-white disabled:text-secondary-text",
+    "border-b-2 bg-neutral-400 border-cancel hover:bg-cancel-hover active:bg-cancel-active disabled:border-cancel-disabled disabled:bg-neutral-300 text-white disabled:text-secondary-text",
 };
 
 export function Button({
@@ -42,7 +42,7 @@ export function Button({
   let actualIcon = icon;
 
   if (query?.isPending) {
-    actualIcon = <MoonLoader size={20} color={"#FFFFFF"} />;
+    actualIcon = <MoonLoader size={18} color={"#FFFFFF"} />;
   }
   if (query?.isSuccess) {
     actualIcon = <Check size={20} color={"green"} strokeWidth={4} />;

@@ -8,13 +8,15 @@ import {
   File,
   MoreVertical,
   Save,
-  Check,
+  FilePlus,
+  FolderPlus,
 } from "react-feather";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { useModal } from "../components/Modal";
 import { Input } from "../components/Input";
 import { useServerQueryParams } from "../useServerQueryParams";
+import { Button } from "../components/Button";
 
 function formatFileSize(size: number): string {
   if (size < 1024) {
@@ -158,7 +160,7 @@ function FileRow({
                 setMoreOpen(false);
               }}
             ></div>
-            <div>
+            <div className="border-1 border-neutral-500 rounded">
               {moreOptions.map((value, index) => (
                 <div
                   className={`relative w-full z-60 cursor-pointer bg-neutral-300 hover:bg-neutral-400 p-2 first:rounded-t last:rounded-b flex flex-row items-center gap-2`}
@@ -369,39 +371,29 @@ export function FilesTab() {
               </div>
             ))}
           {files.type === "file" && (
-            <button
-              className="flex items-center bg-confirm hover:bg-confirm-hover active:bg-confirm-active disabled:bg-confirm-disabled px-2 py-1 text-2xl rounded-sm ml-auto"
+            <Button
+              className="ml-auto"
               onClick={() => {
                 if (content) {
                   editFile.mutate({ content, path, serverId, nodeId });
                 }
               }}
+              variant="confirm"
               disabled={editFile.isPending}
+              icon={<Save />}
+              query={editFile}
             >
-              {!editFile.isError &&
-                !editFile.isSuccess &&
-                !editFile.isPending && <Save size={16} color="white" />}
-              {editFile.isPending && <MoonLoader size={18} color={"white"} />}
-              {editFile.isSuccess && (
-                <Check size={22} className="text-success" />
-              )}
-              {editFile.error && <Error error={editFile.error} size="small" />}
-            </button>
+              <p>Save</p>
+            </Button>
           )}
           {files.type === "folder" && (
-            <div className="flex flex-row ml-auto mr-4 gap-4">
-              <button
-                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded-sm"
-                onClick={createFileModal.open}
-              >
+            <div className="flex flex-row ml-auto mr-4 gap-2">
+              <Button onClick={createFileModal.open} icon={<FilePlus />}>
                 Create File
-              </button>
-              <button
-                className="bg-neutral-300 hover:bg-neutral-400 active:bg-neutral-500 px-2 py-1 rounded-sm"
-                onClick={createFolderModal.open}
-              >
+              </Button>
+              <Button onClick={createFolderModal.open} icon={<FolderPlus />}>
                 Create Folder
-              </button>
+              </Button>
               {/* <form onSubmit={handleSubmit}>
                 <input type="file" onChange={handleFileChange} />
                 <button type="submit">Upload File</button>

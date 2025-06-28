@@ -22,10 +22,12 @@ export function Input({
   return (
     <input
       className={
-        "p-2 w-full bg-neutral-300 border-b-2 border-neutral-400 focus:border-primary-100 transition-colors duration-300 outline-hidden " +
+        "p-2 w-full bg-neutral-300 border-b-2 border-neutral-500 focus:border-primary-100 transition-colors duration-300 outline-hidden " +
         className
       }
-      onChange={(event) => onValueChange ? onValueChange(event.target.value) : {}}
+      onChange={(event) =>
+        onValueChange ? onValueChange(event.target.value) : {}
+      }
       placeholder={placeholder}
       value={value}
       defaultValue={defaultValue}

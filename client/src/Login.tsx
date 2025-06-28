@@ -4,6 +4,7 @@ import { useState } from "react";
 import { trpc } from "./main";
 import { useNavigate } from "react-router-dom";
 import { BarLoader } from "react-spinners";
+import { Button } from "./components/Button";
 
 export function Login(): JSX.Element {
   const [username, setUsername] = useState(null as string | null);
@@ -18,7 +19,7 @@ export function Login(): JSX.Element {
 
   return (
     <div className="w-full h-full flex items-center bg-neutral-100 text-white">
-      <div className="w-2/3 md:w-2/4 lg:w-1/4 m-auto bg-neutral-200 rounded-2xl p-4">
+      <div className="w-2/3 md:w-2/4 lg:w-1/4 m-auto bg-neutral-200 border-neutral-400 border-1 rounded-2xl p-4">
         <div className="flex flex-col">
           <div className="flex flex-row items-center pr-2 py-2 gap-2">
             <User />
@@ -38,9 +39,8 @@ export function Login(): JSX.Element {
           />
         </div>
         <div className="w-full flex flex-col sm:flex-row items-center justify-center mt-8 gap-2 sm:gap-8">
-          <button
+          <Button
             disabled={!username || !password || loggingIn || registering}
-            className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded-sm px-4 py-2 text-white gap-2"
             onClick={() => {
               if (!username || !password) {
                 return;
@@ -85,10 +85,9 @@ export function Login(): JSX.Element {
                 <p>Register</p>
               </div>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
             disabled={!username || !password || loggingIn || registering}
-            className="h-10 bg-neutral-400 hover:bg-neutral-500 disabled:bg-neutral-300 p-2 flex flex-row items-center rounded-sm px-4 py-2 text-white gap-2"
             onClick={() => {
               if (!username || !password) {
                 return;
@@ -119,7 +118,7 @@ export function Login(): JSX.Element {
                 <p>Login</p>
               </div>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { trpc } from "../main";
 import { Container } from "../components/Container";
-import { X } from "react-feather";
+import { Plus, X } from "react-feather";
 import { Input } from "../components/Input";
 import { MoonLoader } from "react-spinners";
 import { Error } from "../components/Error";
 import { useServerQueryParams } from "../useServerQueryParams";
+import { Button } from "../components/Button";
 
 export function NetworkTab() {
   const { nodeId, serverId } = useServerQueryParams();
@@ -45,8 +46,8 @@ export function NetworkTab() {
             key={port}
           >
             <p className="text-xl">{port}</p>
-            <div
-              className="p-1 bg-danger rounded-sm"
+            <Button
+              variant="danger"
               onClick={() =>
                 writePorts.mutate(
                   {
@@ -59,13 +60,12 @@ export function NetworkTab() {
                   }
                 )
               }
-            >
-              <X />
-            </div>
+              icon={<X />}
+            />
           </Container>
         );
       })}
-      <Container className="w-fit flex flex-row gap-2 p-2 rounded-sm bg-neutral-200">
+      <Container className="w-fit flex flex-row gap-2 rounded-sm bg-neutral-200">
         <Input
           className="rounded-sm"
           placeholder="Add port..."
@@ -73,8 +73,7 @@ export function NetworkTab() {
             setNewPort(value);
           }}
         />
-        <button
-          className="p-2 bg-success rounded-sm"
+        <Button
           onClick={() => {
             if (!newPort) return;
             writePorts.mutate(
@@ -88,9 +87,12 @@ export function NetworkTab() {
               }
             );
           }}
+          disabled={!newPort || writePorts.isPending}
+          variant="confirm"
+          icon={<Plus />}
         >
           Add
-        </button>
+        </Button>
       </Container>
     </div>
   );

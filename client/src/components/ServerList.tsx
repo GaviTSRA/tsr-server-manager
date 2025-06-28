@@ -245,11 +245,11 @@ export default function ServerList() {
     {
       title: "Create Server",
       description: "Select a name and node",
+      continueEnabled: !!serverNode && !!serverName,
       body: (
         <>
           <p className="text-secondary-text mt-2">Node</p>
           <Dropdown
-            color="bg-neutral-300 hover:bg-neutral-400"
             values={(nodes ?? []).map((node) => node.id)}
             render={(option) => (
               <p>
@@ -276,9 +276,9 @@ export default function ServerList() {
     {
       title: "Create Server",
       description: "Select a type",
+      continueEnabled: !!serverType && !!serverNode && !!serverName,
       body: (
         <Dropdown
-          color="bg-neutral-300 hover:bg-neutral-400"
           values={
             (serverTypes ?? [])
               .find((entry) => entry.nodeId === serverNode)

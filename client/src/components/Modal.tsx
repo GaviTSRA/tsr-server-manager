@@ -14,6 +14,7 @@ enum ModalState {
 type ModalTab = {
   title: string;
   description: string;
+  continueEnabled?: boolean;
   body?: JSX.Element;
   onConfirm?: () => void;
   onCancel?: () => void;
@@ -51,12 +52,12 @@ export const useModal = (tabs: ModalTab[]) => {
           }}
         >
           <motion.div
-            className="bg-neutral-200 rounded-lg p-4 shadow-lg max-w-md w-full"
+            className="bg-neutral-200 border-neutral-400 border-1 rounded-lg p-4 shadow-lg max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
           >
             <h2 className="text-xl font-bold">{tab.title}</h2>
             <p className="mt-2 text-secondary-text">{tab.description}</p>
@@ -65,9 +66,9 @@ export const useModal = (tabs: ModalTab[]) => {
                 <motion.div
                   className="mt-4"
                   key={currentTab}
-                  initial={{ x: -10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: 10, opacity: 0 }}
+                  initial={{ x: -50, opacity: 0, height: "4rem" }}
+                  animate={{ x: 0, opacity: 1, height: "auto" }}
+                  exit={{ x: 50, opacity: 0, height: "4rem" }}
                   transition={{ duration: 0.1 }}
                 >
                   {tab.body}
@@ -87,9 +88,8 @@ export const useModal = (tabs: ModalTab[]) => {
                 disabled={
                   state === ModalState.FETCHING || state === ModalState.SUCCESS
                 }
-                variant="danger"
               >
-                <p>Cancel</p>
+                <p>{currentTab === 0 ? "Cancel" : "Back"}</p>
               </Button>
               <Button
                 onClick={() => {
@@ -99,7 +99,9 @@ export const useModal = (tabs: ModalTab[]) => {
                   }
                 }}
                 disabled={
-                  state === ModalState.FETCHING || state === ModalState.SUCCESS
+                  state === ModalState.FETCHING ||
+                  state === ModalState.SUCCESS ||
+                  tab.continueEnabled === false
                 }
                 variant="confirm"
               >
@@ -113,7 +115,11 @@ export const useModal = (tabs: ModalTab[]) => {
                   {state === ModalState.ERROR && (
                     <X size={22} className="text-danger" />
                   )}
-                  {state === ModalState.IDLE && <p>Confirm</p>}
+                  {state === ModalState.IDLE && (
+                    <p>
+                      {currentTab === tabs.length - 1 ? "Confirm" : "Continue"}
+                    </p>
+                  )}
                 </>
               </Button>
             </div>

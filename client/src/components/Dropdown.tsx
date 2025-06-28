@@ -7,7 +7,7 @@ type DropdownProps = {
   placeholder?: string;
   color?: string;
   defaultValue?: string;
-  render?: (option: string) => JSX.Element
+  render?: (option: string) => JSX.Element;
 };
 
 export function Dropdown({
@@ -16,7 +16,7 @@ export function Dropdown({
   placeholder,
   defaultValue,
   render = (option: string) => <p>{option}</p>,
-  color = "bg-header hover:bg-border",
+  color = "bg-neutral-300 hover:bg-neutral-400 border-neutral-500",
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(defaultValue);
@@ -25,20 +25,20 @@ export function Dropdown({
     <div onClick={() => setOpen(!open)} className="relative cursor-pointer">
       <div
         className={
-          `flex flex-row items-center select-none p-2 ${color} ` +
+          `flex flex-row items-center select-none p-2 border-1 ${color} ` +
           (open ? "rounded-t-sm " : "rounded-sm ") +
           (selected ? "" : "text-secondary-text")
         }
       >
         {selected && render(selected)}
         <p>{!selected && (placeholder ?? "Select an option...")}</p>
-        <div className="ml-auto mr-2 text-secondary-text">
+        <div className="ml-auto text-secondary-text">
           {open && <ChevronUp />}
           {!open && <ChevronDown />}
         </div>
       </div>
       {open && (
-        <div className="absolute w-full shadow-lg">
+        <div className="absolute w-full shadow-lg border-x-1 border-b-1 border-neutral-500 rounded-b">
           <div
             className="fixed top-0 left-0 w-full h-full z-50"
             onClick={() => setOpen(false)}

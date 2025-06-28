@@ -264,7 +264,6 @@ export function UsersTab() {
                   )
                   .map((user) => user.name)}
                 placeholder="Select user to add..."
-                color="bg-neutral-300 hover:bg-neutral-400"
                 onSelect={(value) => {
                   const user = allUsers.find((el) => el.name === value);
                   if (!user) return;
