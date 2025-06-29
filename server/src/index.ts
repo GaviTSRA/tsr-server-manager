@@ -10,10 +10,10 @@ import { readFileSync } from "fs";
 import cors from "cors";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
-import {
-  createOpenApiExpressMiddleware,
-  generateOpenApiDocument,
-} from "trpc-to-openapi";
+// import {
+//   createOpenApiExpressMiddleware,
+//   generateOpenApiDocument,
+// } from "trpc-to-openapi";
 import { ConnectedNode, registerNode } from "./nodes";
 import { EventSource } from "eventsource";
 import compression from "compression";
