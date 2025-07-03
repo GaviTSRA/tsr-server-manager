@@ -17,7 +17,7 @@ async function update(serverId: string, metadata: Metadata) {
 
 async function getMetadata(event: PlatformEvent) {
   const server = await getServer(event);
-  return dataSchema.parse(server);
+  return dataSchema.parse(server.metadata);
 }
 
 function justHappened(time: string) {
@@ -40,7 +40,7 @@ export async function handleEvent(event: PlatformEvent) {
   switch (event.type) {
     case "power":
       const server = await getServer(event);
-      const metadata = dataSchema.parse(server);
+      const metadata = dataSchema.parse(server.metadata);
       await update(event.serverId, {
         ...metadata,
         players: [],
@@ -70,7 +70,7 @@ export async function handleEvent(event: PlatformEvent) {
 
       if (serverOnlineMatch && serverOnlineMatch[1] && serverOnlineMatch[2]) {
         const server = await getServer(event);
-        const metadata = dataSchema.parse(server);
+        const metadata = dataSchema.parse(server.metadata);
         update(event.serverId, {
           ...metadata,
           players: [],
@@ -107,7 +107,7 @@ export async function handleEvent(event: PlatformEvent) {
 
       if (joinMatch && joinMatch[1] && joinMatch[2]) {
         const server = await getServer(event);
-        const metadata = dataSchema.parse(server);
+        const metadata = dataSchema.parse(server.metadata);
         const players = metadata.players ?? [];
         players.push(joinMatch[2]);
         update(event.serverId, {
@@ -125,7 +125,7 @@ export async function handleEvent(event: PlatformEvent) {
 
       if (leaveMatch && leaveMatch[1] && leaveMatch[2]) {
         const server = await getServer(event);
-        const metadata = dataSchema.parse(server);
+        const metadata = dataSchema.parse(server.metadata);
         const players = metadata.players ?? [];
         update(event.serverId, {
           ...metadata,
