@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import * as docker from "../docker.js";
-import { hasPermission, log, router, serverProcedure, t } from "./trpc.js";
+import { hasPermission, log, router, serverProcedure } from "./trpc.js";
 import { z } from "zod";
 import { serverFilesRouter } from "./server/filesRouter.js";
 import { startupRouter } from "./server/startupRouter.js";
@@ -9,6 +9,7 @@ import { limitsRouter } from "./server/limitsRouter.js";
 import { powerRouter } from "./server/powerRouter.js";
 import { usersRouter } from "./server/usersRouter.js";
 import { logsRouter } from "./server/logsRouter.js";
+import { customRouter } from "./server/custom.js";
 
 export const serverRouter = router({
   power: powerRouter,
@@ -18,6 +19,7 @@ export const serverRouter = router({
   limits: limitsRouter,
   users: usersRouter,
   logs: logsRouter,
+  custom: customRouter,
   server: serverProcedure
     .meta({
       permission: "server",
@@ -40,7 +42,6 @@ export const serverRouter = router({
             "dead",
           ])
           .optional(),
-        metadata: z.record(z.string(), z.any()),
       })
     )
     .query(async ({ ctx }) => {
@@ -54,7 +55,6 @@ export const serverRouter = router({
         name: ctx.server.name,
         type: ctx.server.type,
         status: inspect?.data?.status,
-        metadata: ctx.server.metadata,
       };
     }),
   status: serverProcedure

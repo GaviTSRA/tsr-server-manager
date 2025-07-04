@@ -3,6 +3,8 @@ import { PlatformEvent } from "./events.js";
 import { Permission, registerPermissions } from "./permissions.js";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "./schema.js";
+import path from "path";
+import { TRPCError } from "@trpc/server";
 
 export type ServerType = {
   id: string;
@@ -47,4 +49,33 @@ export function loadServerTypes(db: NodePgDatabase<typeof schema>) {
   });
 
   return serverTypes;
+}
+
+export function readFile(serverId: string, filePath: string) {
+  const root = "servers/" + serverId;
+  const target = path.normalize(path.join(root, filePath));
+  try {
+    const stats = fs.statSync(target);
+    if (stats.isDirectory()) {
+      throw new Error("Cannot read a directory as a file");
+    }
+    return fs.readFileSync(target).toString();
+  } catch (err) {
+    if (typeof err === "string") {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: err,
+      });
+    } else if (err instanceof Error) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: err.message,
+      });
+    } else {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unknown error occurred while reading the file.",
+      });
+    }
+  }
 }

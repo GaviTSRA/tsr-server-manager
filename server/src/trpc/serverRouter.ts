@@ -10,6 +10,7 @@ import { usersRouter } from "./server/usersRouter";
 import { logsRouter } from "./server/logsRouter";
 import { NodeRouter } from "@tsm/node";
 import { handleNodeError } from "../nodes";
+import { customRouter } from "./server/customRouter";
 
 export const serverRouter = router({
   power: powerRouter,
@@ -19,6 +20,7 @@ export const serverRouter = router({
   limits: limitsRouter,
   users: usersRouter,
   logs: logsRouter,
+  custom: customRouter,
   server: nodeProcedure
     .meta({
       openapi: {

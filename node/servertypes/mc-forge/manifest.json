@@ -36,6 +36,11 @@
       "id": "mc-forge.players.read",
       "name": "Read Players",
       "description": "Read the list of players on the server"
+    },
+    {
+      "id": "mc-forge.players.readOps",
+      "name": "Read OP Players",
+      "description": "Read the list of op'd players on the server"
     }
   ]
 }
