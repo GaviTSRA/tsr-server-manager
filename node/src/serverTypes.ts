@@ -79,3 +79,46 @@ export function readFile(serverId: string, filePath: string) {
     }
   }
 }
+
+export function listFileNames(serverId: string, folder: string, regex: RegExp) {
+  const result = [];
+
+  const root = "servers/" + serverId;
+  const target = path.normalize(path.join(root, folder));
+  const folderContents = fs.readdirSync(target);
+  for (const entry of folderContents) {
+    const file = path.normalize(path.join(target, entry));
+    const stats = fs.statSync(file);
+    if (stats.isDirectory()) {
+      continue;
+    }
+
+    if (regex.test(entry)) {
+      result.push(file);
+    }
+  }
+
+  return result;
+}
+
+export function readFiles(serverId: string, folder: string, regex: RegExp) {
+  const result: { [fileName: string]: string } = {};
+
+  const root = "servers/" + serverId;
+  const target = path.normalize(path.join(root, folder));
+  const folderContents = fs.readdirSync(target);
+  for (const entry of folderContents) {
+    const file = path.normalize(path.join(target, entry));
+
+    const stats = fs.statSync(file);
+    if (stats.isDirectory()) {
+      continue;
+    }
+
+    if (regex.test(entry)) {
+      result[entry] = readFile(serverId, file)
+    }
+  }
+
+  return result;
+}

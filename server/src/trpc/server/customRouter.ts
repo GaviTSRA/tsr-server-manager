@@ -35,5 +35,20 @@ export const customRouter = router({
           userId: ctx.user.id,
         });
       }),
+    getMods: nodeProcedure
+      .input(z.object({ serverId: z.string() }))
+      .output(
+        z.custom<
+          inferProcedureOutput<
+            NodeRouter["server"]["custom"]["mcForge"]["getMods"]
+          >
+        >()
+      )
+      .query(async ({ ctx, input }) => {
+        return await ctx.node.trpc.server.custom.mcForge.getMods.query({
+          serverId: input.serverId,
+          userId: ctx.user.id,
+        });
+      }),
   },
 });
