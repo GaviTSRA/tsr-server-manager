@@ -3,6 +3,7 @@
   "icon": "https://forums.factorio.com/images/ext/422c32262d4b0e78baa2846473aa0e40.png",
   "image": "factorio",
   "command": "/server/bin/x64/factorio --start-server /server/${saveName} --server-settings /server/server-settings.json --port ${port}",
+  "stopCommand": "/quit",
   "options": {
     "version": {
       "name": "Version",
@@ -27,8 +28,20 @@
       "description": "Webhook to notify about server events",
       "type": "string",
       "default": ""
+    },
+    "username": {
+      "name": "Factorio Username",
+      "description": "Required for download mods",
+      "type": "string",
+      "default": ""
+    },
+    "token": {
+      "name": "Factorio Token",
+      "description": "Required for download mods",
+      "type": "string",
+      "default": ""
     }
   },
-  "tabs": [],
+  "tabs": ["factorio-mods"],
   "permissions": []
 }
