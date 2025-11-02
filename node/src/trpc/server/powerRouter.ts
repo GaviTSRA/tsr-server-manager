@@ -145,13 +145,16 @@ export const powerRouter = router({
           message: "Server not installed",
         });
       }
+      const stopCommand =
+        (await serverTypes).find((entry) => entry.id === ctx.server.type)
+          ?.stopCommand || "";
       docker.exec(ctx.server.containerId, [
         "screen",
         "-S",
         "server",
         "-X",
         "stuff",
-        "stop^M",
+        `${stopCommand}^M`,
       ]);
       const result = await docker.stopContainer(ctx.server.containerId);
       if (result !== "success") {

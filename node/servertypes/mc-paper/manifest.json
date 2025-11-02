@@ -3,6 +3,7 @@
   "icon": "https://papermc.io/assets/logo/256x.png",
   "image": null,
   "command": "java -Xms128M -Xmx${SERVER_RAM}M -Dterminal.jline=false -Dterminal.ansi=true -jar server.jar --nogui",
+  "stopCommand": "stop",
   "options": {
     "version": {
       "name": "Version",
