@@ -40,7 +40,7 @@ export async function emitLogEvent(
 }
 
 async function emitEvent(type: string, event: PlatformEvent) {
-  const serverType = serverTypes.find((entry) => entry.id === type);
+  const serverType = (await serverTypes).find((entry) => entry.id === type);
   if (!serverType) {
     console.error("Server type not found:", type);
     return;

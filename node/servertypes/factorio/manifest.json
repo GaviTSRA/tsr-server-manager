@@ -1,0 +1,34 @@
+{
+  "name": "Factorio",
+  "icon": "https://forums.factorio.com/images/ext/422c32262d4b0e78baa2846473aa0e40.png",
+  "image": "factorio",
+  "command": "/server/bin/x64/factorio --start-server /server/${saveName} --server-settings /server/server-settings.json --port ${port}",
+  "options": {
+    "version": {
+      "name": "Version",
+      "description": "Factorio version to install, defaults to latest stable if empty",
+      "type": "string",
+      "default": ""
+    },
+    "saveName": {
+      "name": "Save Name",
+      "description": "Name of the save file to load",
+      "type": "string",
+      "default": "world.zip"
+    },
+    "port": {
+      "name": "Server Port",
+      "description": "Port for the Factorio server to listen on",
+      "type": "string",
+      "default": "34197"
+    },
+    "notifyWebhook": {
+      "name": "Notify Webhook",
+      "description": "Webhook to notify about server events",
+      "type": "string",
+      "default": ""
+    }
+  },
+  "tabs": [],
+  "permissions": []
+}

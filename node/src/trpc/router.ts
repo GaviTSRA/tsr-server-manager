@@ -178,7 +178,8 @@ export const nodeRouter = router({
         .array()
     )
     .query(async () => {
-      return serverTypes;
+      const types = await serverTypes;
+      return types;
     }),
   createServer: authedProcedure
     .input(
@@ -190,7 +191,7 @@ export const nodeRouter = router({
     )
     .output(z.void())
     .mutation(async ({ input, ctx }) => {
-      const type = serverTypes.find((type) => type.id === input.type);
+      const type = (await serverTypes).find((type) => type.id === input.type);
       if (!type) {
         throw new TRPCError({
           code: "NOT_FOUND",

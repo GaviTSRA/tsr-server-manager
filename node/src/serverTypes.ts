@@ -26,16 +26,18 @@ export type ServerType = {
   permissions?: Permission[];
 };
 
-export function loadServerTypes(db: NodePgDatabase<typeof schema>) {
+export async function loadServerTypes(db: NodePgDatabase<typeof schema>) {
   const serverTypes: ServerType[] = [];
 
-  fs.readdirSync("servertypes").forEach(async (folder) => {
+  const folders = fs.readdirSync("servertypes");
+
+  for (const folder of folders) {
     const json = fs
       .readFileSync(`servertypes/${folder}/manifest.json`)
       .toString();
     const data = JSON.parse(json);
 
-    let imported = await import(`../servertypes/${folder}/handler.ts`);
+    const imported = await import(`../servertypes/${folder}/handler.ts`);
 
     if (data.permissions) {
       registerPermissions(data.permissions, db, folder);
@@ -46,7 +48,7 @@ export function loadServerTypes(db: NodePgDatabase<typeof schema>) {
       ...data,
       eventHandler: imported.handleEvent,
     });
-  });
+  }
 
   return serverTypes;
 }
@@ -116,7 +118,7 @@ export function readFiles(serverId: string, folder: string, regex: RegExp) {
     }
 
     if (regex.test(entry)) {
-      result[entry] = readFile(serverId, file)
+      result[entry] = readFile(serverId, file);
     }
   }
 
