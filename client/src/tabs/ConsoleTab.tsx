@@ -1,4 +1,4 @@
-import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 import AnsiToHtml from "ansi-to-html";
 import { trpc } from "../main";
 import { Input } from "../components/Input";
@@ -10,6 +10,7 @@ import { MoonLoader } from "react-spinners";
 import { inferProcedureOutput } from "@trpc/server";
 import { AppRouter } from "@tsm/server";
 import { useServerQueryParams } from "../useServerQueryParams";
+import { Virtuoso } from "react-virtuoso";
 
 export function ConsoleTab({
   stats,
@@ -25,22 +26,6 @@ export function ConsoleTab({
   const { nodeId, serverId } = useServerQueryParams();
 
   const ansiConverter = new AnsiToHtml();
-  const consoleRef = useRef(null as HTMLDivElement | null);
-  const [autoScroll, setAutoScroll] = useState(true);
-
-  useEffect(() => {
-    if (autoScroll && consoleRef.current) {
-      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
-    }
-  }, [logs, autoScroll]);
-
-  const handleScroll = () => {
-    if (!consoleRef.current) return;
-    const isAtBottom =
-      consoleRef.current.scrollHeight - consoleRef.current.scrollTop ===
-      consoleRef.current.clientHeight;
-    setAutoScroll(isAtBottom);
-  };
 
   const [cpuUsage, setCPUUsage] = useState(0);
   const [availableCpu, setAvailableCpu] = useState(
@@ -144,27 +129,27 @@ export function ConsoleTab({
           </linearGradient>
         </defs>
       </svg>
-      <div className="bg-neutral-150 border-neutral-400 border-x-1 border-t-1 mt-auto text-secondary-text w-full 2xl:w-2/3 h-full rounded-xl flex flex-col relative">
+      <div className="bg-neutral-150 border-neutral-400 border-x border-t mt-auto w-full 2xl:w-2/3 h-full rounded-xl flex flex-col relative">
         {logsError ? (
           <Container className="h-full rounded-b-none!" expanded={true}>
             <Error error={logsError} />
           </Container>
         ) : (
-          <div
-            className="px-2 pb-4 overflow-y-auto text-wrap"
-            ref={consoleRef}
-            onScroll={handleScroll}
-          >
-            {logs.map((log, index) => (
+          <Virtuoso
+            className="pb-4"
+            style={{ height: "100%", width: "100%" }}
+            totalCount={logs.length}
+            increaseViewportBy={{ top: 200, bottom: 400 }}
+            followOutput="smooth"
+            itemContent={(index) => (
               <div
-                key={index}
-                className="break-words text-wrap max-w-full"
+                className="px-2 font-mono text-sm whitespace-pre-wrap wrap-break-word"
                 dangerouslySetInnerHTML={{
-                  __html: ansiConverter.toHtml(log),
+                  __html: ansiConverter.toHtml(logs[index]),
                 }}
               />
-            ))}
-          </div>
+            )}
+          />
         )}
 
         <div className="sticky bottom-0 mt-auto h-fit flex flex-row">

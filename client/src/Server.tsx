@@ -291,7 +291,7 @@ export function Server() {
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            className="h-full flex flex-col bg-neutral-200 border-r-1 border-neutral-400"
+            className="h-full flex flex-col bg-neutral-200 border-r border-neutral-400"
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: "12rem" }}
             exit={{ opacity: 0, width: 0 }}
@@ -316,7 +316,7 @@ export function Server() {
               )}
               {server && (
                 <div>
-                  <div className="flex flex-row items-center gap-2">
+                  <div className="flex flex-row items-center gap-2 mb-4">
                     <p className="text-2xl mr-auto">{server.name}</p>
                     {statusIcon}
                   </div>

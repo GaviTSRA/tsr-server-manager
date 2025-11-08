@@ -2,16 +2,18 @@ import { TRPCClientErrorLike } from "@trpc/react-query";
 import { DefaultErrorShape } from "@trpc/server/unstable-core-do-not-import";
 import { AlertTriangle, Frown, HelpCircle, Lock } from "react-feather";
 
+export type ErrorType = TRPCClientErrorLike<{
+  input: unknown;
+  output: unknown;
+  transformer: true;
+  errorShape: DefaultErrorShape;
+}>;
+
 export function Error({
   error,
   size,
 }: {
-  error: TRPCClientErrorLike<{
-    input: unknown;
-    output: unknown;
-    transformer: true;
-    errorShape: DefaultErrorShape;
-  }>;
+  error: ErrorType;
   size?: "small";
 }): JSX.Element {
   if (!error.data) {
