@@ -7,6 +7,7 @@ import * as schema from "../schema.js";
 import * as docker from "../docker.js";
 import { serverTypes } from "../index.js";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 
 const PASSWORD = process.env.PASSWORD;
 if (!PASSWORD) {
@@ -216,6 +217,26 @@ export const nodeRouter = router({
         ramLimit: 1024,
       });
     }),
+  shutdown: authedProcedure.mutation(async ({ ctx }) => {
+    if (!process.env.POWER_API_TOKEN || !process.env.POWER_API_URL) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Power API not configured",
+      });
+    }
+
+    try {
+      await axios.post(process.env.POWER_API_URL, null, {
+        headers: { Authorization: `Bearer ${process.env.POWER_API_TOKEN}` },
+        timeout: 5000,
+      });
+    } catch (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to contact Power API: " + (error as Error).message,
+      });
+    }
+  }),
 });
 
 export type NodeRouter = typeof nodeRouter;

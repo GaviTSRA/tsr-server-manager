@@ -52,7 +52,7 @@ export const useModal = (tabs: ModalTab[]) => {
           }}
         >
           <motion.div
-            className="bg-neutral-200 border-neutral-400 border-1 rounded-lg p-4 shadow-lg max-w-md w-full"
+            className="bg-neutral-200 border-neutral-400 border rounded-lg p-4 shadow-lg max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
