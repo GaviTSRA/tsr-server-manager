@@ -32,6 +32,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ServerControls } from "./components/ServerControls";
 import { useServerQueryParams } from "./useServerQueryParams";
 import { MinecraftModsTab } from "./tabs/custom/MinecraftMods";
+import { FactorioModsTab } from "./tabs/custom/FactorioMods";
 
 type Tab = {
   id: string;
@@ -260,6 +261,13 @@ export function Server() {
         tab: <MinecraftModsTab server={server} />,
         custom: true,
       },
+      {
+        id: "factorio-mods",
+        title: "Mods",
+        icon: <Package />,
+        tab: <FactorioModsTab server={server} />,
+        custom: true,
+      },
     ],
     [server, stats, statsError, logs, logsError]
   );
@@ -283,7 +291,7 @@ export function Server() {
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            className="h-full flex flex-col bg-neutral-200 border-r-1 border-neutral-400"
+            className="h-full flex flex-col bg-neutral-200 border-r border-neutral-400"
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: "12rem" }}
             exit={{ opacity: 0, width: 0 }}
@@ -308,7 +316,7 @@ export function Server() {
               )}
               {server && (
                 <div>
-                  <div className="flex flex-row items-center gap-2">
+                  <div className="flex flex-row items-center gap-2 mb-4">
                     <p className="text-2xl mr-auto">{server.name}</p>
                     {statusIcon}
                   </div>
@@ -338,25 +346,25 @@ export function Server() {
                 })}
               {tabs.filter((tab) => tab.custom && customTabs.includes(tab.id))
                 .length > 0 && (
-                  <motion.div
-                    className="w-full flex flex-row gap-2 items-center"
-                    initial={{
-                      x: -50,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      x: 0,
-                      opacity: 1,
-                    }}
-                    transition={{
-                      delay: tabs.filter((tab) => !tab.custom).length * 0.02,
-                    }}
-                  >
-                    <div className="w-full border-b-2 border-neutral-400"></div>
-                    <p className="text-neutral-500">Custom</p>
-                    <div className="w-full border-b-2 border-neutral-400"></div>
-                  </motion.div>
-                )}
+                <motion.div
+                  className="w-full flex flex-row gap-2 items-center"
+                  initial={{
+                    x: -50,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    x: 0,
+                    opacity: 1,
+                  }}
+                  transition={{
+                    delay: tabs.filter((tab) => !tab.custom).length * 0.02,
+                  }}
+                >
+                  <div className="w-full border-b-2 border-neutral-400"></div>
+                  <p className="text-neutral-500">Custom</p>
+                  <div className="w-full border-b-2 border-neutral-400"></div>
+                </motion.div>
+              )}
               {tabs
                 .filter((tab) => tab.custom && customTabs.includes(tab.id))
                 .map((data, index) => {

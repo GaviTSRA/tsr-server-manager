@@ -4,6 +4,7 @@ import {
   Edit2,
   Key,
   Link,
+  Power,
   RefreshCw,
   Server,
   Settings,
@@ -112,8 +113,32 @@ export function Node({ node }: { node: NodeType }) {
       },
     },
   ]);
+  const shutdownModal = useModal([
+    {
+      title: "Shutdown node",
+      description: `Are you sure you want to shutdown node '${node.name}'? This will forcefully stop all servers running on this node.`,
+      onConfirm: () => {
+        shutdownModal.fetching();
+        shutdownNode.mutate(
+          { nodeId: node.id },
+          {
+            onError: (error) => {
+              shutdownModal.error();
+              console.error(error);
+              setTimeout(() => shutdownModal.close(), 2000);
+            },
+            onSuccess: () => {
+              shutdownModal.success();
+              setTimeout(() => shutdownModal.close(), 2000);
+            },
+          }
+        );
+      },
+    },
+  ]);
 
   const editNode = trpc.node.edit.useMutation();
+  const shutdownNode = trpc.node.shutdown.useMutation();
 
   const moreOptions = [
     {
@@ -131,6 +156,11 @@ export function Node({ node }: { node: NodeType }) {
       icon: <Key />,
       onClick: editPasswordModal.open,
     },
+    {
+      label: "Shutdown Node",
+      icon: <Power />,
+      onClick: shutdownModal.open,
+    },
   ];
 
   return (
@@ -139,6 +169,7 @@ export function Node({ node }: { node: NodeType }) {
         {renameNodeModal.Modal}
         {editURLModal.Modal}
         {editPasswordModal.Modal}
+        {shutdownModal.Modal}
         <div className="flex flex-row gap-2 items-center">
           <Server />
           <p className="text-xl">{node.name}</p>
@@ -151,7 +182,7 @@ export function Node({ node }: { node: NodeType }) {
           >
             <Settings />
             {moreOpen && (
-              <div className="absolute w-fit shadow-lg text-white border-neutral-400 border-1 rounded">
+              <div className="absolute w-fit shadow-lg text-white border-neutral-400 border rounded">
                 <div
                   className="fixed top-0 left-0 w-full h-full z-50"
                   onClick={(e) => {

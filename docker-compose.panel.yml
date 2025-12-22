@@ -19,6 +19,7 @@ services:
       dockerfile: ./server/Dockerfile
     environment:
       - DB_HOST=db
+    network_mode: "host"
     volumes:
       - ./:/workspace
       - /workspace/client

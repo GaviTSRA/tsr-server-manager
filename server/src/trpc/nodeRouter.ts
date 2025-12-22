@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { authedProcedure, router } from "./trpc";
+import { authedProcedure, nodeProcedure, router } from "./trpc";
 import { z } from "zod";
 import { Node } from "../schema";
 
@@ -16,6 +16,13 @@ export const nodeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.db.update(Node).set(input).where(eq(Node.id, input.nodeId));
+    }),
+  shutdown: nodeProcedure
+    .meta({
+      openapi: { method: "POST", path: "/nodes/shutdown", protect: true },
+    })
+    .mutation(async ({ ctx }) => {
+      await ctx.node.trpc.shutdown.mutate();
     }),
   list: authedProcedure
     .meta({ openapi: { method: "GET", path: "/nodes/list", protect: true } })

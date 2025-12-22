@@ -73,6 +73,7 @@ export const appRouter = router({
         try {
           serverTypes = await node.trpc.serverTypes.query(input);
         } catch (err) {
+          console.info("Error fetching server types from node", err);
           await handleNodeError(node, err);
           continue;
         }
@@ -82,6 +83,7 @@ export const appRouter = router({
           serverTypes,
         });
       }
+      console.info(result);
       return result;
     }),
   createServer: nodeProcedure

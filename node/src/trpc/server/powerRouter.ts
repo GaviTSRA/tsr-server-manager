@@ -28,7 +28,7 @@ export const powerRouter = router({
     .mutation(async ({ ctx, input }) => {
       let containerId = ctx.server.containerId;
       if (!containerId) {
-        const type = serverTypes.find(
+        const type = (await serverTypes).find(
           (type) => type.id === ctx.server.type
         ) as ServerType;
 
@@ -39,18 +39,20 @@ export const powerRouter = router({
         env.push(`SERVER_RAM=${ctx.server.ramLimit}`);
 
         if (!containerId) {
+          let command = `screen -S server bash -c "/server/install.sh && ${type.command.replace(
+            "${SERVER_RAM}",
+            ctx.server.ramLimit.toString()
+          )}"`;
+
+          for (const [key, value] of Object.entries(ctx.server.options)) {
+            command = command.replace(`\${${key}}`, value.toString());
+          }
+
           const result = await docker.createContainer(
             ctx.server.id,
             ctx.server.name.toLowerCase().replaceAll(" ", "-"),
             type.image ?? ctx.server.options["image"],
-            [
-              "/bin/bash",
-              "-c",
-              `screen -S server bash -c "/server/install.sh && ${type.command.replace(
-                "${SERVER_RAM}",
-                ctx.server.ramLimit.toString()
-              )}"`,
-            ],
+            ["/bin/bash", "-c", command],
             env,
             ctx.server.ports,
             ctx.server.cpuLimit,
@@ -143,13 +145,16 @@ export const powerRouter = router({
           message: "Server not installed",
         });
       }
+      const stopCommand =
+        (await serverTypes).find((entry) => entry.id === ctx.server.type)
+          ?.stopCommand || "";
       docker.exec(ctx.server.containerId, [
         "screen",
         "-S",
         "server",
         "-X",
         "stuff",
-        "stop^M",
+        `${stopCommand}^M`,
       ]);
       const result = await docker.stopContainer(ctx.server.containerId);
       if (result !== "success") {

@@ -12,6 +12,7 @@ export type ServerType = {
   command: string;
   name: string;
   image: string | null;
+  stopCommand: string;
   options: {
     [id: string]: {
       name: string;
@@ -26,16 +27,18 @@ export type ServerType = {
   permissions?: Permission[];
 };
 
-export function loadServerTypes(db: NodePgDatabase<typeof schema>) {
+export async function loadServerTypes(db: NodePgDatabase<typeof schema>) {
   const serverTypes: ServerType[] = [];
 
-  fs.readdirSync("servertypes").forEach(async (folder) => {
+  const folders = fs.readdirSync("servertypes");
+
+  for (const folder of folders) {
     const json = fs
       .readFileSync(`servertypes/${folder}/manifest.json`)
       .toString();
     const data = JSON.parse(json);
 
-    let imported = await import(`../servertypes/${folder}/handler.ts`);
+    const imported = await import(`../servertypes/${folder}/handler.ts`);
 
     if (data.permissions) {
       registerPermissions(data.permissions, db, folder);
@@ -46,7 +49,7 @@ export function loadServerTypes(db: NodePgDatabase<typeof schema>) {
       ...data,
       eventHandler: imported.handleEvent,
     });
-  });
+  }
 
   return serverTypes;
 }
@@ -80,7 +83,36 @@ export function readFile(serverId: string, filePath: string) {
   }
 }
 
-export function listFileNames(serverId: string, folder: string, regex: RegExp) {
+export function writeFile(serverId: string, filePath: string, data: Buffer) {
+  const root = "servers/" + serverId;
+  const target = path.normalize(path.join(root, filePath));
+  try {
+    return fs.writeFileSync(target, data);
+  } catch (err) {
+    if (typeof err === "string") {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: err,
+      });
+    } else if (err instanceof Error) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: err.message,
+      });
+    } else {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unknown error occurred while reading the file.",
+      });
+    }
+  }
+}
+
+export function listFileNames(
+  serverId: string,
+  folder: string,
+  regex?: RegExp
+) {
   const result = [];
 
   const root = "servers/" + serverId;
@@ -93,7 +125,7 @@ export function listFileNames(serverId: string, folder: string, regex: RegExp) {
       continue;
     }
 
-    if (regex.test(entry)) {
+    if (!regex || regex.test(entry)) {
       result.push(file);
     }
   }
@@ -116,7 +148,7 @@ export function readFiles(serverId: string, folder: string, regex: RegExp) {
     }
 
     if (regex.test(entry)) {
-      result[entry] = readFile(serverId, file)
+      result[entry] = readFile(serverId, file);
     }
   }
 

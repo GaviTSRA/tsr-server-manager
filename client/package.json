@@ -7,7 +7,7 @@
     "@tailwindcss/vite": "^4.1.5",
     "@tanstack/react-query": "^5.62.8",
     "@tanstack/react-table": "^8.20.6",
-    "@tanstack/react-virtual": "^3.11.2",
+    "@tanstack/react-virtual": "^3.13.12",
     "@trpc/client": "11.4.3",
     "@trpc/react-query": "11.4.3",
     "@trpc/server": "11.4.3",
@@ -20,6 +20,7 @@
     "react-feather": "^2.0.10",
     "react-router-dom": "^6.27.0",
     "react-spinners": "^0.14.1",
+    "react-virtuoso": "^4.14.1",
     "superjson": "^2.2.2",
     "victory": "^37.3.5",
     "web-vitals": "^2.1.4"
