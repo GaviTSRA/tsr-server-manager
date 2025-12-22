@@ -2,7 +2,7 @@
   "name": "Python",
   "icon": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg",
   "image": null,
-  "command": "python3 main.py",
+  "command": "bash -c 'source venv/bin/activate && python main.py'",
   "options": {
     "image": {
       "name": "Image",
