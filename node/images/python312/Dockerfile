@@ -1,7 +1,8 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
-RUN apt update
-RUN apt install curl -y
-RUN apt install screen -y
-RUN apt install python3 -y
-RUN apt install python3-pip -y
+RUN apt-get update \
+ && apt-get install -y \
+    curl \
+    screen \
+    python3 \
+    python3-pip \
