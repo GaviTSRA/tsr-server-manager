@@ -6,4 +6,4 @@ RUN apt-get update \
     screen \
     python3 \
     python3-pip \
-    python3-vevn
+    python3-venv
