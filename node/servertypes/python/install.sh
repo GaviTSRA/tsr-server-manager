@@ -1,3 +1,3 @@
 if [ -n "$PACKAGES" ]; then
-    python -m pip3 install $PACKAGES
+    python3 -m pip3 install $PACKAGES
 fi
