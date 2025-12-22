@@ -1,0 +1,22 @@
+{
+  "name": "Python",
+  "icon": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg",
+  "image": null,
+  "command": "python3 main.py",
+  "options": {
+    "image": {
+      "name": "Image",
+      "description": "Python image to use, depending on the python version",
+      "type": "enum",
+      "options": ["python312"],
+      "default": "python312"
+    },
+    "packages": {
+      "name": "Packages",
+      "description": "Additional python packages to install via pip (space separated)",
+      "type": "string",
+      "default": ""
+    }
+  },
+  "tabs": []
+}
