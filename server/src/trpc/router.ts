@@ -83,7 +83,6 @@ export const appRouter = router({
           serverTypes,
         });
       }
-      console.info(result);
       return result;
     }),
   createServer: nodeProcedure

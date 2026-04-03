@@ -18,6 +18,8 @@ services:
     environment:
       - DOCKER_HOST=tcp://host.docker.internal:2375
       - DB_HOST=db
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
     ports:
       - 8771:8771/tcp
     volumes:
@@ -25,5 +27,3 @@ services:
       - ./:/workspace
       - /workspace/client
       - /workspace/server
-      - /workspace/node_modules
-      - /workspace/node/node_modules
