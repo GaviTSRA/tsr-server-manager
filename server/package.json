@@ -6,6 +6,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "proto:gen": "protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,esModuleInterop=true,useDate=true,useExactTypes=false -I ../proto ../proto/node.proto",
     "dev": "npx tsx watch src/index.ts",
     "build": "tsc --build",
     "clean": "rm -rf dist"
@@ -21,10 +22,14 @@
     "@types/node": "^22.10.2",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.31.4",
+    "grpc-tools": "^1.13.1",
+    "ts-proto": "^2.12.0",
+    "ts-protoc-gen": "^0.15.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.4",
     "@trpc/client": "11.4.3",
     "@trpc/server": "11.4.3",
     "@tsm/node": "*",
@@ -39,6 +44,8 @@
     "eventsource": "^3.0.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "nice-grpc": "^2.1.17",
+    "nice-grpc-common": "^2.0.4",
     "pg": "^8.13.1",
     "superjson": "^2.2.2",
     "trpc-to-openapi": "^2.3.2",

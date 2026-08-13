@@ -1,0 +1,4 @@
+fn main() {
+    println!("cargo:rerun-if-changed=../proto/node.proto");
+    tonic_prost_build::compile_protos("../proto/node.proto").unwrap();
+}

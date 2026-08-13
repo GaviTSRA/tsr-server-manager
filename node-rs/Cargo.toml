@@ -1,0 +1,20 @@
+[package]
+name = "node-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = "0.4.45"
+futures = "0.3.34"
+http = "1.5.0"
+jsonwebtoken = { version = "11.0.0", features = ["rust_crypto"] }
+prost = "0.14.4"
+prost-types = "0.14.4"
+serde = "1.0.229"
+tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
+tonic = "0.14.6"
+tonic-prost = "0.14.6"
+tower = "0.5.3"
+
+[build-dependencies]
+tonic-prost-build = "0.14.6"

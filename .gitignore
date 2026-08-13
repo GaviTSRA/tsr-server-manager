@@ -11,6 +11,7 @@ client/.env
 
 /server/node_modules
 server/.env
+/server/src/generated
 
 /node/servers/**/
 /node/node_modules
@@ -18,6 +19,8 @@ node/.env
 
 /panel-postgres-data/
 /node-postgres-data/
+
+/node-rs/target
 
 /.pnp
 .pnp.js

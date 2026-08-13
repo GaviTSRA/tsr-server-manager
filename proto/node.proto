@@ -1,0 +1,55 @@
+syntax = "proto3";
+package node;
+
+import "google/protobuf/timestamp.proto";
+
+message PingRequest {}
+message PongResponse {}
+
+message AuthenticateRequest {
+  string password = 1;
+}
+
+message AuthenticateResponse {
+  string token = 1;
+}
+
+enum ContainerStatus {
+  CONTAINER_STATUS_UNSPECIFIED = 0;
+  CREATED = 1;
+  RUNNING = 2;
+  PAUSED = 3;
+  RESTARTING = 4;
+  REMOVING = 5;
+  EXITED = 6;
+  DEAD = 7;
+}
+
+message ResourceStats {
+    google.protobuf.Timestamp timestamp = 1;
+    double cpu_usage = 2;
+    double cpu_max = 3;
+    double ram_usage = 4;
+    double ram_max = 5;
+}
+
+message Server {
+    string id = 1;
+    optional string container_id = 2;
+    string name = 3;
+    optional ContainerStatus status = 4;
+    string type = 5;
+    repeated ResourceStats recent_stats = 6;
+}
+
+message ServersResponse {
+    repeated Server servers = 1;
+}
+
+message ServersRequest {}
+
+service Node {
+    rpc Ping (PingRequest) returns (PongResponse) {}
+    rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
+    rpc GetServers (ServersRequest) returns (ServersResponse) {}
+}
