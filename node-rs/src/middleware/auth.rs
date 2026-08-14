@@ -1,10 +1,7 @@
-use std::task::{Context, Poll};
-
-use futures::future::BoxFuture;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
-use tonic::Status;
-use tower::{Layer, Service};
+use tonic::{Status, async_trait, body::Body};
+use tonic_middleware::RequestInterceptor;
 
 use crate::node;
 
@@ -49,73 +46,40 @@ fn verify_token(token: &str, secret: &str) -> Result<Claims, jsonwebtoken::error
 const ALLOWED_UNAUTHENTICATED_PATHS: [&str; 1] = ["/node.Node/Authenticate"];
 
 #[derive(Clone)]
-pub struct AuthLayer {
-    secret: String,
+pub struct AuthInterceptor {
+    pub secret: String,
 }
-impl AuthLayer {
+
+impl AuthInterceptor {
     pub fn new(secret: String) -> Self {
-        AuthLayer { secret }
+        AuthInterceptor { secret }
     }
 }
-impl<S> Layer<S> for AuthLayer {
-    type Service = AuthMiddleware<S>;
 
-    fn layer(&self, inner: S) -> Self::Service {
-        AuthMiddleware {
-            inner,
-            secret: self.secret.clone(),
+#[async_trait]
+impl RequestInterceptor for AuthInterceptor {
+    async fn intercept(
+        &self,
+        req: tonic::codegen::http::Request<Body>,
+    ) -> Result<tonic::codegen::http::Request<Body>, Status> {
+        if ALLOWED_UNAUTHENTICATED_PATHS.contains(&req.uri().path()) {
+            return Ok(req);
         }
-    }
-}
 
-#[derive(Clone)]
-pub struct AuthMiddleware<S> {
-    inner: S,
-    secret: String,
-}
+        let token = req
+            .headers()
+            .get("authorization")
+            .and_then(|v| v.to_str().ok());
 
-impl<S> Service<http::Request<tonic::body::Body>> for AuthMiddleware<S>
-where
-    S: Service<http::Request<tonic::body::Body>, Response = http::Response<tonic::body::Body>>
-        + Clone
-        + Send
-        + 'static,
-    S::Future: Send + 'static,
-    S::Error: Send + 'static,
-{
-    type Response = S::Response;
-    type Error = S::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+        let authorized = match token {
+            Some(token) => verify_token(token, &self.secret).is_ok(),
+            None => false,
+        };
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-
-    fn call(&mut self, req: http::Request<tonic::body::Body>) -> Self::Future {
-        let clone = self.inner.clone();
-        let mut inner = std::mem::replace(&mut self.inner, clone);
-        let secret = self.secret.clone();
-
-        Box::pin(async move {
-            if ALLOWED_UNAUTHENTICATED_PATHS.contains(&req.uri().path()) {
-                return inner.call(req).await;
-            }
-
-            let token = req
-                .headers()
-                .get("authorization")
-                .and_then(|v| v.to_str().ok());
-
-            let authorized = match token {
-                Some(token) => verify_token(token, &secret).is_ok(),
-                None => false,
-            };
-
-            if authorized {
-                inner.call(req).await
-            } else {
-                Ok(Status::unauthenticated("NODE_UNAUTHORIZED").into_http())
-            }
-        })
+        if authorized {
+            return Ok(req);
+        } else {
+            return Err(Status::unauthenticated("NODE_UNAUTHORIZED"));
+        }
     }
 }

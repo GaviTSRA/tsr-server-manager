@@ -1,4 +1,5 @@
 use tonic::{Request, Response, Status, transport::Server};
+use tonic_middleware::InterceptorFor;
 
 use crate::node::{PongResponse, node_server::NodeServer};
 
@@ -45,9 +46,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         password: "PASSWORD".to_string(),
     };
 
+    let auth_interceptor = middleware::auth::AuthInterceptor::new(node.password.clone());
+
     Server::builder()
-        .layer(middleware::auth::AuthLayer::new(node.password.clone()))
-        .add_service(NodeServer::new(node))
+        .add_service(InterceptorFor::new(NodeServer::new(node), auth_interceptor))
         .serve(addr)
         .await?;
 
