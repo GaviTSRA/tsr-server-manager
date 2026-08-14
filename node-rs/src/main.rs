@@ -1,3 +1,4 @@
+use sea_orm::{Database, DatabaseConnection};
 use tonic::{Request, Response, Status, transport::Server};
 use tonic_middleware::InterceptorFor;
 
@@ -18,9 +19,8 @@ pub struct Node {
 impl node::node_server::Node for Node {
     async fn ping(
         &self,
-        request: Request<node::PingRequest>,
+        _: Request<node::PingRequest>,
     ) -> Result<Response<node::PongResponse>, Status> {
-        println!("Ping!");
         Ok(Response::new(PongResponse {}))
     }
 
@@ -41,6 +41,10 @@ impl node::node_server::Node for Node {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let db: DatabaseConnection =
+        Database::connect("postgres://postgres:postgres@localhost:5433/tsm-node").await?;
+    db.get_schema_registry("node-rs::db::*").sync(&db).await?;
+
     let addr = "0.0.0.0:8772".parse().unwrap();
     let node = Node {
         password: "PASSWORD".to_string(),
