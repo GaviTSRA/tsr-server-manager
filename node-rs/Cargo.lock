@@ -1759,6 +1759,7 @@ dependencies = [
  "prost-types",
  "sea-orm",
  "serde",
+ "serde_json",
  "tokio",
  "tonic",
  "tonic-middleware",

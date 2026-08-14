@@ -3,6 +3,7 @@
 node/servers
 node/.env
 node-postgres-data
+node-postgres-data2
 panel-postgres-data
 node_modules
 

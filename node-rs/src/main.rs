@@ -4,6 +4,7 @@ use tonic_middleware::InterceptorFor;
 
 use crate::node::{PongResponse, node_server::NodeServer};
 
+mod db;
 mod middleware;
 
 pub mod node {
@@ -42,12 +43,14 @@ impl node::node_server::Node for Node {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db: DatabaseConnection =
-        Database::connect("postgres://postgres:postgres@localhost:5433/tsm-node").await?;
+        Database::connect("postgres://postgres:postgres@localhost:5434/tsm-node").await?;
+    println!("Connected to db");
     db.get_schema_registry("node-rs::db::*").sync(&db).await?;
+    println!("Schema applied");
 
     let addr = "0.0.0.0:8772".parse().unwrap();
     let node = Node {
-        password: "PASSWORD".to_string(),
+        password: "Node".to_string(),
     };
 
     let auth_interceptor = middleware::auth::AuthInterceptor::new(node.password.clone());
