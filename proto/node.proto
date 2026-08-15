@@ -75,9 +75,17 @@ message ServerTypesResponse {
     repeated Manifest server_types = 1;
 }
 
+message CreateServerRequest {
+    string userId = 1;
+    string name = 2;
+    string type = 3;
+}
+message CreateServerResponse {}
+
 service Node {
     rpc Ping (PingRequest) returns (PongResponse) {}
     rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
     rpc GetServers (ServersRequest) returns (ServersResponse) {}
     rpc GetServerTypes (ServerTypesRequest) returns (ServerTypesResponse) {}
+    rpc CreateServer (CreateServerRequest) returns (CreateServerResponse) {}
 }

@@ -1,4 +1,7 @@
-use sea_orm::{Database, DatabaseConnection, EntityTrait};
+use std::collections::HashMap;
+
+use sea_orm::ActiveValue::{NotSet, Set};
+use sea_orm::{ActiveModelTrait, Database, DatabaseConnection, EntityTrait};
 use tonic::{Request, Response, Status};
 use tonic_middleware::InterceptorFor;
 
@@ -73,6 +76,45 @@ impl node::node_server::Node for Node {
                 .map(|server_type| server_type.manifest)
                 .collect(),
         }))
+    }
+
+    async fn create_server(
+        &self,
+        request: Request<node::CreateServerRequest>,
+    ) -> Result<Response<node::CreateServerResponse>, Status> {
+        let req = request.into_inner();
+
+        let server_type = self
+            .server_types
+            .iter()
+            .find(|server_type| server_type.manifest.id == req.r#type)
+            .ok_or(Status::not_found("Servertype not found"))?;
+
+        let mut options = HashMap::new();
+        for (id, option) in &server_type.manifest.options {
+            options.insert(id.clone(), option.default.clone());
+        }
+
+        db::server::ActiveModel::insert(
+            db::server::ActiveModel {
+                id: Set(uuid::Uuid::new_v4()),
+                owner_id: Set(uuid::Uuid::parse_str(&req.user_id).unwrap()),
+                name: Set(req.name),
+                server_type: Set(server_type.manifest.id.clone()),
+                container_id: Set(None),
+                options: Set(db::server::ServerOptions(options)),
+                ports: Set(vec![]),
+                cpu_limit: Set(1.0),
+                ram_limit: Set(1024),
+                restart_policy: Set(db::restart_policy::RestartPolicy::No),
+                restart_retry_count: Set(1),
+            },
+            &self.db,
+        )
+        .await
+        .or(Err(Status::internal("Failed to insert server")))?;
+
+        Ok(Response::new(node::CreateServerResponse {}))
     }
 }
 

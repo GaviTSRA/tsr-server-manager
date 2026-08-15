@@ -6,12 +6,10 @@ import {
   nodeProcedure,
 } from "./trpc";
 import {
-  inferProcedureOutput,
   TRPCError,
 } from "@trpc/server";
 import { serverRouter } from "./serverRouter";
 import { userRouter } from "./userRouter";
-import { NodeRouter } from "@tsm/node";
 import { nodes } from "..";
 import { nodeRouter } from "./nodeRouter";
 import { handleNodeError } from "../nodes";
@@ -89,7 +87,7 @@ export const appRouter = router({
         type: z.string(),
       })
     )
-    .output(z.custom<inferProcedureOutput<NodeRouter["createServer"]>>())
+    .output(z.void())
     .mutation(async ({ input, ctx }) => {
       if (!ctx.user.canCreateServers) {
         throw new TRPCError({
@@ -99,7 +97,7 @@ export const appRouter = router({
       }
 
       try {
-        return await ctx.node.trpc.createServer.mutate({
+        await ctx.node.grpc.createServer({
           name: input.name,
           type: input.type,
           userId: ctx.user.id,

@@ -3,6 +3,9 @@ name = "node-rs"
 version = "0.1.0"
 edition = "2024"
 
+[profile.dev]
+debug = "line-tables-only"
+
 [dependencies]
 chrono = "0.4.45"
 jsonwebtoken = { version = "11.0.0", features = ["rust_crypto"] }
@@ -15,7 +18,7 @@ tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 tonic = "0.14.6"
 tonic-middleware = "0.4.1"
 tonic-prost = "0.14.6"
-uuid = "1.24.0"
+uuid = { version = "1.24.0", features = ["v4"] }
 
 [build-dependencies]
 tonic-prost-build = "0.14.6"
