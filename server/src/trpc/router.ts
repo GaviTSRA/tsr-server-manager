@@ -6,7 +6,6 @@ import {
   nodeProcedure,
 } from "./trpc";
 import {
-  inferProcedureInput,
   inferProcedureOutput,
   TRPCError,
 } from "@trpc/server";
@@ -16,7 +15,7 @@ import { NodeRouter } from "@tsm/node";
 import { nodes } from "..";
 import { nodeRouter } from "./nodeRouter";
 import { handleNodeError } from "../nodes";
-import { Server } from "../generated/node";
+import { Server, Manifest } from "../generated/node";
 
 export const appRouter = router({
   user: userRouter,
@@ -37,50 +36,48 @@ export const appRouter = router({
     .query(async (_) => {
       const result = [];
       for (const node of Object.values(nodes)) {
-        let servers;
         try {
-          servers = await node.grpc.getServers({});
+          result.push({
+            nodeId: node.id,
+            nodeName: node.name,
+            servers: (await node.grpc.getServers({})).servers,
+          });
         } catch (err) {
           await handleNodeError(node, err);
           continue;
         }
-        result.push({
-          nodeId: node.id,
-          nodeName: node.name,
-          servers: servers.servers,
-        });
+        
       }
       return result;
     }),
   serverTypes: publicProcedure
     .meta({ openapi: { method: "GET", path: "/serverTypes", protect: false } })
-    .input(z.custom<inferProcedureInput<NodeRouter["serverTypes"]>>())
+    .input(z.void())
     .output(
       z
         .object({
           nodeId: z.string(),
           nodeName: z.string(),
           serverTypes:
-            z.custom<inferProcedureOutput<NodeRouter["serverTypes"]>>(),
+            z.custom<Manifest>().array(),
         })
         .array()
     )
-    .query(async ({ input }) => {
+    .query(async (_) => {
       const result = [];
       for (const node of Object.values(nodes)) {
-        let serverTypes;
         try {
-          serverTypes = await node.trpc.serverTypes.query(input);
+          result.push({
+            nodeId: node.id,
+            nodeName: node.name,
+            serverTypes: ( await node.grpc.getServerTypes({})).serverTypes,
+          });
         } catch (err) {
           console.info("Error fetching server types from node", err);
           await handleNodeError(node, err);
           continue;
         }
-        result.push({
-          nodeId: node.id,
-          nodeName: node.name,
-          serverTypes,
-        });
+        
       }
       return result;
     }),
