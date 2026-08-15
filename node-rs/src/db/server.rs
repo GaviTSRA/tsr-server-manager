@@ -18,8 +18,7 @@ pub struct Model {
     pub name: String,
     #[sea_orm(rename = "type")]
     pub server_type: String,
-    #[sea_orm(nullable)]
-    pub container_id: String,
+    pub container_id: Option<String>,
     #[sea_orm(column_type = "Json")]
     pub options: ServerOptions,
     pub ports: Vec<i32>,

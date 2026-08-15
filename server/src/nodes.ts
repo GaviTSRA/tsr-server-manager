@@ -122,7 +122,7 @@ async function checkNode(node: NodeType) {
       });
       nodes[node.id].token = token;
     } catch (error) {
-      handleNodeError(node, error);
+      handleNodeError(nodes[node.id], error, node);
       return;
     }
   }
@@ -139,7 +139,7 @@ async function checkNode(node: NodeType) {
       });
       nodes[node.id].grpc_token = token.token;
     } catch (error) {
-      handleNodeError(node, error);
+      handleNodeError(nodes[node.id], error, node);
       return;
     }
   }
@@ -170,7 +170,7 @@ async function checkNode(node: NodeType) {
       .where(eq(schema.Node.id, node.id));
     console.info(`[${node.name}] Connected!`);
   } catch (error) {
-    handleNodeError(node, error);
+    handleNodeError(nodes[node.id], error, node);
     return;
   }
 
@@ -179,8 +179,7 @@ async function checkNode(node: NodeType) {
   }, 5000);
 }
 
-export async function handleNodeError(dbNode: NodeType, error: any) {
-  const node = nodes[dbNode.id];
+export async function handleNodeError(node: ConnectedNode, error: any, dbNode: NodeType | undefined = undefined) {
   console.info(`[${node.name}] ERR: ${error}`);
   let errorHandled = false;
 
@@ -216,9 +215,11 @@ export async function handleNodeError(dbNode: NodeType, error: any) {
     nodes[node.id].usersSynced = false;
   }
 
-  setTimeout(async () => {
-    checkNode(dbNode);
-  }, 5000);
+  if (dbNode) {
+    setTimeout(async () => {
+      checkNode(dbNode);
+    }, 5000);
+  }
 
   if (!errorHandled) {
     return error;

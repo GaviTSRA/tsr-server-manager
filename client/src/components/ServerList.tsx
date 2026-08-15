@@ -68,11 +68,11 @@ function Server({
   useEffect(() => {
     if (!server.recentStats || server.recentStats.length === 0) return;
     const latestStats = server.recentStats[server.recentStats.length - 1];
-    if (latestStats.cpuCount) setAvailableCpu(latestStats.cpuCount * 100);
+    if (latestStats.cpuMax) setAvailableCpu(latestStats.cpuMax * 100);
 
-    if (latestStats.ramAvailable) {
+    if (latestStats.ramMax) {
       setAvailableRam(
-        Math.round((latestStats.ramAvailable / 1024 / 1024 / 1024) * 100) / 100
+        Math.round((latestStats.ramMax / 1024 / 1024 / 1024) * 100) / 100
       );
     } else if (latestStats.ramUsage) {
       setAvailableRam(
@@ -85,19 +85,20 @@ function Server({
   const statusSize = 30;
   switch (server.status) {
     case undefined:
+    case "CONTAINER_STATUS_UNSPECIFIED":
       status = <Settings size={statusSize} className="text-gray-500" />;
       break;
-    case "created":
-    case "exited":
+    case "CREATED":
+    case "EXITED":
       status = <StopCircle size={statusSize} className="text-red-600" />;
       break;
-    case "running":
+    case "RUNNING":
       status = <PlayCircle size={statusSize} className="text-success" />;
       break;
-    case "restarting":
+    case "RESTARTING":
       status = <ArrowUpCircle size={statusSize} className="text-gray-500" />;
       break;
-    case "dead":
+    case "DEAD":
       status = <AlertCircle size={statusSize} className="text-red-600" />;
       break;
   }

@@ -16,6 +16,7 @@ import { NodeRouter } from "@tsm/node";
 import { nodes } from "..";
 import { nodeRouter } from "./nodeRouter";
 import { handleNodeError } from "../nodes";
+import { Server } from "../generated/node";
 
 export const appRouter = router({
   user: userRouter,
@@ -29,18 +30,16 @@ export const appRouter = router({
         .object({
           nodeId: z.string(),
           nodeName: z.string(),
-          servers: z.custom<inferProcedureOutput<NodeRouter["servers"]>>(),
+          servers: z.custom<Server>().array(),
         })
         .array()
     )
-    .query(async ({ ctx }) => {
+    .query(async (_) => {
       const result = [];
       for (const node of Object.values(nodes)) {
         let servers;
         try {
-          servers = await node.trpc.servers.query({
-            userId: ctx.user.id,
-          });
+          servers = await node.grpc.getServers({});
         } catch (err) {
           await handleNodeError(node, err);
           continue;
@@ -48,7 +47,7 @@ export const appRouter = router({
         result.push({
           nodeId: node.id,
           nodeName: node.name,
-          servers,
+          servers: servers.servers,
         });
       }
       return result;

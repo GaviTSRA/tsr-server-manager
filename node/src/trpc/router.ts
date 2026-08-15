@@ -164,6 +164,7 @@ export const nodeRouter = router({
           icon: z.string(),
           command: z.string(),
           image: z.string().nullable(),
+          stopCommand: z.string(),
           options: z.record(
             z.string(),
             z.object({
