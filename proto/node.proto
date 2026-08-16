@@ -4,13 +4,6 @@ package node;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-message AuthenticateRequest {
-  string password = 1;
-}
-message AuthenticateResponse {
-  string token = 1;
-}
-
 message ServersResponse {
     message Server {
         message ResourceStats {
@@ -79,7 +72,6 @@ message CreateServerRequest {
 
 service Node {
     rpc Ping (google.protobuf.Empty) returns (google.protobuf.Empty);
-    rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);
     rpc GetServers (google.protobuf.Empty) returns (ServersResponse);
     rpc GetServerTypes (google.protobuf.Empty) returns (ServerTypesResponse);
     rpc CreateServer (CreateServerRequest) returns (google.protobuf.Empty);

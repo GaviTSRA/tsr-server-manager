@@ -1,5 +1,5 @@
 fn main() {
-    println!("cargo:rerun-if-changed=../proto/node.proto");
+    println!("cargo:rerun-if-changed=../proto");
     tonic_prost_build::configure()
         .type_attribute(
             "node.ServerTypesResponse.Manifest",
@@ -21,6 +21,9 @@ fn main() {
             "node.ServerTypesResponse.Manifest.ManifestServerOption.ManifestServerOptionType",
             "#[derive(serde::Serialize, serde::Deserialize)]",
         )
-        .compile_protos(&["../proto/node.proto"], &["../proto"])
+        .compile_protos(
+            &["../proto/node.proto", "../proto/auth.proto"],
+            &["../proto"],
+        )
         .unwrap();
 }

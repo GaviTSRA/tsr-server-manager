@@ -15,9 +15,11 @@ import { db, nodes } from ".";
 import * as schema from "./schema";
 import { TRPCError } from "@trpc/server";
 import SuperJSON from "superjson";
-import { ClientError, ClientMiddlewareCall, createChannel, createClientFactory, Metadata, RawClient } from "nice-grpc";
+import { ClientError, ClientMiddlewareCall, createChannel, createClient, createClientFactory, Metadata } from "nice-grpc";
 import { NodeDefinition } from "./generated/node";
-import { FromTsProtoServiceDefinition } from "nice-grpc/lib/service-definitions/ts-proto";
+import { AuthDefinition } from "./generated/auth";
+
+type ReturnTypeOf<T> = T extends (...args: any[]) => infer R ? R : never;
 
 export type ConnectedNode = {
   id: string;
@@ -26,7 +28,7 @@ export type ConnectedNode = {
   grpc_token: string | undefined;
   usersSynced: boolean;
   trpc: TRPCClient<NodeRouter>;
-  grpc: RawClient<FromTsProtoServiceDefinition<NodeDefinition>>;
+  grpc: ReturnTypeOf<typeof getGrpcClient>;
 };
 
 function getNodeClient(id: string, url: string) {
@@ -86,10 +88,16 @@ function createAuthMiddleware(getToken: () => string | undefined) {
   };
 }
 
-function getGrpcClient(url: string, getToken: () => string | undefined): RawClient<FromTsProtoServiceDefinition<NodeDefinition>> {
+function getGrpcClient(url: string, getToken: () => string | undefined) {
   const channel = createChannel("host.docker.internal:8772");
-  const client = createClientFactory().use(createAuthMiddleware(getToken)).create(NodeDefinition, channel);
-  return client;
+  const authMiddleware = createAuthMiddleware(getToken);
+
+  const authClient = createClient(AuthDefinition, channel);
+  const nodeClient = createClientFactory().use(authMiddleware).create(NodeDefinition, channel);
+  return {
+    ...authClient,
+    ...nodeClient
+  };
 }
 
 export async function registerNode(node: NodeType) {

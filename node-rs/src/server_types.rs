@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use crate::node::server_types_response::Manifest;
+use crate::grpc::node::def::server_types_response::Manifest;
 
 pub mod option_type_as_str {
-    use crate::node::server_types_response::manifest::manifest_server_option::ManifestServerOptionType;
+    use crate::grpc::node::def::server_types_response::manifest::manifest_server_option::ManifestServerOptionType;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S>(value: &i32, serializer: S) -> Result<S::Ok, S::Error>
