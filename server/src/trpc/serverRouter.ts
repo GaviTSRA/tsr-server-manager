@@ -11,6 +11,7 @@ import { logsRouter } from "./server/logsRouter";
 import { NodeRouter } from "@tsm/node";
 import { handleNodeError } from "../nodes";
 import { customRouter } from "./server/customRouter";
+import { ServerInfoResponse } from "../generated/server";
 
 export const serverRouter = router({
   power: powerRouter,
@@ -30,10 +31,10 @@ export const serverRouter = router({
       },
     })
     .input(z.object({ serverId: z.string() }))
-    .output(z.custom<inferProcedureOutput<NodeRouter["server"]["server"]>>())
+    .output(z.custom<ServerInfoResponse>())
     .query(async ({ input, ctx }) => {
       try {
-        return await ctx.node.trpc.server.server.query({
+        return await ctx.node.grpc.server.info({
           serverId: input.serverId,
           userId: ctx.user.id,
         });
@@ -45,6 +46,7 @@ export const serverRouter = router({
     .input(z.object({ serverId: z.string() }))
     .output(z.custom<inferProcedureOutput<NodeRouter["server"]["status"]>>())
     .query(async ({ ctx, input }) => {
+      return [];
       return ctx.node.trpc.server.status.query({
         serverId: input.serverId,
         userId: ctx.user.id,

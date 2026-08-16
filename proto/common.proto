@@ -1,0 +1,18 @@
+syntax = "proto3";
+package common;
+
+enum ContainerStatus {
+    CONTAINER_STATUS_UNSPECIFIED = 0;
+    CREATED = 1;
+    RUNNING = 2;
+    PAUSED = 3;
+    RESTARTING = 4;
+    REMOVING = 5;
+    EXITED = 6;
+    DEAD = 7;
+}
+
+message ServerRequest {
+    string server_id = 1;
+    string user_id = 2;
+}

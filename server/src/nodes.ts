@@ -18,6 +18,7 @@ import SuperJSON from "superjson";
 import { ClientError, ClientMiddlewareCall, createChannel, createClient, createClientFactory, Metadata } from "nice-grpc";
 import { NodeDefinition } from "./generated/node";
 import { AuthDefinition } from "./generated/auth";
+import { ServerDefinition } from "./generated/server";
 
 type ReturnTypeOf<T> = T extends (...args: any[]) => infer R ? R : never;
 
@@ -94,9 +95,13 @@ function getGrpcClient(url: string, getToken: () => string | undefined) {
 
   const authClient = createClient(AuthDefinition, channel);
   const nodeClient = createClientFactory().use(authMiddleware).create(NodeDefinition, channel);
+  const serverClient = createClientFactory().use(authMiddleware).create(ServerDefinition, channel);
   return {
     ...authClient,
-    ...nodeClient
+    ...nodeClient,
+    server: {
+      ...serverClient
+    }
   };
 }
 

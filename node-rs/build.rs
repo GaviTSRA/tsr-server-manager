@@ -22,7 +22,12 @@ fn main() {
             "#[derive(serde::Serialize, serde::Deserialize)]",
         )
         .compile_protos(
-            &["../proto/node.proto", "../proto/auth.proto"],
+            &[
+                "../proto/common.proto",
+                "../proto/node.proto",
+                "../proto/auth.proto",
+                "../proto/server.proto",
+            ],
             &["../proto"],
         )
         .unwrap();

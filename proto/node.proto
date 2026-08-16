@@ -4,6 +4,8 @@ package node;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
+import "common.proto";
+
 message ServersResponse {
     message Server {
         message ResourceStats {
@@ -14,21 +16,10 @@ message ServersResponse {
             double ram_max = 5;
         }
 
-        enum ContainerStatus {
-            CONTAINER_STATUS_UNSPECIFIED = 0;
-            CREATED = 1;
-            RUNNING = 2;
-            PAUSED = 3;
-            RESTARTING = 4;
-            REMOVING = 5;
-            EXITED = 6;
-            DEAD = 7;
-        }
-
         string id = 1;
         optional string container_id = 2;
         string name = 3;
-        optional ContainerStatus status = 4;
+        common.ContainerStatus status = 4;
         string type = 5;
         repeated ResourceStats recent_stats = 6;
     }

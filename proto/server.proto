@@ -1,0 +1,16 @@
+syntax = "proto3";
+package server;
+
+import "common.proto";
+
+message ServerInfoResponse {
+    string id = 1;
+    optional string containerId = 2;
+    string name = 3;
+    string type = 4;
+    common.ContainerStatus status = 5;
+}
+
+service Server {
+   rpc Info (common.ServerRequest) returns (ServerInfoResponse);
+}

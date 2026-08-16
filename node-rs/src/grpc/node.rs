@@ -8,6 +8,9 @@ use crate::App;
 use crate::db;
 use def::*;
 
+pub mod common {
+    tonic::include_proto!("common");
+}
 pub mod def {
     tonic::include_proto!("node");
 }
@@ -29,7 +32,7 @@ impl node_server::Node for App {
                 id: server.id.to_string(),
                 container_id: server.container_id.clone(),
                 name: server.name.clone(),
-                status: Some(servers_response::server::ContainerStatus::Unspecified as i32),
+                status: common::ContainerStatus::Unspecified as i32,
                 r#type: server.server_type.clone(),
                 recent_stats: vec![],
             })
