@@ -13,7 +13,7 @@ import { userRouter } from "./userRouter";
 import { nodes } from "..";
 import { nodeRouter } from "./nodeRouter";
 import { handleNodeError } from "../nodes";
-import { Server, Manifest } from "../generated/node";
+import { ServersResponse_Server, ServerTypesResponse_Manifest } from "../generated/node"
 
 export const appRouter = router({
   user: userRouter,
@@ -27,7 +27,7 @@ export const appRouter = router({
         .object({
           nodeId: z.string(),
           nodeName: z.string(),
-          servers: z.custom<Server>().array(),
+          servers: z.custom<ServersResponse_Server>().array(),
         })
         .array()
     )
@@ -57,7 +57,7 @@ export const appRouter = router({
           nodeId: z.string(),
           nodeName: z.string(),
           serverTypes:
-            z.custom<Manifest>().array(),
+            z.custom<ServerTypesResponse_Manifest>().array(),
         })
         .array()
     )

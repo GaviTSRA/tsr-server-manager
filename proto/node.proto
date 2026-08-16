@@ -1,10 +1,8 @@
 syntax = "proto3";
 package node;
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
-
-message PingRequest {}
-message PongResponse {}
 
 message AuthenticateRequest {
   string password = 1;
@@ -13,65 +11,63 @@ message AuthenticateResponse {
   string token = 1;
 }
 
-enum ContainerStatus {
-  CONTAINER_STATUS_UNSPECIFIED = 0;
-  CREATED = 1;
-  RUNNING = 2;
-  PAUSED = 3;
-  RESTARTING = 4;
-  REMOVING = 5;
-  EXITED = 6;
-  DEAD = 7;
-}
-
-message ResourceStats {
-    google.protobuf.Timestamp timestamp = 1;
-    double cpu_usage = 2;
-    double cpu_max = 3;
-    double ram_usage = 4;
-    double ram_max = 5;
-}
-
-message Server {
-    string id = 1;
-    optional string container_id = 2;
-    string name = 3;
-    optional ContainerStatus status = 4;
-    string type = 5;
-    repeated ResourceStats recent_stats = 6;
-}
-
-message ServersRequest {}
 message ServersResponse {
+    message Server {
+        message ResourceStats {
+            google.protobuf.Timestamp timestamp = 1;
+            double cpu_usage = 2;
+            double cpu_max = 3;
+            double ram_usage = 4;
+            double ram_max = 5;
+        }
+
+        enum ContainerStatus {
+            CONTAINER_STATUS_UNSPECIFIED = 0;
+            CREATED = 1;
+            RUNNING = 2;
+            PAUSED = 3;
+            RESTARTING = 4;
+            REMOVING = 5;
+            EXITED = 6;
+            DEAD = 7;
+        }
+
+        string id = 1;
+        optional string container_id = 2;
+        string name = 3;
+        optional ContainerStatus status = 4;
+        string type = 5;
+        repeated ResourceStats recent_stats = 6;
+    }
+
     repeated Server servers = 1;
 }
 
-enum ManifestServerOptionType {
-    UNSPECIFIED = 0;
-    STRING = 1;
-    ENUM = 2;
-}
-
-message ManifestServerOption {
-    string name = 1;
-    string description = 2;
-    ManifestServerOptionType type = 3;
-    string default = 4;
-    repeated string options = 5;
-}
-
-message Manifest {
-    string id = 1;
-    string name = 2;
-    string icon = 3;
-    optional string image = 4;
-    string start_command = 5;
-    string stop_command = 6;
-    map<string, ManifestServerOption> options = 7;
-}
-
-message ServerTypesRequest {}
 message ServerTypesResponse {
+    message Manifest {
+        message ManifestServerOption {
+            enum ManifestServerOptionType {
+                UNSPECIFIED = 0;
+                STRING = 1;
+                ENUM = 2;
+            }
+
+            string name = 1;
+            string description = 2;
+            ManifestServerOptionType type = 3;
+            string default = 4;
+            repeated string options = 5;
+        }
+
+        string id = 1;
+        string name = 2;
+        string icon = 3;
+        optional string image = 4;
+        string start_command = 5;
+        string stop_command = 6;
+        map<string, ManifestServerOption> options = 7;
+    }
+
     repeated Manifest server_types = 1;
 }
 
@@ -80,12 +76,11 @@ message CreateServerRequest {
     string name = 2;
     string type = 3;
 }
-message CreateServerResponse {}
 
 service Node {
-    rpc Ping (PingRequest) returns (PongResponse) {}
-    rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
-    rpc GetServers (ServersRequest) returns (ServersResponse) {}
-    rpc GetServerTypes (ServerTypesRequest) returns (ServerTypesResponse) {}
-    rpc CreateServer (CreateServerRequest) returns (CreateServerResponse) {}
+    rpc Ping (google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);
+    rpc GetServers (google.protobuf.Empty) returns (ServersResponse);
+    rpc GetServerTypes (google.protobuf.Empty) returns (ServerTypesResponse);
+    rpc CreateServer (CreateServerRequest) returns (google.protobuf.Empty);
 }

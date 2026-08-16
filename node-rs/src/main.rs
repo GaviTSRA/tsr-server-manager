@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use sea_orm::ActiveValue::{NotSet, Set};
+use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, Database, DatabaseConnection, EntityTrait};
 use tonic::{Request, Response, Status};
 use tonic_middleware::InterceptorFor;
 
 use crate::db::server::Entity as Server;
-use crate::node::{PongResponse, node_server::NodeServer};
+use crate::node::node_server::NodeServer;
 use crate::server_types::{ServerType, load_server_types};
 
 mod db;
@@ -26,11 +26,8 @@ pub struct Node {
 
 #[tonic::async_trait]
 impl node::node_server::Node for Node {
-    async fn ping(
-        &self,
-        _: Request<node::PingRequest>,
-    ) -> Result<Response<node::PongResponse>, Status> {
-        Ok(Response::new(PongResponse {}))
+    async fn ping(&self, _: Request<()>) -> Result<Response<()>, Status> {
+        Ok(Response::new(()))
     }
 
     async fn authenticate(
@@ -40,21 +37,18 @@ impl node::node_server::Node for Node {
         middleware::auth::auth_route(request.into_inner(), self.password.clone())
     }
 
-    async fn get_servers(
-        &self,
-        _: Request<node::ServersRequest>,
-    ) -> Result<Response<node::ServersResponse>, Status> {
+    async fn get_servers(&self, _: Request<()>) -> Result<Response<node::ServersResponse>, Status> {
         let servers = Server::find()
             .all(&self.db)
             .await
             .map_err(|_| Status::internal("Failed to load servers"))?;
         let loaded_servers = servers
             .iter()
-            .map(|server| node::Server {
+            .map(|server| node::servers_response::Server {
                 id: server.id.to_string(),
                 container_id: server.container_id.clone(),
                 name: server.name.clone(),
-                status: Some(node::ContainerStatus::Unspecified as i32),
+                status: Some(node::servers_response::server::ContainerStatus::Unspecified as i32),
                 r#type: server.server_type.clone(),
                 recent_stats: vec![],
             })
@@ -66,7 +60,7 @@ impl node::node_server::Node for Node {
 
     async fn get_server_types(
         &self,
-        _: Request<node::ServerTypesRequest>,
+        _: Request<()>,
     ) -> Result<Response<node::ServerTypesResponse>, Status> {
         Ok(Response::new(node::ServerTypesResponse {
             server_types: self
@@ -81,7 +75,7 @@ impl node::node_server::Node for Node {
     async fn create_server(
         &self,
         request: Request<node::CreateServerRequest>,
-    ) -> Result<Response<node::CreateServerResponse>, Status> {
+    ) -> Result<Response<()>, Status> {
         let req = request.into_inner();
 
         let server_type = self
@@ -114,7 +108,7 @@ impl node::node_server::Node for Node {
         .await
         .or(Err(Status::internal("Failed to insert server")))?;
 
-        Ok(Response::new(node::CreateServerResponse {}))
+        Ok(Response::new(()))
     }
 }
 
