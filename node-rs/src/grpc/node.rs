@@ -25,7 +25,7 @@ impl node_server::Node for App {
         let servers = db::server::Entity::find()
             .all(&self.db)
             .await
-            .map_err(|_| Status::internal("Failed to load servers"))?;
+            .map_err(|e| Status::internal(format!("Failed to load servers: {e}")))?;
         let loaded_servers = servers
             .iter()
             .map(|server| servers_response::Server {

@@ -13,10 +13,10 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
-import { z } from "zod";
+import { string, z } from "zod";
 
 // Data Types
-export const ResetartPolicy = pgEnum("RestartPolicy", [
+export const ResetartPolicy = pgEnum("restart_policy", [
   "no",
   "on-failure",
   "unless-stopped",
@@ -33,7 +33,7 @@ export const Server = pgTable("Server", {
   type: varchar().notNull(),
   containerId: varchar(),
   options: json().$type<{ [name: string]: string }>().notNull(),
-  ports: json().$type<string[]>().notNull(),
+  ports: integer().array().notNull(),
   cpuLimit: real().notNull(),
   ramLimit: integer().notNull(),
   restartPolicy: ResetartPolicy().notNull().default("no"),

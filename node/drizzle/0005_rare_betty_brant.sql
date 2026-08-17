@@ -1,0 +1,1 @@
+ALTER TYPE "public"."RestartPolicy" RENAME TO "restart_policy";

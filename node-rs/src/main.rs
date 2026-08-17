@@ -37,10 +37,13 @@ impl App {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Connecting to db...");
     let db: DatabaseConnection =
-        Database::connect("postgres://postgres:postgres@localhost:5434/tsm-node").await?;
+        Database::connect("postgres://postgres:postgres@localhost:5433/tsm-node").await?;
     println!("Connected to db");
     println!("Applying schema...");
-    db.get_schema_registry("node-rs::db::*").sync(&db).await?;
+    match db.get_schema_registry("node-rs::db::*").sync(&db).await {
+        Ok(()) => (),
+        Err(e) => println!("{e}"),
+    }
     println!("Schema applied");
 
     println!("Loading server types...");
@@ -51,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = App {
         db,
         server_types,
-        password: "Node".to_string(),
+        password: "PASSWORD".to_string(),
     };
 
     let auth_interceptor = middleware::auth::AuthInterceptor::new(app.password.clone());

@@ -36,6 +36,27 @@
       "when": 1746710809863,
       "tag": "0004_keen_tinkerer",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786980248670,
+      "tag": "0005_rare_betty_brant",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786981165822,
+      "tag": "0006_dark_yellow_claw",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786981377651,
+      "tag": "0007_third_purifiers",
+      "breakpoints": true
     }
   ]
 }

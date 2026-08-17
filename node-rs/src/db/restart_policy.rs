@@ -5,7 +5,7 @@ use sea_orm::entity::prelude::*;
     rs_type = "String",
     db_type = "Enum",
     enum_name = "restart_policy",
-    rename_all = "camelCase"
+    rename_all = "kebab-case"
 )]
 pub enum RestartPolicy {
     No,

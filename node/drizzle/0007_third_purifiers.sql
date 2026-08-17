@@ -1,0 +1,1 @@
+ALTER TABLE "Server" ALTER COLUMN "ports" SET NOT NULL;
