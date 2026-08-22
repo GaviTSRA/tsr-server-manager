@@ -34,23 +34,11 @@ impl node_server::Node for App {
                 None
             };
 
-            let status = if let Some(inspect) = inspect
-                && let Some(state) = inspect.state
-                && let Some(status) = state.status
-            {
-                Some(ContainerStatus::from(status))
-            } else {
-                None
-            };
-
             loaded_servers.push(servers_response::Server {
                 id: server.id.to_string(),
                 container_id: server.container_id.clone(),
                 name: server.name.clone(),
-                status: match status {
-                    Some(status) => status,
-                    None => ContainerStatus::Unspecified,
-                } as i32,
+                status: ContainerStatus::from(inspect) as i32,
                 r#type: server.server_type.clone(),
                 recent_stats: vec![],
             });

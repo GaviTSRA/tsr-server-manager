@@ -22,23 +22,12 @@ impl server_server::Server for App {
         } else {
             None
         };
-        let status = if let Some(inspect) = inspect
-            && let Some(state) = inspect.state
-            && let Some(status) = state.status
-        {
-            Some(ContainerStatus::from(status))
-        } else {
-            None
-        };
         Ok(Response::new(ServerInfoResponse {
             id: server.id.to_string(),
             name: server.name,
             container_id: server.container_id,
             r#type: server.server_type,
-            status: match status {
-                Some(status) => status,
-                None => ContainerStatus::Unspecified,
-            } as i32,
+            status: ContainerStatus::from(inspect) as i32,
         }))
     }
 }
