@@ -9,22 +9,21 @@ import { TRPCError } from "@trpc/server";
 export type ServerType = {
   id: string;
   icon: string;
-  command: string;
+  startCommand: string;
   name: string;
-  image: string | null;
+  image?: string | undefined;
   stopCommand: string;
   options: {
     [id: string]: {
       name: string;
       description: string;
-      type: "string" | "enum";
+      type: "STRING" | "ENUM" | "UNSPECIFIED";
       default: string;
       options?: string[];
     };
   };
-  tabs?: string[];
-  eventHandler?: (event: PlatformEvent) => Promise<void>;
-  permissions?: Permission[];
+ //tabs?: string[];
+  //permissions?: Permission[];
 };
 
 export async function loadServerTypes(db: NodePgDatabase<typeof schema>) {

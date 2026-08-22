@@ -1,10 +1,11 @@
+use bollard::Docker;
 use sea_orm::{Database, DatabaseConnection, EntityTrait};
 use tonic::Status;
 use tonic_middleware::InterceptorFor;
 
-use crate::grpc::auth::def::auth_server::AuthServer;
-use crate::grpc::node::def::node_server::NodeServer;
-use crate::grpc::server::def::server_server::ServerServer;
+use crate::grpc::proto::auth::auth_server::AuthServer;
+use crate::grpc::proto::node::node_server::NodeServer;
+use crate::grpc::proto::server::server_server::ServerServer;
 use crate::server_types::{ServerType, load_server_types};
 
 mod db;
@@ -12,11 +13,12 @@ mod grpc;
 mod middleware;
 mod server_types;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct App {
     db: DatabaseConnection,
     server_types: Vec<ServerType>,
     password: String,
+    docker: Docker,
 }
 
 impl App {
@@ -40,21 +42,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Database::connect("postgres://postgres:postgres@localhost:5433/tsm-node").await?;
     println!("Connected to db");
     println!("Applying schema...");
-    match db.get_schema_registry("node-rs::db::*").sync(&db).await {
-        Ok(()) => (),
-        Err(e) => println!("{e}"),
-    }
+    db.get_schema_registry("node-rs::db::*")
+        .sync(&db)
+        .await
+        .expect("Cannot apply schema");
     println!("Schema applied");
 
     println!("Loading server types...");
     let server_types = load_server_types();
     println!("Loaded {} server types", server_types.len());
 
+    println!("Connecting to docker...");
+    let docker = Docker::connect_with_local_defaults().expect("Cannot connect to docker");
+    println!("Connected to docker");
+
     let addr = "0.0.0.0:8772".parse().unwrap();
     let app = App {
         db,
         server_types,
         password: "PASSWORD".to_string(),
+        docker,
     };
 
     let auth_interceptor = middleware::auth::AuthInterceptor::new(app.password.clone());

@@ -2,7 +2,7 @@ syntax = "proto3";
 package common;
 
 enum ContainerStatus {
-    CONTAINER_STATUS_UNSPECIFIED = 0;
+    UNSPECIFIED = 0;
     CREATED = 1;
     RUNNING = 2;
     PAUSED = 3;
@@ -10,6 +10,7 @@ enum ContainerStatus {
     REMOVING = 5;
     EXITED = 6;
     DEAD = 7;
+    STOPPING = 8;
 }
 
 message ServerRequest {

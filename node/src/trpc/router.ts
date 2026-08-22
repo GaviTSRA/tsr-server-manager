@@ -86,6 +86,7 @@ export const nodeRouter = router({
               "removing",
               "exited",
               "dead",
+              "stopping",
             ])
             .optional(),
           type: z.string(),
@@ -162,15 +163,15 @@ export const nodeRouter = router({
           id: z.string(),
           name: z.string(),
           icon: z.string(),
-          command: z.string(),
-          image: z.string().nullable(),
+          startCommand: z.string(),
+          image: z.string().optional(),
           stopCommand: z.string(),
           options: z.record(
             z.string(),
             z.object({
               name: z.string(),
               description: z.string(),
-              type: z.enum(["string", "enum"]),
+              type: z.enum(["STRING", "ENUM", "UNSPECIFIED"]),
               default: z.string(),
               options: z.string().array().optional(),
             })

@@ -10,14 +10,15 @@ export function ServerControls({
   serverId: string;
   nodeId: string;
   status:
-    | "created"
-    | "running"
-    | "paused"
-    | "restarting"
-    | "removing"
-    | "exited"
-    | "dead"
-    | undefined;
+    | "UNSPECIFIED"
+    | "CREATED"
+    | "RUNNING"
+    | "PAUSED"
+    | "RESTARTING"
+    | "REMOVING"
+    | "EXITED"
+    | "DEAD"
+    | "STOPPING";
 }) {
   const startServer = trpc.server.power.start.useMutation();
   const stopServer = trpc.server.power.stop.useMutation();
@@ -26,7 +27,7 @@ export function ServerControls({
   const genericClassName =
     "cursor-pointer bg-neutral-400 rounded-lg px-2 py-1 w-full h-full flex flex-row gap-2 items-center text-center";
 
-  let controls: JSX.Element = <p>Unhandled</p>;
+  let controls: JSX.Element = <p>Unhandled: {status}</p>;
   if (startServer.isPending || stopServer.isPending || killServer.isPending) {
     controls = (
       <div className={genericClassName + " justify-center"}>
@@ -34,9 +35,9 @@ export function ServerControls({
       </div>
     );
   } else if (
-    status === undefined ||
-    status === "created" ||
-    status === "exited"
+    status === "UNSPECIFIED" ||
+    status === "CREATED" ||
+    status === "EXITED"
   ) {
     controls = (
       <div
@@ -47,7 +48,7 @@ export function ServerControls({
         <p>Start</p>
       </div>
     );
-  } else if (status === "running") {
+  } else if (status === "RUNNING") {
     controls = (
       <div
         onClick={() => stopServer.mutate({ serverId, nodeId })}

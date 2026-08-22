@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   Sidebar,
   Package,
+  ArrowDownCircle,
 } from "react-feather";
 import { Link, useNavigate } from "react-router-dom";
 import { Error } from "./components/Error";
@@ -106,11 +107,11 @@ export function Server() {
       const type = serverTypes
         .find((type) => type.nodeId === nodeId)
         ?.serverTypes.find((type) => type.id === server.type);
-      if (type && type.tabs) {
+      /*if (type && type.tabs) {
         setCustomTabs(type.tabs);
       } else {
         setCustomTabs([]);
-      }
+      }*/
     }
   }, [server, serverTypes, nodeId]);
 
@@ -124,13 +125,13 @@ export function Server() {
   const [statusIcon, setStatusIcon] = useState(null as JSX.Element | null);
   const [logs, setLogs] = useState([] as string[]);
   const [wasOffline, setWasOffline] = useState(
-    server ? server.status !== "running" : false
+    server ? server.status !== "RUNNING" : false
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (!server) return;
-    if (server.status === "running") {
+    if (server.status === "RUNNING") {
       if (wasOffline) {
         resetLogs();
       }
@@ -139,25 +140,29 @@ export function Server() {
       setWasOffline(true);
     }
     switch (server.status) {
-      case undefined:
+      case "UNSPECIFIED":
         setStatusIcon(<Settings size={24} className="text-gray-500" />);
         // setStatus("Not Configured");
         break;
-      case "created":
-      case "exited":
+      case "CREATED":
+      case "EXITED":
         setStatusIcon(<StopCircle size={24} className="text-red-600" />);
         // setStatus("Stopped");
         break;
-      case "running":
+      case "RUNNING":
         setStatusIcon(<PlayCircle size={24} className="text-success" />);
         // setStatus("Running");
         break;
-      case "restarting":
+      case "RESTARTING":
         setStatusIcon(<ArrowUpCircle size={24} className="text-gray-500" />);
         // setStatus("Restarting");
         break;
-      case "dead":
+      case "DEAD":
         setStatusIcon(<AlertCircle size={24} className="text-red-600" />);
+        // setStatus("Dead");
+        break;
+      case "STOPPING":
+        setStatusIcon(<ArrowDownCircle size={24} className="text-red-600" />);
         // setStatus("Dead");
         break;
     }

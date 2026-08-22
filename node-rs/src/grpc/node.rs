@@ -4,16 +4,10 @@ use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, EntityTrait};
 use tonic::{Request, Response, Status};
 
+use super::proto::common::ContainerStatus;
+use super::proto::node::*;
 use crate::App;
 use crate::db;
-use def::*;
-
-pub mod common {
-    tonic::include_proto!("common");
-}
-pub mod def {
-    tonic::include_proto!("node");
-}
 
 #[tonic::async_trait]
 impl node_server::Node for App {
@@ -26,17 +20,41 @@ impl node_server::Node for App {
             .all(&self.db)
             .await
             .map_err(|e| Status::internal(format!("Failed to load servers: {e}")))?;
-        let loaded_servers = servers
-            .iter()
-            .map(|server| servers_response::Server {
+
+        let mut loaded_servers = vec![];
+        for server in servers {
+            let inspect = if let Some(container_id) = &server.container_id {
+                Some(
+                    self.docker
+                        .inspect_container(container_id, None)
+                        .await
+                        .unwrap(),
+                )
+            } else {
+                None
+            };
+
+            let status = if let Some(inspect) = inspect
+                && let Some(state) = inspect.state
+                && let Some(status) = state.status
+            {
+                Some(ContainerStatus::from(status))
+            } else {
+                None
+            };
+
+            loaded_servers.push(servers_response::Server {
                 id: server.id.to_string(),
                 container_id: server.container_id.clone(),
                 name: server.name.clone(),
-                status: common::ContainerStatus::Unspecified as i32,
+                status: match status {
+                    Some(status) => status,
+                    None => ContainerStatus::Unspecified,
+                } as i32,
                 r#type: server.server_type.clone(),
                 recent_stats: vec![],
-            })
-            .collect();
+            });
+        }
         Ok(Response::new(ServersResponse {
             servers: loaded_servers,
         }))

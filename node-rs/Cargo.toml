@@ -3,10 +3,8 @@ name = "node-rs"
 version = "0.1.0"
 edition = "2024"
 
-[profile.dev]
-debug = "line-tables-only"
-
 [dependencies]
+bollard = { version = "0.21.1", features = ["buildkit", "chrono", "ssl", "websocket"] }
 chrono = "0.4.45"
 jsonwebtoken = { version = "11.0.0", features = ["rust_crypto"] }
 prost = "0.14.4"
@@ -22,3 +20,6 @@ uuid = { version = "1.24.0", features = ["v4"] }
 
 [build-dependencies]
 tonic-prost-build = "0.14.6"
+
+[profile.dev]
+debug = "line-tables-only"

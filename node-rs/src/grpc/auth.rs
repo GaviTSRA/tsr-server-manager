@@ -1,12 +1,8 @@
 use tonic::{Request, Response, Status};
 
+use super::proto::auth::*;
 use crate::App;
 use crate::middleware::auth::create_token;
-use def::*;
-
-pub mod def {
-    tonic::include_proto!("auth");
-}
 
 #[tonic::async_trait]
 impl auth_server::Auth for App {
