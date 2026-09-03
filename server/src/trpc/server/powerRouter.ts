@@ -1,7 +1,6 @@
-import { inferProcedureOutput } from "@trpc/server";
 import { nodeProcedure, router } from "../trpc";
 import { z } from "zod";
-import { NodeRouter } from "@tsm/node";
+import { Empty } from "../../generated/google/protobuf/empty";
 
 export const powerRouter = router({
   start: nodeProcedure
@@ -14,11 +13,9 @@ export const powerRouter = router({
       },
     })
     .input(z.object({ serverId: z.string() }))
-    .output(
-      z.custom<inferProcedureOutput<NodeRouter["server"]["power"]["start"]>>()
-    )
+    .output(z.custom<Empty>())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.node.trpc.server.power.start.mutate({
+      return await ctx.node.grpc.server.power.start({
         userId: ctx.user.id,
         serverId: input.serverId,
       });
@@ -33,11 +30,9 @@ export const powerRouter = router({
       },
     })
     .input(z.object({ serverId: z.string() }))
-    .output(
-      z.custom<inferProcedureOutput<NodeRouter["server"]["power"]["restart"]>>()
-    )
+    .output(z.custom<Empty>())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.node.trpc.server.power.restart.mutate({
+      return await ctx.node.grpc.server.power.restart({
         userId: ctx.user.id,
         serverId: input.serverId,
       });
@@ -52,11 +47,9 @@ export const powerRouter = router({
       },
     })
     .input(z.object({ serverId: z.string() }))
-    .output(
-      z.custom<inferProcedureOutput<NodeRouter["server"]["power"]["stop"]>>()
-    )
+    .output(z.custom<Empty>())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.node.trpc.server.power.stop.mutate({
+      return await ctx.node.grpc.server.power.stop({
         userId: ctx.user.id,
         serverId: input.serverId,
       });
@@ -71,11 +64,9 @@ export const powerRouter = router({
       },
     })
     .input(z.object({ serverId: z.string() }))
-    .output(
-      z.custom<inferProcedureOutput<NodeRouter["server"]["power"]["kill"]>>()
-    )
+    .output(z.custom<Empty>())
     .mutation(async ({ ctx, input }) => {
-      return await ctx.node.trpc.server.power.kill.mutate({
+      return await ctx.node.grpc.server.power.kill({
         userId: ctx.user.id,
         serverId: input.serverId,
       });

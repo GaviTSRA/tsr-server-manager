@@ -6,8 +6,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "proto:gen:linux": "protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,esModuleInterop=true,useDate=true,useExactTypes=false,stringEnums=true,unrecognizedEnum=false -I ../proto ../proto/common.proto ../proto/node.proto ../proto/auth.proto ../proto/server.proto",
-    "proto:gen:windows": "protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto.cmd --ts_proto_out=./src/generated --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,esModuleInterop=true,useDate=true,useExactTypes=false,stringEnums=true,unrecognizedEnum=false -I ../proto ../proto/common.proto ../proto/node.proto ../proto/auth.proto ../proto/server.proto",
+    "proto:gen:linux": "protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,esModuleInterop=true,useDate=true,useExactTypes=false,stringEnums=true,unrecognizedEnum=false -I ../proto ../proto/common.proto ../proto/node.proto ../proto/auth.proto ../proto/server.proto ../proto/server_power.proto",
+    "proto:gen:windows": "protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto.cmd --ts_proto_out=./src/generated --ts_proto_opt=outputServices=nice-grpc,outputServices=generic-definitions,esModuleInterop=true,useDate=true,useExactTypes=false,stringEnums=true,unrecognizedEnum=false -I ../proto ../proto/common.proto ../proto/node.proto ../proto/auth.proto ../proto/server.proto ../proto/server_power.proto",
     "dev": "npx tsx watch src/index.ts",
     "build": "tsc --build",
     "clean": "rm -rf dist"

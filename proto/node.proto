@@ -47,7 +47,7 @@ message ServerTypesResponse {
         string name = 2;
         string icon = 3;
         optional string image = 4;
-        string start_command = 5;
+        repeated string start_command = 5;
         string stop_command = 6;
         map<string, ManifestServerOption> options = 7;
     }

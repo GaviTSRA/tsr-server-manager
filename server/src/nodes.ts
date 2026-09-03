@@ -19,6 +19,7 @@ import { ClientError, ClientMiddlewareCall, createChannel, createClient, createC
 import { NodeDefinition } from "./generated/node";
 import { AuthDefinition } from "./generated/auth";
 import { ServerDefinition } from "./generated/server";
+import { ServerPowerDefinition } from "./generated/server_power";
 
 type ReturnTypeOf<T> = T extends (...args: any[]) => infer R ? R : never;
 
@@ -96,11 +97,15 @@ function getGrpcClient(url: string, getToken: () => string | undefined) {
   const authClient = createClient(AuthDefinition, channel);
   const nodeClient = createClientFactory().use(authMiddleware).create(NodeDefinition, channel);
   const serverClient = createClientFactory().use(authMiddleware).create(ServerDefinition, channel);
+  const powerClient = createClientFactory().use(authMiddleware).create(ServerPowerDefinition, channel);
   return {
     ...authClient,
     ...nodeClient,
     server: {
-      ...serverClient
+      ...serverClient,
+      power: {
+        ...powerClient
+      }
     }
   };
 }

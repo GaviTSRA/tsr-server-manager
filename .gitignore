@@ -22,6 +22,8 @@ node/.env
 /node-postgres-data/
 
 /node-rs/target
+/node-rs/servers
+/node-rs/.env
 
 /.pnp
 .pnp.js

@@ -11,7 +11,7 @@ impl server_server::Server for App {
         request: Request<ServerRequest>,
     ) -> Result<Response<ServerInfoResponse>, Status> {
         let req = request.into_inner();
-        let server = self.resolve_server(req.server_id).await?;
+        let server = self.resolve_server(&req.server_id).await?;
         let inspect = if let Some(container_id) = &server.container_id {
             Some(
                 self.docker

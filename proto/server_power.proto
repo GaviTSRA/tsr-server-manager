@@ -1,0 +1,13 @@
+syntax = "proto3";
+package server_power;
+
+import "google/protobuf/empty.proto";
+
+import "common.proto";
+
+service ServerPower {
+    rpc Start (common.ServerRequest) returns (google.protobuf.Empty);
+    rpc Restart (common.ServerRequest) returns (google.protobuf.Empty);
+    rpc Stop (common.ServerRequest) returns (google.protobuf.Empty);
+    rpc Kill (common.ServerRequest) returns (google.protobuf.Empty);
+}

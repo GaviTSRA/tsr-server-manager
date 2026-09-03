@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod node;
 pub mod server;
+pub mod server_power;
 
 pub mod proto {
     use bollard::plugin::{ContainerInspectResponse, ContainerStateStatusEnum};
@@ -46,5 +47,8 @@ pub mod proto {
     }
     pub mod server {
         tonic::include_proto!("server");
+    }
+    pub mod server_power {
+        tonic::include_proto!("server_power");
     }
 }

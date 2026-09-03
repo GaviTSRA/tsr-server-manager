@@ -14,6 +14,10 @@ fn main() {
             "#[derive(serde::Serialize, serde::Deserialize)]",
         )
         .field_attribute(
+            "node.ServerTypesResponse.Manifest.ManifestServerOption.options",
+            "#[serde(default)]",
+        )
+        .field_attribute(
             "node.ServerTypesResponse.Manifest.ManifestServerOption.type",
             "#[serde(with = \"crate::server_types::option_type_as_str\")]",
         )
@@ -27,6 +31,7 @@ fn main() {
                 "../proto/node.proto",
                 "../proto/auth.proto",
                 "../proto/server.proto",
+                "../proto/server_power.proto",
             ],
             &["../proto"],
         )
